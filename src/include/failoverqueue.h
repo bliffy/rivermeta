@@ -1,26 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef _FAILOVER_QUEUE_H
 #define _FAILOVER_QUEUE_H
 
@@ -28,26 +5,25 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include "error_print.h"
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 /* queue implemented as doubly-linked list with two data per node (one data could be NULL, if desired)*/
 typedef struct _fq_node_t
 {
-     void             *data1;
-     void             *data2;
-     struct _fq_node_t *prev;
-     struct _fq_node_t *next;
+     void*              data1;
+     void*              data2;
+     struct _fq_node_t* prev;
+     struct _fq_node_t* next;
 } fq_node_t;
 
 typedef struct _failoverqueue_t
 {
-     fq_node_t     *head;  /* records removed from here */
-     fq_node_t     *tail;  /* records added here */
-     fq_node_t     *freeq;
+     fq_node_t*    head;  /* records removed from here */
+     fq_node_t*    tail;  /* records added here */
+     fq_node_t*    freeq;
      unsigned int  size;
 } failoverqueue_t;
 
@@ -69,31 +45,12 @@ static inline failoverqueue_t* fqueue_init(void)
 /* frees queue memory */
 static inline void fqueue_exit(failoverqueue_t *qp)
 {
-     fq_node_t *qnode, *this_node;
+     fq_node_t* qnode;
+     fq_node_t* this_node;
 
      if(qp == NULL) {
           return;
      }
-
-#if 0
-     //XXX: nodes in the queue-proper (not freeq) should be
-     //     free'd by the calling function (e.g. via wsdata_delete)
-     /* free all nodes and their data */
-     qnode = qp->head;
-     while(qnode != NULL) {
-          if (qnode->data1) {
-               free(qnode->data1);
-               qnode->data1 = NULL;
-          }
-          if (qnode->data2) {
-               free(qnode->data2);
-               qnode->data2 = NULL;
-          }
-          this_node = qnode;	
-          qnode = qnode->next;
-          free(this_node);
-     }
-#endif
 
      /* free all freeq nodes */
      qnode = qp->freeq;
@@ -113,11 +70,14 @@ static inline void fqueue_exit(failoverqueue_t *qp)
  * allocates memory for this node
  * returns pointer to node or NULL on error
  *****/
-static inline fq_node_t* fqueue_add(failoverqueue_t *qp, void *data1, void *data2)
+static inline fq_node_t* fqueue_add(
+          failoverqueue_t* qp,
+          void* data1,
+          void* data2)
 {
-     fq_node_t *new_node = NULL;
+     fq_node_t* new_node = NULL;
 
-     if(qp == NULL) {
+     if (qp == NULL) {
           return new_node;
      }
 
@@ -160,9 +120,12 @@ static inline fq_node_t* fqueue_add(failoverqueue_t *qp, void *data1, void *data
  * allocates memory for this node
  * returns pointer to node or NULL on error
  *****/
-static inline fq_node_t* fqueue_add_front(failoverqueue_t *qp, void *data1, void *data2)
+static inline fq_node_t* fqueue_add_front(
+          failoverqueue_t* qp,
+          void* data1,
+          void *data2)
 {
-     fq_node_t *new_node = NULL;
+     fq_node_t* new_node = NULL;
 
      if(qp == NULL) {
           return new_node;
@@ -187,7 +150,7 @@ static inline fq_node_t* fqueue_add_front(failoverqueue_t *qp, void *data1, void
      /* maintain queue */
      qp->size++;
 
-     if(qp->head == NULL) {
+     if (qp->head == NULL) {
           qp->head = new_node;
           qp->tail = new_node;
      }
@@ -213,9 +176,12 @@ static inline fq_node_t* fqueue_add_front(failoverqueue_t *qp, void *data1, void
  * frees memory allocated for this node
  * returns 1 on success or 0 on error
  *****/
-static inline int fqueue_remove(failoverqueue_t *qp, void **data1, void **data2)
+static inline int fqueue_remove(
+          failoverqueue_t* qp,
+          void** data1,
+          void** data2)
 {
-     fq_node_t *rm_node = NULL;
+     fq_node_t* rm_node = NULL;
 
      if((qp == NULL) || (qp->head == NULL)) {
           return 0;
@@ -231,7 +197,7 @@ static inline int fqueue_remove(failoverqueue_t *qp, void **data1, void **data2)
      rm_node = qp->head;
      qp->head = qp->head->next;
 
-     if(qp->head != NULL) {
+     if (qp->head != NULL) {
           qp->head->prev = NULL;
      }
      else {
@@ -239,7 +205,7 @@ static inline int fqueue_remove(failoverqueue_t *qp, void **data1, void **data2)
      }
 
      /* free memory to list of freeq available*/
-     rm_node->next = qp->freeq;
+     rm_node->next  = qp->freeq;
      rm_node->data1 = NULL;
      rm_node->data2 = NULL;
      qp->freeq = rm_node;
@@ -247,21 +213,21 @@ static inline int fqueue_remove(failoverqueue_t *qp, void **data1, void **data2)
      return ((NULL != *data1) || (NULL != *data2));
 }
 
-static inline unsigned int fqueue_size(failoverqueue_t *qp)
+static inline unsigned int fqueue_size(failoverqueue_t* qp)
 {
-     if(NULL == qp) {
+     if (NULL == qp) {
           return 0;
      }
-
      return qp->size;
 }
 
 
-static inline int fqueue_clear(failoverqueue_t *qp)
+static inline int fqueue_clear(failoverqueue_t* qp)
 {
-     fq_node_t *qnode, *this_node;
+     fq_node_t* qnode;
+     fq_node_t* this_node;
 
-     if(qp == NULL) {
+     if (qp == NULL) {
           return -1;
      }
 
@@ -282,7 +248,7 @@ static inline int fqueue_clear(failoverqueue_t *qp)
 }
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _FAILOVER_QUEUE_H

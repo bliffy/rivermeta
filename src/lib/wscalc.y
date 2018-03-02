@@ -327,7 +327,11 @@ void *wscalc_createLookupTable(void) {
      return tmp;
 }
 
-wscalc_lookupTableEntry *wscalc_getEntry(char *name, void *table, int *created) {
+wscalc_lookupTableEntry *wscalc_getEntry(
+          const char * name,
+          void * table,
+          int * created)
+{
      wscalc_lookupTableEntry *ptr = table;
      wscalc_lookupTableEntry *lastPtr = NULL;
      *created = 0;

@@ -1,14 +1,11 @@
-
 #ifndef _EVAHASH3_H
 #define _EVAHASH3_H
 
-#include "cppwrap.h"
-
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
-/* copied from http://burtleburtle.net/bob/hash/evahash.html */
+// copied from http://burtleburtle.net/bob/hash/evahash.html
 #define evahash3_mix(a,b,c) \
 { \
   a-=b;  a-=c;  a^=(c>>13); \
@@ -22,12 +19,16 @@ CPP_OPEN
   c-=a;  c-=b;  c^=(b>>15); \
 }
 
-/* copied from http://burtleburtle.net/bob/hash/evahash.html */
-static inline void evahash3(uint8_t *k, uint32_t length, uint32_t initval,
-                            uint32_t * out1,
-                            uint32_t * out2,
-                            uint32_t * out3) {
-    uint32_t a,b,c;
+// copied from http://burtleburtle.net/bob/hash/evahash.html
+static inline void evahash3(
+          uint8_t* k,
+          uint32_t length,
+          uint32_t initval,
+          uint32_t* out1,
+          uint32_t* out2,
+          uint32_t* out3)
+{
+    uint32_t a, b, c;
     uint32_t len;
 
     len = length;
@@ -64,7 +65,7 @@ static inline void evahash3(uint8_t *k, uint32_t length, uint32_t initval,
 }
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _EVAHASH3_H

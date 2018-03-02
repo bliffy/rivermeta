@@ -1,26 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef _WSHEAP_H
 #define _WSHEAP_H
 
@@ -29,11 +6,10 @@ SOFTWARE.
 #include <string.h>
 #include "error_print.h"
 #include "dprint.h"
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 //return -1 if less than, 0 if equal, 1 if greater than
 typedef int (*wsheap_compair)(void * first, void * second);
@@ -60,11 +36,12 @@ static inline void wsheap_swap(void ** first, void ** second) {
 
 
 /* allocates & initializes heap */
-static inline wsheap_t* wsheap_init(uint64_t max,
-                                    size_t data_size,
-                                    wsheap_compair cmp,
-                                    wsheap_replace replace,
-                                    void *aux)
+static inline wsheap_t * wsheap_init(
+          uint64_t max,
+          size_t data_size,
+          wsheap_compair cmp,
+          wsheap_replace replace,
+          void * aux)
 {
      if (!cmp || !replace) {
           error_print("failed wsheap_init - callback");
@@ -93,8 +70,7 @@ static inline wsheap_t* wsheap_init(uint64_t max,
           return NULL;
      }
      //point heap at buffers
-     uint64_t i;
-     for (i = 0; i < max; i++) {
+     for (uint64_t i = 0; i < max; i++) {
           h->heap[i] = h->buffer + (i*data_size);
      }
 
@@ -104,8 +80,7 @@ static inline wsheap_t* wsheap_init(uint64_t max,
 static inline void wsheap_reset(wsheap_t * h)
 {
      memset(h->buffer, 0, h->max * h->data_size); 
-     uint64_t i;
-     for (i = 0; i < h->max; i++) {
+     for (uint64_t i = 0; i < h->max; i++) {
           h->heap[i] = h->buffer + (i*h->data_size);
      }
      h->count = 0;
@@ -115,28 +90,29 @@ static inline void wsheap_reset(wsheap_t * h)
 /* frees stack memory */
 static inline void wsheap_destroy(wsheap_t * h)
 {
-     if (h->buffer) {
+     if (h->buffer)
           free(h->buffer);
-     }
-     if (h->heap) {
+     if (h->heap)
           free(h->heap);
-     }
      free(h);
 }
 
 //maintenace function
-static inline void wsheap_promote(wsheap_t *h, uint64_t pos) {
+static inline void wsheap_promote(
+          wsheap_t * h,
+          uint64_t pos)
+{
      //assert(pos < h->count);
      uint64_t child = pos;
+     uint64_t parent;
      while (child > 0) {
-          uint64_t parent = ((child + 1) / 2) - 1;
+          parent = ((child + 1) / 2) - 1;
           if (h->cmp(h->heap[child], h->heap[parent]) < 0) {
                wsheap_swap(&h->heap[child], &h->heap[parent]);
                child = parent;
           }
-          else {
+          else
                break;
-          }
      } 
 }
 
@@ -144,26 +120,28 @@ static inline void wsheap_promote(wsheap_t *h, uint64_t pos) {
 static inline void wsheap_demote(wsheap_t *h, uint64_t pos) {
      //assert(pos < h->count);
      uint64_t parent = pos;
+     uint64_t child2;
+     uint64_t child1;
+     uint64_t min_child;
      while (1) {
-          uint64_t child2 = (parent + 1) * 2;
-          uint64_t child1 = child2 - 1;
-          uint64_t min_child = child1;
+          child2 = (parent + 1) * 2;
+          child1 = child2 - 1;
+          min_child = child1;
 
-          if (child1 >= h->count) {
+          if (child1 >= h->count)
                break;
-          }
-          else if ((child2 < h->count) &&
-                   (h->cmp(h->heap[child1], h->heap[child2]) > 0)) {
+
+          if ((child2 < h->count) && (h->cmp(h->heap[child1], h->heap[child2]) > 0)) {
                min_child = child2;
           }
           
-          if (h->cmp(h->heap[min_child], h->heap[parent]) < 0) {
-               wsheap_swap(&h->heap[min_child], &h->heap[parent]);
-               parent = min_child;
-          }
-          else {
+          if (h->cmp(h->heap[min_child],
+                     h->heap[parent]) >= 0)
+          {
                break;
           }
+          wsheap_swap(&h->heap[min_child], &h->heap[parent]);
+          parent = min_child;
      }
 }
 
@@ -171,7 +149,7 @@ static inline void wsheap_demote(wsheap_t *h, uint64_t pos) {
 /***** 
  * returns pointer to node or NULL on error
  *****/
-static inline void * wsheap_insert(wsheap_t *h, void *data)
+static inline void * wsheap_insert(wsheap_t * h, void * data)
 {
      void * rtn_data = NULL;
      if (h->count < h->max) {
@@ -184,7 +162,10 @@ static inline void * wsheap_insert(wsheap_t *h, void *data)
      return rtn_data; 
 }
 
-static inline void * wsheap_update(wsheap_t *h, void *data) {
+static inline void * wsheap_update(
+          wsheap_t * h,
+          void * data)
+{
      uint64_t pos = (data - h->buffer)/h->data_size;
      if (pos >= h->count) {
           return NULL;
@@ -194,7 +175,10 @@ static inline void * wsheap_update(wsheap_t *h, void *data) {
 }
 
 
-static inline void * wsheap_replace_root(wsheap_t *h, void *data) {
+static inline void * wsheap_replace_root(
+          wsheap_t * h,
+          void * data)
+{
      void * rtn_data = NULL;
      if (h->count) {
           h->replace(h->heap[0], data, h->aux);
@@ -204,19 +188,18 @@ static inline void * wsheap_replace_root(wsheap_t *h, void *data) {
      return rtn_data;
 }
 
-static inline void * wsheap_insert_replace(wsheap_t *h, void *data) {
+static inline void * wsheap_insert_replace(
+          wsheap_t * h,
+          void * data)
+{
      void * rtn = wsheap_insert(h, data);
-     if (rtn) {
-          return rtn;
-     }
-     
+     if (rtn) return rtn;
      return wsheap_replace_root(h, data);
 }
 
 //destroys heap property
-static inline void wsheap_sort_inplace(wsheap_t *h) {
+static inline void wsheap_sort_inplace(wsheap_t * h) {
      uint64_t total = h->count;
-
      while (h->count > 1) {
         h->count--;
         wsheap_swap(&h->heap[0], &h->heap[h->count]);
@@ -226,7 +209,7 @@ static inline void wsheap_sort_inplace(wsheap_t *h) {
 }
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _WSSTACK_H

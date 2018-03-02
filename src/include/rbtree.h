@@ -4,27 +4,6 @@
 // Original author:  Emin Martinian
 //                   Signals, Information & Algorithms Group, MIT
 
-/*
-
-   Redistribution and use in source and binary forms, with or without
-   modification, are permitted provided that neither the name of Emin
-   Martinian nor the names of any contributors are be used to endorse or
-   promote products derived from this software without specific prior
-   written permission.
-
-   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-   */
-
 #ifndef _RBTREE_H
 #define _RBTREE_H
 
@@ -32,35 +11,32 @@
 #include "wsstack.h"
 #include "waterslide.h" // for wsdata
 #include "error_print.h"
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
-//  CONVENTIONS:  All data structures for red-black trees have the prefix
-//                "rb_" to prevent name conflicts.
-//                                                                     
-//                Function names: Each word in a function name begins with
-//                a capital letter.  An example function name is 
-//                CreateRedTree(a,b,c). Furthermore, each function name
-//                should begin with a capital letter to easily distinguish
-//                them from variables.
-//                                                                    
-//                Variable names: Each word in a variable name begins with
-//                a capital letter EXCEPT the first letter of the variable
-//                name.  For example, int newLongInt.  Global variables have
-//                names beginning with "g".  An example of a global
-//                variable name is gNewtonsConstant.
+// CONVENTIONS:  All data structures for red-black trees have the prefix
+// "rb_" to prevent name conflicts.
+// Function names: Each word in a function name begins with
+// a capital letter.  An example function name is 
+// CreateRedTree(a,b,c). Furthermore, each function name
+// should begin with a capital letter to easily distinguish
+// them from variables.
+// Variable names: Each word in a variable name begins with
+// a capital letter EXCEPT the first letter of the variable
+// name.  For example, int newLongInt.  Global variables have
+// names beginning with "g".  An example of a global
+// variable name is gNewtonsConstant.
 
 typedef struct _rb_node_t {
-     void * key;
-     wsdata_t * wsd;
+     void* key;
+     wsdata_t* wsd;
      int type_index;
      int red; // if red = 0 then the node is black
-     struct _rb_node_t * left;
-     struct _rb_node_t * right;
-     struct _rb_node_t * parent;
+     struct _rb_node_t* left;
+     struct _rb_node_t* right;
+     struct _rb_node_t* parent;
 } rb_node_t;
 
 // cheap free list that is not thread-safe
@@ -68,13 +44,13 @@ typedef struct _node_list_t_ {
      // indices into array
      uint32_t head;
      uint32_t tail;
-     rb_node_t ** nodelist;
+     rb_node_t** nodelist;
      uint32_t size;
 } node_list_t;
 
-static inline node_list_t * node_list_init(uint32_t size) {
+static inline node_list_t* node_list_init(uint32_t size) {
      assert(size > 0);
-     node_list_t * list = (node_list_t *)calloc(1, sizeof(node_list_t));
+     node_list_t* list = (node_list_t *)calloc(1, sizeof(node_list_t));
      if (!list) {
           error_print("failed node_list_init calloc of list");
           return NULL;
@@ -82,7 +58,6 @@ static inline node_list_t * node_list_init(uint32_t size) {
 
      int i = 0;
      list->size = size;
-
      list->nodelist = calloc(list->size, sizeof(rb_node_t *));
      if (!list->nodelist) {
           error_print("failed node_list_init calloc of list->nodelist");
@@ -104,21 +79,21 @@ static inline node_list_t * node_list_init(uint32_t size) {
      return list;
 }
 
-static inline rb_node_t * node_list_alloc(node_list_t * list) {
+static inline rb_node_t* node_list_alloc(node_list_t* list) {
      if(list->tail == list->head) {
           // out of space
           return NULL;
      }
 
-     rb_node_t * newnode = list->nodelist[list->tail - 1];
+     rb_node_t* newnode = list->nodelist[list->tail - 1];
      list->tail--;
      list->nodelist[list->tail] = NULL;
 
      return newnode;
 }
 
-static inline void node_list_free(node_list_t * list, rb_node_t * thenode) {
-     if(list->tail >= list->size) {
+static inline void node_list_free(node_list_t* list, rb_node_t* thenode) {
+     if (list->tail >= list->size) {
           // we have a problem...there is no space to add this node to
           error_print("trying to add more node than this list can hold");
           return;
@@ -133,38 +108,37 @@ static inline void node_list_free(node_list_t * list, rb_node_t * thenode) {
 // Compare(a,b) should return 1 if *a > *b, -1 if *a < *b, and 0 otherwise
 // Destroy(a) takes a pointer to whatever key might be and frees it accordingly
 typedef struct _rb_tree_t {
-     int (*Compare)(const void * a, const void * b); 
-     void (*DestroyKey)(void * a);
-     void (*PrintKey)(const void * a);
+     int (*Compare)(const void* a, const void* b); 
+     void (*DestroyKey)(void* a);
+     void (*PrintKey)(const void* a);
   //  A sentinel is used for root and for nil.  These sentinels are
   //  created when RBTreeCreate is called.  root->left should always
   //  point to the node which is the root of the tree.  nil points to a
   //  node which should always be black but has arbitrary children and
   //  parent and no key.  The point of using these sentinels is so
   //  that the root and nil nodes do not require special cases in the code
-     rb_node_t * root;             
-     rb_node_t * nil;              
-     rb_node_t * min_node; // pointer to a node with the least key value
-     rb_node_t * max_node; // pointer to a node with the max key value
-     rb_node_t * lastins_node; // pointer to the last inserted node
-     node_list_t * node_free_list;
+     rb_node_t* root;
+     rb_node_t* nil;
+     rb_node_t* min_node; // pointer to a node with the least key value
+     rb_node_t* max_node; // pointer to a node with the max key value
+     rb_node_t* lastins_node; // pointer to the last inserted node
+     node_list_t* node_free_list;
      uint32_t num_nodes; // number of actual (internal) nodes in this tree (excluding the leaf nodes)
 } rb_tree_t;
 
-static inline void* rb_node_alloc(void *arg)
+static inline void* rb_node_alloc(void* arg)
 {
-     void *tmp = calloc(1, sizeof(rb_node_t));
+     void* tmp = calloc(1, sizeof(rb_node_t));
      if (!tmp) {
           error_print("failed rb_node_alloc calloc of tmp");
           return NULL;
      }
-
      return tmp;
 }
 
 // default assumes a double value
-void DefaultDestroyFunc(void * a) { free((double *)a); }
-void DefaultPrintFunc(const void * a) { fprintf(stderr, "%f", *(double *)a); }
+void DefaultDestroyFunc(void* a) { free((double*)a); }
+void DefaultPrintFunc(const void* a) { fprintf(stderr, "%f", *(double*)a); }
 
 //***********************************************************************
 //  FUNCTION:  RBTreeCreate
@@ -184,12 +158,14 @@ void DefaultPrintFunc(const void * a) { fprintf(stderr, "%f", *(double *)a); }
 //  Modifies Input: none
 //***********************************************************************
 
-static inline rb_tree_t * RBTreeCreate( int (*CompFunc) (const void *, const void *),
-			      void (*DestFunc) (void *),
-			      void (*PrintFunc) (const void *),
-                              uint32_t maxsize) {
-     rb_tree_t * newTree;
-     rb_node_t * temp;
+static inline rb_tree_t* RBTreeCreate(
+          int (*CompFunc) (const void*, const void*),
+          void (*DestFunc) (void *),
+          void (*PrintFunc) (const void *),
+          uint32_t maxsize)
+{
+     rb_tree_t* newTree;
+     rb_node_t* temp;
 
      newTree = (rb_tree_t *) calloc(1, sizeof(rb_tree_t));
      if (!newTree) {
@@ -226,7 +202,7 @@ static inline rb_tree_t * RBTreeCreate( int (*CompFunc) (const void *, const voi
 
      //  see the comment in the rb_tree_t structure in this file
      //  for information on nil and root
-     temp = newTree->nil = (rb_node_t *) malloc(sizeof(rb_node_t));
+     temp = newTree->nil = (rb_node_t*) malloc(sizeof(rb_node_t));
      if (!newTree->nil) {
           error_print("failed RBTreeCreate malloc of newTree->nil");
           return NULL;
@@ -235,7 +211,7 @@ static inline rb_tree_t * RBTreeCreate( int (*CompFunc) (const void *, const voi
      temp->red = 0;
      temp->key = 0;
 
-     temp = newTree->root = (rb_node_t *) malloc(sizeof(rb_node_t));
+     temp = newTree->root = (rb_node_t*) malloc(sizeof(rb_node_t));
      if (!newTree->root) {
           error_print("failed RBTreeCreate malloc of newTree->root");
           return NULL;
@@ -264,9 +240,10 @@ static inline rb_tree_t * RBTreeCreate( int (*CompFunc) (const void *, const voi
 //           accordingly.
 //***********************************************************************
 
-static inline void LeftRotate(rb_tree_t * tree, rb_node_t * x) {
-     rb_node_t * y;
-     rb_node_t * nil = tree->nil;
+static inline void LeftRotate(rb_tree_t* tree, rb_node_t* x)
+{
+     rb_node_t* y;
+     rb_node_t* nil = tree->nil;
 
      // I originally wrote this function to use the sentinel for
      // nil to avoid checking for nil.  However this introduces a
@@ -317,9 +294,10 @@ static inline void LeftRotate(rb_tree_t * tree, rb_node_t * x) {
 //           accordingly.
 //***********************************************************************
 
-static inline void RightRotate(rb_tree_t * tree, rb_node_t * y) {
-     rb_node_t * x;
-     rb_node_t * nil = tree->nil;
+static inline void RightRotate(rb_tree_t* tree, rb_node_t* y)
+{
+     rb_node_t* x;
+     rb_node_t* nil = tree->nil;
 
      // I originally wrote this function to use the sentinel for
      // nil to avoid checking for nil.  However this introduces a
@@ -367,11 +345,14 @@ static inline void RightRotate(rb_tree_t * tree, rb_node_t * y) {
 //           by the RBTreeInsert function and not by the user
 //***********************************************************************
 
-static inline void TreeInsertHelp(rb_tree_t * tree, rb_node_t * z) {
+static inline void TreeInsertHelp(
+          rb_tree_t* tree,
+          rb_node_t* z)
+{
      // This function should only be called by InsertRBTree (see above)
-     rb_node_t * x;
-     rb_node_t * y;
-     rb_node_t * nil = tree->nil;
+     rb_node_t* x;
+     rb_node_t* y;
+     rb_node_t* nil = tree->nil;
   
      z->left = z->right = nil;
      y = tree->max_node;
@@ -382,20 +363,7 @@ static inline void TreeInsertHelp(rb_tree_t * tree, rb_node_t * z) {
           tree->lastins_node = z;
           return;
      } 
-//  for insert at max node
-#if 0
-     while ( y->parent != tree->root) {
-          if ( 1 == tree->Compare(y->key, z->key)) { //y.key > z.key
-              y = y->parent ;
-          }
-         else {
-               break;
-          }
-     }
-#endif
-
 //  for insert at last inserted node
-//#if 0
      y = tree->lastins_node;
      int result = tree->Compare(tree->lastins_node->key, z->key);
      if ( 0 != result) {
@@ -410,9 +378,8 @@ static inline void TreeInsertHelp(rb_tree_t * tree, rb_node_t * z) {
                      if ( 1 == tree->Compare(x->key, z->key) ) break;
                      else y=x;
                 }                                                             
-            }     // leave with y pointing to insert point
+            } // leave with y pointing to insert point
      }
-//#endif
 
      x = y;
      while (x != nil) {
@@ -455,13 +422,18 @@ static inline void TreeInsertHelp(rb_tree_t * tree, rb_node_t * z) {
 //           pointer and inserts it into the tree.
 //***********************************************************************
 
-static inline rb_node_t * RBTreeInsert_initial(rb_tree_t * tree, void * key, wsdata_t * wsd, int type_index) {
-     rb_node_t * y;
-     rb_node_t * x;
-     rb_node_t * newNode;
+static inline rb_node_t* RBTreeInsert_initial(
+          rb_tree_t* tree,
+          void* key,
+          wsdata_t* wsd,
+          int type_index)
+{
+     rb_node_t* y;
+     rb_node_t* x;
+     rb_node_t* newNode;
 
-     //x = (rb_node_t *) malloc(sizeof(rb_node_t));
-     x = (rb_node_t *) node_list_alloc(tree->node_free_list);
+     //x = (rb_node_t*) malloc(sizeof(rb_node_t));
+     x = (rb_node_t*) node_list_alloc(tree->node_free_list);
      if (!x) {
           error_print("unable to allocate x");
           return NULL;
@@ -554,10 +526,15 @@ static inline rb_node_t * RBTreeInsert_initial(rb_tree_t * tree, void * key, wsd
 //           pointer and inserts it into the tree.
 //***********************************************************************
 
-static inline rb_node_t * RBTreeInsert(rb_tree_t * tree, void * key, wsdata_t * wsd, int type_index) {
-     rb_node_t * y;
-     rb_node_t * x;
-     rb_node_t * newNode;
+static inline rb_node_t * RBTreeInsert(
+          rb_tree_t* tree,
+          void* key,
+          wsdata_t* wsd,
+          int type_index)
+{
+     rb_node_t* y;
+     rb_node_t* x;
+     rb_node_t* newNode;
 
      //x = (rb_node_t *) malloc(sizeof(rb_node_t));
      x = (rb_node_t *) node_list_alloc(tree->node_free_list);
@@ -644,10 +621,13 @@ static inline rb_node_t * RBTreeInsert(rb_tree_t * tree, void * key, wsdata_t * 
 //   Note:  uses the algorithm in _Introduction_To_Algorithms_
 //***********************************************************************
   
-static inline rb_node_t * TreeSuccessor(rb_tree_t * tree, rb_node_t * x) { 
-     rb_node_t * y;
-     rb_node_t * nil = tree->nil;
-     rb_node_t * root = tree->root;
+static inline rb_node_t* TreeSuccessor(
+          rb_tree_t* tree,
+          rb_node_t* x)
+{
+     rb_node_t* y;
+     rb_node_t* nil = tree->nil;
+     rb_node_t* root = tree->root;
 
      if (nil != (y = x->right)) { //assignment to y is intentional
           while (y->left != nil) { //returns the minium of the right subtree of x
@@ -680,10 +660,13 @@ static inline rb_node_t * TreeSuccessor(rb_tree_t * tree, rb_node_t * x) {
 //   Note:  uses the algorithm in _Introduction_To_Algorithms_
 //***********************************************************************
 
-static inline rb_node_t * TreePredecessor(rb_tree_t * tree, rb_node_t * x) {
-     rb_node_t * y;
-     rb_node_t * nil = tree->nil;
-     rb_node_t * root = tree->root;
+static inline rb_node_t* TreePredecessor(
+          rb_tree_t* tree,
+          rb_node_t* x)
+{
+     rb_node_t* y;
+     rb_node_t* nil = tree->nil;
+     rb_node_t* root = tree->root;
 
      if (nil != (y = x->left)) { //assignment to y is intentional
           while (y->right != nil) { //returns the maximum of the left subtree of x
@@ -719,9 +702,12 @@ static inline rb_node_t * TreePredecessor(rb_tree_t * tree, rb_node_t * x) {
 //   Note:    This function should only be called from RBTreePrint
 //***********************************************************************
 
-static inline void InorderTreePrint(rb_tree_t * tree, rb_node_t * x) {
-     rb_node_t * nil = tree->nil;
-     rb_node_t * root = tree->root;
+static inline void InorderTreePrint(
+          rb_tree_t* tree,
+          rb_node_t* x)
+{
+     rb_node_t* nil = tree->nil;
+     rb_node_t* root = tree->root;
      if (x != tree->nil) {
           InorderTreePrint(tree, x->left);
           fprintf(stderr, "  key = "); 
@@ -767,8 +753,11 @@ static inline void InorderTreePrint(rb_tree_t * tree, rb_node_t * x) {
 //   Note:    This function should only be called by RBTreeDestroy
 //***********************************************************************
 
-static inline void TreeDestHelper(rb_tree_t * tree, rb_node_t * x) {
-     rb_node_t * nil = tree->nil;
+static inline void TreeDestHelper(
+          rb_tree_t* tree,
+          rb_node_t* x)
+{
+     rb_node_t* nil = tree->nil;
      if (x != nil) {
           TreeDestHelper(tree, x->left);
           TreeDestHelper(tree, x->right);
@@ -791,7 +780,7 @@ static inline void TreeDestHelper(rb_tree_t * tree, rb_node_t * x) {
 //
 //***********************************************************************
 
-static inline void RBTreeDestroy(rb_tree_t * tree) {
+static inline void RBTreeDestroy(rb_tree_t* tree) {
      TreeDestHelper(tree, tree->root->left);
      free(tree->root);
      free(tree->nil);
@@ -813,7 +802,7 @@ static inline void RBTreeDestroy(rb_tree_t * tree) {
 //
 //***********************************************************************
 
-static inline void RBTreePrint(rb_tree_t * tree) {
+static inline void RBTreePrint(rb_tree_t* tree) {
      InorderTreePrint(tree, tree->root->left);
 }
 
@@ -831,9 +820,9 @@ static inline void RBTreePrint(rb_tree_t * tree) {
 //
 //***********************************************************************
   
-static inline rb_node_t * RBExactQuery(rb_tree_t * tree, void * q) {
-     rb_node_t * x = tree->root->left;
-     rb_node_t * nil = tree->nil;
+static inline rb_node_t* RBExactQuery(rb_tree_t* tree, void* q) {
+     rb_node_t* x = tree->root->left;
+     rb_node_t* nil = tree->nil;
      int compVal;
      if (x == nil) {
           return(0);
@@ -871,9 +860,9 @@ static inline rb_node_t * RBExactQuery(rb_tree_t * tree, void * q) {
 //   The algorithm from this function is from _Introduction_To_Algorithms_
 //***********************************************************************
 
-static inline void RBDeleteFixUp(rb_tree_t * tree, rb_node_t * x) {
-     rb_node_t * root = tree->root->left;
-     rb_node_t * w;
+static inline void RBDeleteFixUp(rb_tree_t* tree, rb_node_t* x) {
+     rb_node_t* root = tree->root->left;
+     rb_node_t* w;
 
      while( (!x->red) && (root != x)) {
           if (x == x->parent->left) {
@@ -947,12 +936,12 @@ static inline void RBDeleteFixUp(rb_tree_t * tree, rb_node_t * x) {
 //   The algorithm from this function is from _Introduction_To_Algorithms_
 //***********************************************************************
 
-static inline void RBDelete(rb_tree_t * tree, rb_node_t * z){
-     rb_node_t * y;
-     rb_node_t * x;
-     rb_node_t * successor = TreeSuccessor(tree, z);
-     rb_node_t * nil = tree->nil;
-     rb_node_t * root = tree->root;
+static inline void RBDelete(rb_tree_t* tree, rb_node_t* z){
+     rb_node_t* y;
+     rb_node_t* x;
+     rb_node_t* successor = TreeSuccessor(tree, z);
+     rb_node_t* nil = tree->nil;
+     rb_node_t* root = tree->root;
 
      // set the new min node
      if(z == tree->min_node) {
@@ -1008,7 +997,7 @@ static inline void RBDelete(rb_tree_t * tree, rb_node_t * z){
 
 // return the pointer to the min_node of the tree; must delete this
 // node after use by calling RBDelete(...)
-static inline rb_node_t * RBGetMinimum(rb_tree_t * tree) {
+static inline rb_node_t* RBGetMinimum(rb_tree_t * tree) {
      if(tree->min_node == tree->nil) {
           return NULL;
      }
@@ -1026,11 +1015,15 @@ static inline rb_node_t * RBGetMinimum(rb_tree_t * tree) {
 //   Modifies Input: none
 //***********************************************************************
 
-static inline wsstack_t * RBEnumerate(rb_tree_t * tree, void * low, void * high) {
-     wsstack_t * enumResultStack;
-     rb_node_t * nil = tree->nil;
-     rb_node_t * x = tree->root->left;
-     rb_node_t * lastBest = nil;
+static inline wsstack_t* RBEnumerate(
+          rb_tree_t* tree,
+          void* low,
+          void* high)
+{
+     wsstack_t* enumResultStack;
+     rb_node_t* nil = tree->nil;
+     rb_node_t* x = tree->root->left;
+     rb_node_t* lastBest = nil;
 
      enumResultStack = wsstack_init();
      while (nil != x) {
@@ -1050,7 +1043,7 @@ static inline wsstack_t * RBEnumerate(rb_tree_t * tree, void * low, void * high)
 }
       
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _RBTREE_H

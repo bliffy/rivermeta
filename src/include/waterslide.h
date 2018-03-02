@@ -1,26 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 // waterslide.h
 //  main header file needed for most all processing and datatype functions
 #ifndef _WATERSLIDE_H
@@ -43,7 +20,6 @@ SOFTWARE.
 #include "status_print.h"
 #include "tool_print.h"
 #include "dprint.h"
-#include "cppwrap.h"
 
 #if defined(__linux__)
 #include <sys/stat.h>
@@ -470,7 +446,7 @@ static inline wslabel_t * wsregister_label_wprefix(void * tt,
      }
 }
 
-int wsregister_label_alias(void *, wslabel_t *, char *);
+int wsregister_label_alias(void *, wslabel_t *, const char *);
 
 static inline int wsdata_add_reference(wsdata_t * wsd) {
 #ifdef USE_ATOMICS
@@ -526,7 +502,7 @@ static inline int wsdata_remove_reference(wsdata_t * wsd) {
 
 
 int wsdatatype_match(void *, wsdatatype_t *, const char *);
-int wslabel_match(void *, wslabel_t *, const char *);
+int wslabel_match(void *, const wslabel_t *, const char *);
 
 ///---------------
 //defined in parse_graph.h

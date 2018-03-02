@@ -1,13 +1,11 @@
-
 #ifndef _WATERSLIDE_BIT_H
 #define _WATERSLIDE_BIT_H
 
 #include <stdint.h>
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 //taken from http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSet64
 //  by Sean Anderson, et al.
@@ -41,8 +39,8 @@ static inline uint32_t uint32_log2(uint32_t v) {
 }
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _WATERSLIDE_BIT_H
 

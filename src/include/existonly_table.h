@@ -1,35 +1,11 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef _existonly_table_h
 #define _existonly_table_h
 
 #include "stringhash9a.h"
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 //generic type
 typedef stringhash9a_t eot_t;
@@ -44,11 +20,13 @@ typedef int (*eot_open_table)(eot_t **, const char *);
 typedef int (*eot_open_sht_table)(eot_t **, uint32_t, eot_sh_opts_t *);
 typedef eot_t * (*eot_create)(uint32_t, uint32_t);
 //DEPRECATED
-typedef int (*eot_create_shared)(void *, void **, const char *, uint32_t, int *, 
-                                 int, void *);
+typedef int (*eot_create_shared)(
+     void *, void **, const char *,
+     uint32_t, int *, int, void *);
 //CURRENT
-typedef int (*eot_create_shared_sht)(void *, void **, const char *, uint32_t, int *, 
-                                     eot_sh_opts_t *);
+typedef int (*eot_create_shared_sht)(
+     void *, void **, const char *,
+     uint32_t, int *, eot_sh_opts_t *);
 typedef int (*eot_check)(eot_t *, void *, int);
 typedef uint64_t (*eot_drop_cnt)(eot_t *);
 typedef int (*eot_set)(eot_t *, void *, int);
@@ -92,8 +70,8 @@ eot_delete_loc existonly_table_delete_loc = stringhash9a_delete_loc;
 eot_delete_wsdata existonly_table_delete_wsdata = stringhash9a_delete_wsdata;
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _existonly_table_h
 

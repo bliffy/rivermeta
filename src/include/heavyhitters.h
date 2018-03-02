@@ -1,27 +1,4 @@
 /*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-/*
    This is an approximate counting algorithm
 
    This work is based on the Space Saving Algorithm in
@@ -31,8 +8,7 @@ SOFTWARE.
    and informed by analysis in:
    "Methods for Finding Frequent Items in Data Streams"
    by Graham Cormode, Marios Hadjieleftheriou
-   */
-
+*/
 
 #ifndef _HEAVYHITTERS_H
 #define _HEAVYHITTERS_H
@@ -47,8 +23,8 @@ SOFTWARE.
 #include "wsheap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 /* main structures are:
    1. priority queue implemented as doubly-linked list stack
@@ -59,17 +35,17 @@ CPP_OPEN
  */
 typedef struct _hh_node_t
 {
-     uint64_t         key;
-     uint64_t         value;
-     uint64_t         starting_value;
-     struct _hh_node_t * ht_prev;
-     struct _hh_node_t * ht_next;
-     uint8_t           data[];
+     uint64_t           key;
+     uint64_t           value;
+     uint64_t           starting_value;
+     struct _hh_node_t* ht_prev;
+     struct _hh_node_t* ht_next;
+     uint8_t            data[];
 } hh_node_t;
 
-static int hh_node_compair(void * vfirst, void * vsecond) {
-     hh_node_t * first = (hh_node_t*)vfirst;
-     hh_node_t * second = (hh_node_t*)vsecond;
+static int hh_node_compair(void* vfirst, void* vsecond) {
+     hh_node_t* first = (hh_node_t*)vfirst;
+     hh_node_t* second = (hh_node_t*)vsecond;
 
      if (first->value < second->value) {
           return -1;
@@ -82,32 +58,35 @@ static int hh_node_compair(void * vfirst, void * vsecond) {
      }
 }
 
-static void hh_node_replace(void * vnode, void * vreplace, void * aux);
-typedef void (* heavyhitters_release)(void * /*data*/);
+static void hh_node_replace(void* vnode, void* vreplace, void* aux);
+typedef void (*heavyhitters_release)(void* /*data*/);
 
 typedef struct _heavyhitters_t
 {
      uint64_t     max;
      size_t       data_size;
-     hh_node_t ** hashtable;
-     wsheap_t *   heap;
+     hh_node_t**  hashtable;
+     wsheap_t*    heap;
      heavyhitters_release release;
      uint32_t     seed;
 } heavyhitters_t;
 
 
 /* allocates & initializes queue memory */
-static inline heavyhitters_t* heavyhitters_init(uint64_t max, size_t data_size,
-                                                heavyhitters_release release)
+static inline heavyhitters_t* heavyhitters_init(
+          uint64_t max,
+          size_t data_size,
+          heavyhitters_release release)
 {
-     heavyhitters_t * hh = (heavyhitters_t*)calloc(1, sizeof(heavyhitters_t));
+     heavyhitters_t* hh = (heavyhitters_t*)calloc(1, sizeof(heavyhitters_t));
      hh->max = max;
      hh->data_size = data_size;
      
-     hh->heap = wsheap_init(max, sizeof(hh_node_t) + data_size,
-                            hh_node_compair,
-                            hh_node_replace,
-                            hh);
+     hh->heap = wsheap_init(
+          max, sizeof(hh_node_t) + data_size,
+          hh_node_compair,
+          hh_node_replace,
+          hh);
      if (!hh->heap) {
           free(hh);
           error_print("unable to allocate heavy hitters heap");
@@ -127,12 +106,12 @@ static inline heavyhitters_t* heavyhitters_init(uint64_t max, size_t data_size,
      return hh;
 }
 
-static inline void hh_release_all(heavyhitters_t * hh) {
+static inline void hh_release_all(heavyhitters_t* hh) {
      uint64_t count = hh->heap->count;
      if (!count) {
           return;
      }
-     void ** list = hh->heap->heap;
+     void** list = hh->heap->heap;
      if (!list) {
           return;
      }
@@ -147,9 +126,11 @@ static inline void hh_release_all(heavyhitters_t * hh) {
 
 //the following sort destroys heavyhitters table tracking..
 //must call reset or destroy after done with sorted list
-static inline hh_node_t** heavyhitters_sort(heavyhitters_t * hh,
-                                            uint64_t max,
-                                            uint64_t * count) {
+static inline hh_node_t** heavyhitters_sort(
+          heavyhitters_t* hh,
+          uint64_t max,
+          uint64_t* count)
+{
      wsheap_sort_inplace(hh->heap);
      if (!count) {
           error_print("must have counter for sort");
@@ -165,8 +146,7 @@ static inline hh_node_t** heavyhitters_sort(heavyhitters_t * hh,
 }
 
 // reset data structures back to empty
-static inline int heavyhitters_reset(heavyhitters_t * hh) {
-     dprint("reset");
+static inline int heavyhitters_reset(heavyhitters_t* hh) {
      if (!hh) {
           return 0;
      }
@@ -181,8 +161,7 @@ static inline int heavyhitters_reset(heavyhitters_t * hh) {
 }
 
 // destroy all data structures
-static inline int heavyhitters_destroy(heavyhitters_t * hh) {
-     dprint("destroy");
+static inline int heavyhitters_destroy(heavyhitters_t* hh) {
      if (!hh) {
           return 0;
      }
@@ -198,8 +177,10 @@ static inline int heavyhitters_destroy(heavyhitters_t * hh) {
      return 1;
 }
 
-static inline void hh_hashtable_detach(heavyhitters_t * hh, hh_node_t * node) {
-     dprint("ht_detach");
+static inline void hh_hashtable_detach(
+          heavyhitters_t* hh,
+          hh_node_t* node)
+{
      uint64_t hindex = node->key % hh->max;
 
      if (hh->hashtable[hindex] == node) {
@@ -216,13 +197,13 @@ static inline void hh_hashtable_detach(heavyhitters_t * hh, hh_node_t * node) {
      node->ht_next = NULL;
 }
 
-static inline void hh_hashtable_attach(heavyhitters_t * hh, hh_node_t * node,
-                                       uint64_t hindex) {
-     dprint("ht_attach");
+static inline void hh_hashtable_attach(
+          heavyhitters_t* hh,
+          hh_node_t* node,
+          uint64_t hindex)
+{
      if (!hh->hashtable[hindex]) {
           hh->hashtable[hindex] = node;
-          dprint("node %"PRIx64" hashtable %"PRIx64, (uint64_t)node,
-                 (uint64_t)hh->hashtable[hindex]);
      }
      else {
           hh->hashtable[hindex]->ht_prev = node;
@@ -232,10 +213,14 @@ static inline void hh_hashtable_attach(heavyhitters_t * hh, hh_node_t * node,
 }
 
 //called to replace existing with new value/data
-static void hh_node_replace(void * vnode, void * vreplace, void * vhh) {
-     hh_node_t * node = (hh_node_t*)vnode;
-     hh_node_t * replace = (hh_node_t*)vreplace;
-     heavyhitters_t * hh = (heavyhitters_t *) vhh;
+static void hh_node_replace(
+          void* vnode,
+          void* vreplace,
+          void* vhh)
+{
+     hh_node_t* node = (hh_node_t*)vnode;
+     hh_node_t* replace = (hh_node_t*)vreplace;
+     heavyhitters_t* hh = (heavyhitters_t*)vhh;
 
      //if not empty...
      //remove from hashtable
@@ -259,26 +244,19 @@ static void hh_node_replace(void * vnode, void * vreplace, void * vhh) {
 
 
 //returns data at increment position
-static inline hh_node_t * heavyhitters_increment(heavyhitters_t * hh,
-                                                 const void * key_data,
-                                                 size_t key_length,
-                                                 uint64_t value) {
-     dprint("hh_increment");
+static inline hh_node_t* heavyhitters_increment(
+          heavyhitters_t* hh,
+          const void* key_data,
+          size_t key_length,
+          uint64_t value) {
      //hash key data
-     uint64_t key = evahash64((uint8_t *)key_data, key_length, hh->seed);
+     uint64_t key = evahash64((uint8_t*)key_data, key_length, hh->seed);
 
      //look up key in hashtable
      uint64_t hindex = key % hh->max;
-     dprint("key %"PRIx64" hindex %"PRIu64, key, hindex);
-     
      hh_node_t * cursor = hh->hashtable[hindex];
-
-     dprint("find key in hashtable %"PRIx64, (uint64_t) cursor);
      for (;cursor; cursor = cursor->ht_next) {
-          dprint("cursor is %"PRIx64, (uint64_t) cursor);
-          dprint("cursor->ht_next is %"PRIx64, (uint64_t) cursor->ht_next);
           if (cursor->key == key) {
-               dprint("found key at cursor%"PRIx64, (uint64_t)cursor);
                //found key
                cursor->value += value;
                return (hh_node_t*)wsheap_update(hh->heap, cursor);
@@ -293,7 +271,7 @@ static inline hh_node_t * heavyhitters_increment(heavyhitters_t * hh,
 }
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _HEAVYHITTERS_H

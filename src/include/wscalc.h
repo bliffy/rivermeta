@@ -1,37 +1,13 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef _WSCALC_H
 #define _WSCALC_H
 
 #include <inttypes.h>
 #include "wstypes.h"
 #include "datatypes/wsdt_string.h"
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 /**
    These are constants used to determine what operation
@@ -81,28 +57,36 @@ wsdata_t*      getWSCVString  (wscalcValue v);
 struct timeval getWSCVTime    (wscalcValue v);
 
 
-static inline wscalcValue makeWSCalcValueInteger(int64_t d ) {
+static inline wscalcValue makeWSCalcValueInteger(
+          int64_t d )
+{
      wscalcValue res;
      res.type = WSCVT_INTEGER;
      res.v.i = d;
      return res;
 }
 
-static inline wscalcValue makeWSCalcValueUInteger(uint64_t d ) {
+static inline wscalcValue makeWSCalcValueUInteger(
+          uint64_t d )
+{
      wscalcValue res;
      res.type = WSCVT_UINTEGER;
      res.v.u = d;
      return res;
 }
 
-static inline wscalcValue makeWSCalcValueDouble(double d ) {
+static inline wscalcValue makeWSCalcValueDouble(
+          double d )
+{
      wscalcValue res;
      res.type = WSCVT_DOUBLE;
      res.v.d = d;
      return res;
 }
 
-static inline wsdata_t* createStringData(size_t size, char **resBuf)
+static inline wsdata_t* createStringData(
+          size_t size,
+          char **resBuf)
 {
      int bufLen = 0;
      wsdata_t * data = wsdata_create_buffer(size, resBuf, &bufLen);
@@ -115,8 +99,6 @@ static inline wsdata_t* createStringData(size_t size, char **resBuf)
      return sdata;
 }
 
-
-
 static inline wscalcValue makeWSCalcValueString(wsdata_t *d)
 {
      wscalcValue res;
@@ -127,7 +109,9 @@ static inline wscalcValue makeWSCalcValueString(wsdata_t *d)
      return res;
 }
 
-static inline wscalcValue makeWSCalcValueStringRaw(char *str, int len)
+static inline wscalcValue makeWSCalcValueStringRaw(
+          char * str,
+          int len)
 {
      char *buf = NULL;
      int dlen = 0;
@@ -143,7 +127,9 @@ static inline wscalcValue makeWSCalcValueStringRaw(char *str, int len)
 }
 
 
-static inline wscalcValue makeWSCalcValueTimeval(const struct timeval *tv) {
+static inline wscalcValue makeWSCalcValueTimeval(
+          const struct timeval * tv)
+{
      wscalcValue res;
      res.type = WSCVT_TIME;
      res.v.t = *tv;
@@ -163,17 +149,26 @@ static inline wscalcValue makeWSCalcValueTimeval(const struct timeval *tv) {
    wscalcParts.
 */
 typedef struct _wscalcPart {
-     wscalcValue (*go)(struct _wscalcPart*, void *runtimeToken);
+     wscalcValue (*go)(
+          struct _wscalcPart *,
+          void * runtimeToken);
      void (*destroy)(struct _wscalcPart*);
      void (*flush)(struct _wscalcPart*);
      void *params;
 } wscalcPart;
 
 int wscalclex(void);
-int wscalcparse (void *callerState, wscalcPart **wscalc_output, int *wscalc_error);
+int wscalcparse(
+     void * callerState,
+     wscalcPart ** wscalc_output,
+     int * wscalc_error);
 
-int wscalc_parse_script(void *callerState, wscalcPart **wscalc_output,
-                        int *wscalc_error, FILE **fileList, const char *extra_script);
+int wscalc_parse_script(
+     void * callerState,
+     wscalcPart ** wscalc_output,
+     int * wscalc_error,
+     FILE ** fileList,
+     const char * extra_script);
 
 /**
    This structure is used to help the code using the calc
@@ -190,15 +185,16 @@ int wscalc_parse_script(void *callerState, wscalcPart **wscalc_output,
 */
 typedef struct _wscalcLookupTableEntry {
      char name[50];
-     void *reference;
-     struct _wscalcLookupTableEntry *next;
+     void * reference;
+     struct _wscalcLookupTableEntry * next;
 } wscalc_lookupTableEntry;
 
-extern void *wscalc_createLookupTable(void);
-extern wscalc_lookupTableEntry *wscalc_getEntry(char *name, void *table, int *create);
-extern void wscalc_destroyTable(void *table);
-
-//#define YYSTYPE wscalcPart
+extern void* wscalc_createLookupTable(void);
+extern wscalc_lookupTableEntry* wscalc_getEntry(
+     const char * name,
+     void * table,
+     int * create);
+extern void wscalc_destroyTable(void * table);
 
 /**
    These function pointers need to be assigned
@@ -229,7 +225,7 @@ void * assignLabel;
 #endif
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _WSCALC_H

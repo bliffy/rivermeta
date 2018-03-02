@@ -1,25 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 //#define _GNU_SOURCE
 #include <time.h>
 #include <stdio.h>
@@ -41,8 +19,11 @@ SOFTWARE.
 static char * sysutil_pConfigPath = NULL;
 static char * sysutil_pConfigPaths[MAX_PATH_COUNT+1] = {NULL};
 
-void sysutil_print_content(FILE * stream, uint8_t * content, int clen) {
-     int i,k;
+void sysutil_print_content(
+          FILE* stream,
+          const char* content,
+          size_t clen) {
+     size_t i,k;
      char seg16[17];
 
      memset(seg16,0,17);
@@ -52,17 +33,14 @@ void sysutil_print_content(FILE * stream, uint8_t * content, int clen) {
      for (i = 0; i < clen; i++) {
           k = i % 16;
 
-          if (k == 0) {
+          if (k == 0)
                fprintf(stream, " ");
-          }
 
           fprintf(stream,"%02x ", (uint8_t)content[i]);
-          if (isprint(content[i])) {
+          if (isprint(content[i]))
                seg16[k] = content[i];
-          }
-          else {
+          else
                seg16[k] = '.';
-          }
 
           switch(k) {
           case 7:
@@ -79,12 +57,10 @@ void sysutil_print_content(FILE * stream, uint8_t * content, int clen) {
           for (i = k; i < 15; i++) {
                switch(i) {
                case 7:
-                    if (k == 7) {
+                    if (k == 7)
                          fprintf(stream,"   ");
-                    }
-                    else {
+                    else
                          fprintf(stream,"    ");
-                    }
                     break;
                case 15:
                     fprintf(stream,"  ");
@@ -99,22 +75,23 @@ void sysutil_print_content(FILE * stream, uint8_t * content, int clen) {
 }
 
 #define MAX_WEB_LINE 100
-void sysutil_print_content_web(FILE * stream, uint8_t * content, int clen) {
-     int i,k;
+void sysutil_print_content_web(
+          FILE* stream,
+          const char* content,
+          size_t clen) {
+     size_t i,k;
      char seg16[MAX_WEB_LINE];
 
      k = 15;
-     int s = 0;
+     size_t s = 0;
 
      //print buf contents
      for (i = 0; i < clen; i++) {
           k = i % 16;
-
           if (k == 0) {
                fprintf(stream, " ");
                s = 0;
           }
-
           fprintf(stream,"%02x ", (uint8_t)content[i]);
           if (isprint(content[i])) {
                switch(content[i]) {
@@ -145,7 +122,7 @@ void sysutil_print_content_web(FILE * stream, uint8_t * content, int clen) {
                fprintf(stream, " ");
                break;
           case 15:
-               fprintf(stream,"  %.*s\n", s, seg16);
+               fprintf(stream,"  %.*s\n", (unsigned int)s, seg16);
                break;
           }
      }
@@ -169,53 +146,52 @@ void sysutil_print_content_web(FILE * stream, uint8_t * content, int clen) {
                }
           }
 
-          fprintf(stream,"  %.*s\n", s, seg16);
+          fprintf(stream,"  %.*s\n", (unsigned int)s, seg16);
      }
 }
 
 
-void sysutil_print_content_ascii(FILE * stream, uint8_t * content,
-                                 int clen) {
-     int i;
-
-     for (i = 0; i < clen; i++) {
-          if (isprint(content[i])) {
+void sysutil_print_content_ascii(
+          FILE* stream,
+          const char* content,
+          size_t clen)
+{
+     for (size_t i = 0; i < clen; i++) {
+          if (isprint(content[i]))
                fprintf(stream, "%c", content[i]);
-          }
-          else {
+          else
                fprintf(stream, ".");
-          }
      }
 }
 
-void sysutil_print_content_hex(FILE * stream, uint8_t * content,
-                                 int clen) {
-     int i;
-
-     for (i = 0; i < clen; i++) {
+void sysutil_print_content_hex(
+          FILE* stream,
+          const char* content,
+          size_t clen) {
+     for (size_t i = 0; i < clen; i++) {
           fprintf(stream, " %02x", (uint8_t)content[i]);
      }
 }
 
 
 
-void sysutil_print_content_strings(FILE * stream, uint8_t * content,
-                                   int clen, int runlen) {
-     int i;
-     int crun = 0;
-     int printlines = 0;
-     uint8_t * startp = NULL;
-
-     for (i = 0; i < clen; i++) {
+void sysutil_print_content_strings(
+          FILE* stream,
+          const char* content,
+          size_t clen,
+          size_t runlen) {
+     size_t crun = 0;
+     size_t printlines = 0;
+     const char* startp = NULL;
+     for (size_t i = 0; i < clen; i++) {
           if (isprint(content[i]) || (content[i] == '\t')) {
-               if (!crun) {
+               if (!crun)
                     startp = &content[i];
-               }
                crun++;
           }
           else {
                if (crun >= runlen) {
-                    fprintf(stream, "%.*s\n", crun, startp);
+                    fprintf(stream, "%.*s\n", (unsigned int)crun, startp);
                     printlines++;
                }
                crun = 0;
@@ -223,27 +199,28 @@ void sysutil_print_content_strings(FILE * stream, uint8_t * content,
           }
      }
      if (crun && ((crun >= runlen) || !printlines)) {
-          fprintf(stream, "%.*s\n", crun, startp);
+          fprintf(stream, "%.*s\n", (unsigned int)crun, startp);
      }
 }
 
-void sysutil_print_content_strings_web(FILE * stream, uint8_t * content,
-                                       int clen, int runlen) {
-     int i;
-     int crun = 0;
-     int printlines = 0;
-     uint8_t * startp = NULL;
-
-     for (i = 0; i < clen; i++) {
+void sysutil_print_content_strings_web(
+          FILE* stream,
+          const char* content,
+          size_t clen,
+          size_t runlen) {
+     size_t crun = 0;
+     size_t printlines = 0;
+     const char* startp = NULL;
+     for (size_t i = 0; i < clen; i++) {
           if (isprint(content[i]) || (content[i] == '\t')) {
-               if (!crun) {
+               if (!crun)
                     startp = &content[i];
-               }
                crun++;
           }
           else {
                if (crun >= runlen) {
-                    sysutil_print_webchars(stream, crun, startp);
+                    sysutil_print_webchars(
+                         stream, crun, startp);
                     printlines++;
                }
                crun = 0;
@@ -255,7 +232,10 @@ void sysutil_print_content_strings_web(FILE * stream, uint8_t * content,
      }
 }
 
-void sysutil_rename_file(char * sourcefile, char * destfile) {
+void sysutil_rename_file(
+          const char* sourcefile,
+          const char* destfile)
+{
      if (rename(sourcefile, destfile) == -1) {
           perror("renaming file");
           error_print("could not rename file");
@@ -265,30 +245,29 @@ void sysutil_rename_file(char * sourcefile, char * destfile) {
 
 #define SYSUTIL_TIME_STRING_MAX 20
 #define SYSUTIL_SUFFIX_LEN 5
-int sysutil_name_timedfile(char * basefile, char * extension,
-                            time_t filetime, time_t increment,
-                            char * outfilename, int outfilename_len) {
-     int prefixlen = 0;
-     int midlen = 0;
-     int extension_offset = 0;
-     int extension_len = 0;
-     int suffix_cnt = 0;
+int sysutil_name_timedfile(
+          const char* basefile,
+          const char* extension,
+          time_t filetime,
+          time_t increment,
+          char* outfilename,
+          size_t outfilename_len)
+{
+     size_t prefixlen = 0;
+     size_t midlen = 0;
+     size_t extension_offset = 0;
+     size_t extension_len = 0;
+     size_t suffix_cnt = 0;
      struct tm tmsec;
      struct stat statbuffer;
      char workingfile[2000];
-     int len;
-     //FILE * rfp;
+     size_t len;
 
-     if (!basefile) {
+     if (!basefile)
           return 0;
-     }
-
-     if (extension) {
+     if (extension)
           extension_len = strlen(extension);
-     }
-
      prefixlen = strlen(basefile);
-
      len = prefixlen + SYSUTIL_TIME_STRING_MAX + 
           extension_len + SYSUTIL_SUFFIX_LEN + 1;
 
@@ -304,16 +283,25 @@ int sysutil_name_timedfile(char * basefile, char * extension,
 
      //if per hour or per minute or per second
      if (increment % 60) {
-          midlen = strftime(workingfile + prefixlen, SYSUTIL_TIME_STRING_MAX,
-                            "%Y%m%d.%H%M.%S", &tmsec);
+          midlen = strftime(
+               workingfile + prefixlen,
+               SYSUTIL_TIME_STRING_MAX,
+               "%Y%m%d.%H%M.%S",
+               &tmsec);
      }
      else if (increment % 3600) {
-          midlen = strftime(workingfile + prefixlen, SYSUTIL_TIME_STRING_MAX,
-                            "%Y%m%d.%H%M", &tmsec);
+          midlen = strftime(
+               workingfile + prefixlen,
+               SYSUTIL_TIME_STRING_MAX,
+               "%Y%m%d.%H%M",
+               &tmsec);
      }
      else {
-          midlen = strftime(workingfile + prefixlen, SYSUTIL_TIME_STRING_MAX,
-                            "%Y%m%d.%H", &tmsec);
+          midlen = strftime(
+               workingfile + prefixlen,
+               SYSUTIL_TIME_STRING_MAX,
+               "%Y%m%d.%H",
+               &tmsec);
      }
      extension_offset = midlen + prefixlen;
 
@@ -326,12 +314,10 @@ int sysutil_name_timedfile(char * basefile, char * extension,
      suffix_cnt++;
 
      while (!stat(workingfile, &statbuffer)) {
-          //error_print("File %s already exists", workingfile);
           snprintf(workingfile + extension_offset,
                    len - extension_offset,
-                   ".%03u%s", suffix_cnt, extension);
+                   ".%03zu%s", suffix_cnt, extension);
           suffix_cnt++;
-
           if (suffix_cnt >= 10000) {
                error_print("max files reached");
                return 0;
@@ -351,18 +337,15 @@ int sysutil_name_timedfile(char * basefile, char * extension,
      return 1;
 }
 
-FILE * sysutil_open_timedfile(char * basefile, char * extension,
-                              time_t filetime, time_t increment,
-                              char * outfilename, int outfilename_len) {
-     //int prefixlen = 0;
-     //int midlen = 0;
-     //int extension_offset = 0;
-     //int extension_len = 0;
-     //int suffix_cnt = 0;
-     //struct tm tmsec;
-     //struct stat statbuffer;
+FILE * sysutil_open_timedfile(
+          const char* basefile,
+          const char* extension,
+          time_t filetime,
+          time_t increment,
+          char* outfilename,
+          size_t outfilename_len)
+{
      char workingfile[2000];
-     //int len;
      FILE * rfp;
 
      if (sysutil_name_timedfile(basefile, extension, filetime, increment, workingfile, 2000) == 0) {
@@ -377,8 +360,7 @@ FILE * sysutil_open_timedfile(char * basefile, char * extension,
      }
 
      if (outfilename) {
-          int len = strlen(workingfile);
-          //truncate somehow..
+          size_t len = strlen(workingfile);
           if (len > outfilename_len) {
                len = outfilename_len;
           }
@@ -392,7 +374,7 @@ FILE * sysutil_open_timedfile(char * basefile, char * extension,
 
 
 // read in string and return number based on string
-uint64_t sysutil_get_strbytes(char * optarg) {
+uint64_t sysutil_get_strbytes(const char* optarg) {
      if (strchr(optarg,'k') || strchr(optarg,'K')) {
           return (uint64_t)strtoull(optarg, NULL, 10) * 1024;
      }
@@ -407,7 +389,7 @@ uint64_t sysutil_get_strbytes(char * optarg) {
      }
 }
 
-time_t sysutil_get_duration_ts(char * optarg) {
+time_t sysutil_get_duration_ts(const char * optarg) {
      time_t increment_ts = 0;
 
      if (strchr(optarg,'h') || strchr(optarg,'H')) {
@@ -433,9 +415,8 @@ time_t sysutil_get_duration_ts(char * optarg) {
 //read string and return time interval
 //check to see if string is divisible by hour
 //returns 0 on error
-time_t sysutil_get_hourly_increment_ts(char * optarg) {
+time_t sysutil_get_hourly_increment_ts(const char* optarg) {
      time_t increment_ts = sysutil_get_duration_ts(optarg);
-
      if ( (increment_ts >= 3600) && ((increment_ts % 3600) == 0) ) {
       return increment_ts;
      }
@@ -446,11 +427,12 @@ time_t sysutil_get_hourly_increment_ts(char * optarg) {
 }
 
 //set next time boundary. (used by sysutil_test_time_boundary)
-static void sysutil_next_time_boundary(time_boundary_t * tb,
-                       time_t current_time) {
-     if (!tb) {
-      return;
-     }
+static void sysutil_next_time_boundary(
+          time_boundary_t* tb,
+          time_t current_time)
+{
+     if (!tb)
+          return;
 
      //align boundary to bottom of the hour
      tb->boundary_ts = current_time - (current_time % 3600);
@@ -459,8 +441,8 @@ static void sysutil_next_time_boundary(time_boundary_t * tb,
 
      //align to increment minute
      do {
-      tb->current_boundary = tb->boundary_ts;
-      tb->boundary_ts += tb->increment_ts;
+          tb->current_boundary = tb->boundary_ts;
+          tb->boundary_ts += tb->increment_ts;
      }
      while (tb->boundary_ts <= current_time);
 }
@@ -470,57 +452,47 @@ static void sysutil_next_time_boundary(time_boundary_t * tb,
  * returns 1 if time boundary was reached
  * returns 0 if time boundary was not reached
  */
-int sysutil_test_time_boundary(time_boundary_t * tb, time_t current_time) {
-     if ((tb == NULL) || (tb->increment_ts == 0)) {
-      return 0;
-     }
+int sysutil_test_time_boundary(
+          time_boundary_t* tb,
+          time_t current_time)
+{
+     if ((tb == NULL) || (tb->increment_ts == 0))
+          return 0;
      else if (tb->boundary_ts == 0) {
-      //this is the first time we checked this info
-      sysutil_next_time_boundary(tb, current_time);
-      return 2;
+          //this is the first time we checked this info
+          sysutil_next_time_boundary(tb, current_time);
+          return 2;
      }
      else if (current_time >= tb->boundary_ts) {
-      sysutil_next_time_boundary(tb, current_time);
-      return 1;
+          sysutil_next_time_boundary(tb, current_time);
+          return 1;
      }
      return 0;
 }
 
 void sysutil_print_time_interval(FILE * fp, time_t t) {
      time_t i;
-
-     if (t == 0) {
-      fprintf(fp, "0 seconds");
-     }
-
+     if (t == 0)
+          fprintf(fp, "0 seconds");
      else if ((t % 3600) == 0) {
-      i = t / 3600;
-
-      if ((int)i == 1) {
-           fprintf(fp,"1 hour");
-      }
-      else {
-           fprintf(fp,"%u hours", (unsigned int)i);
-      }
+          i = t / 3600;
+          if ((int)i == 1)
+               fprintf(fp,"1 hour");
+          else
+               fprintf(fp,"%zu hours", i);
      }
-
      else if ((t % 60) == 0) {
-      i = t / 60;
-
-      if (i == 1) {
-           fprintf(fp,"1 minute");
-      }
-      else {
-           fprintf(fp,"%u minutes", (unsigned int)i);
-      }
+          i = t / 60;
+          if (i == 1)
+               fprintf(fp,"1 minute");
+          else
+               fprintf(fp,"%zu minutes", i);
      }
      else {
-      if (t == 1) {
-           fprintf(fp,"1 second");
-      }
-      else {
-           fprintf(fp,"%u seconds", (unsigned int)t);
-      }
+          if (t == 1)
+               fprintf(fp,"1 second");
+          else
+               fprintf(fp,"%zu seconds", t);
      }
 }
 
@@ -531,11 +503,9 @@ void sysutil_print_time_interval(FILE * fp, time_t t) {
  */
 void sysutil_printts(FILE * stream, time_t sec, time_t usec) {
 
-     register int s;
      struct tm tm;
      time_t Time;
-
-     s = sec % 86400;
+     register int s = sec % 86400;
      Time = sec - s;
      gmtime_r (&Time, &tm);
      fprintf(stream,"%04d.%02d.%02d %02d:%02d:%02d.%06u",
@@ -545,29 +515,30 @@ void sysutil_printts(FILE * stream, time_t sec, time_t usec) {
              s % 60, (unsigned)usec);
 }
 
-int sysutil_snprintts(char * buf, int len, time_t sec, time_t usec) {
-
-     register int s;
+int sysutil_snprintts(
+          char* buf,
+          size_t len,
+          time_t sec,
+          time_t usec)
+{
      struct tm tm;
      time_t Time;
-
-     s = sec % 86400;
+     register int s = sec % 86400;
      Time = sec - s;
      gmtime_r (&Time, &tm);
-     return snprintf(buf, len,
-                     "%04d.%02d.%02d %02d:%02d:%02d.%06u",
-                     tm.tm_year+1900,
-                     tm.tm_mon+1, tm.tm_mday,
-                     s / 3600, (s % 3600) / 60,
-                     s % 60, (unsigned)usec);
+     return snprintf(
+          buf, len,
+          "%04d.%02d.%02d %02d:%02d:%02d.%06u",
+          tm.tm_year+1900,
+          tm.tm_mon+1, tm.tm_mday,
+          s / 3600, (s % 3600) / 60,
+          s % 60, (unsigned)usec);
 }
 
 void sysutil_printts_sec(FILE * stream, time_t tsec) {
-     int s;
      struct tm tm;
      time_t Time;
-
-     s = tsec % 86400;
+     register int s = tsec % 86400;
      Time = tsec - s;
      gmtime_r (&Time, &tm);
      fprintf(stream,"%04d.%02d.%02d %02d:%02d:%02d",
@@ -577,51 +548,47 @@ void sysutil_printts_sec(FILE * stream, time_t tsec) {
              s % 60);
 }
 
-int sysutil_snprintts_sec(char * buf, int len, time_t sec) {
-
-     register int s;
+int sysutil_snprintts_sec(char* buf, size_t len, time_t sec) {
      struct tm tm;
      time_t Time;
-
-     s = sec % 86400;
+     register int s = sec % 86400;
      Time = sec - s;
      gmtime_r (&Time, &tm);
-     return snprintf(buf, len,
-                     "%04d.%02d.%02d %02d:%02d:%02d",
-                     tm.tm_year+1900,
-                     tm.tm_mon+1, tm.tm_mday,
-                     s / 3600, (s % 3600) / 60,
-                     s % 60);
+     return snprintf(
+          buf, len,
+          "%04d.%02d.%02d %02d:%02d:%02d",
+          tm.tm_year+1900,
+          tm.tm_mon+1, tm.tm_mday,
+          s / 3600, (s % 3600) / 60,
+          s % 60);
 }
 
-int sysutil_snprintts_sec2(char * buf, int len, time_t sec) {
-
-     register int s;
+int sysutil_snprintts_sec2(char* buf, size_t len, time_t sec) {
      struct tm tm;
      time_t Time;
-
-     s = sec % 86400;
+     register int s = sec % 86400;
      Time = sec - s;
      gmtime_r (&Time, &tm);
-     return snprintf(buf, len,
-                     "%04d.%02d.%02d_%02d.%02d.%02d",
-                     tm.tm_year+1900,
-                     tm.tm_mon+1, tm.tm_mday,
-                     s / 3600, (s % 3600) / 60,
-                     s % 60);
+     return snprintf(
+          buf, len,
+          "%04d.%02d.%02d_%02d.%02d.%02d",
+          tm.tm_year+1900,
+          tm.tm_mon+1, tm.tm_mday,
+          s / 3600, (s % 3600) / 60,
+          s % 60);
 }
 
 
 
 
 
-int sysutil_file_exists(char * filename) {
+int sysutil_file_exists(const char* filename) {
      struct stat statbuffer;
-
      //check filename
      if ((stat(filename, &statbuffer) == 0) &&
          S_ISREG(statbuffer.st_mode) &&
-         (statbuffer.st_size > 0))  {
+         (statbuffer.st_size > 0))
+     {
           return 1;
      }
      return 0;
@@ -634,7 +601,7 @@ int set_sysutil_pConfigPath(const char *pConfPath) {
      if ( !sysutil_pConfigPath ) return 0;
 
      /* Process to build the Paths array */
-     int p = 0;
+     size_t p = 0;
      char *buf = sysutil_pConfigPath;
      while ( p <= MAX_PATH_COUNT && buf ) {
           sysutil_pConfigPaths[p++] = strsep(&buf, ":");
@@ -643,7 +610,11 @@ int set_sysutil_pConfigPath(const char *pConfPath) {
      return 1;
 }
 
-int get_sysutil_pConfigPath(uint32_t pathComponent, char ** buf, uint * len) {
+int get_sysutil_pConfigPath(
+          uint32_t pathComponent,
+          char** buf,
+          unsigned int* len)
+{
      if ( pathComponent > MAX_PATH_COUNT ) return 0;
 
      if (sysutil_pConfigPaths[pathComponent] && *buf) {
@@ -681,7 +652,10 @@ int sysutil_prepend_config_path(char** fname) {
 }
 
 //wrapper for fopen to allow user to use default config file path..
-FILE * sysutil_config_fopen(const char * fname, const char * opts) {
+FILE * sysutil_config_fopen(
+          const char* fname,
+          const char* opts)
+{
      char buf[PATH_MAX];
      FILE * retval = NULL;
 
@@ -707,19 +681,19 @@ void sysutil_config_fclose(FILE * fp) {
 }
 
 //look for | hex | values - to decode like snort does
-int sysutil_decode_hex_escapes(char * str, int * len) {
+int sysutil_decode_hex_escapes(char* str, size_t* len) {
      char scratchpad[SCRATCHPAD_LEN];
      char * startpipe;
      char * endpipe;
      char * strpos;
      char * strend;
      char * spad;
-     int spad_len = 0;
-     int i;
+     size_t spad_len = 0;
+     size_t i;
 
      // error check
      if (*len > SCRATCHPAD_LEN) {
-          error_print("incoming string too long (%u) for scratchpad (%u).", 
+          error_print("incoming string too long (%zu) for scratchpad (%u).", 
                       *len, SCRATCHPAD_LEN);
           return 0;
      }

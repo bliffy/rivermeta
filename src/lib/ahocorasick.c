@@ -29,36 +29,48 @@ SOFTWARE.
 #include "shared/getrank.h"
 #include "shared/lock_init.h"
 
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+#define MAX_UINT 0xffffffff
+#define NUMCHAR sizeof(char)
+
+
 /**
-  \brief searches buffer for keyword matches, calls callback on each match
+  searches buffer for keyword matches, calls callback on each match
  
   will call straight aho-corasick or bmh/aho-corasick depending on number of signatures 
   and length of signatures
 
-  \return -1 on failure
-  \return 1 on match
-  \return 0 on no match
- */
-  int (*ac_search)(ahoc_t *           /* init & loaded ahoc tree */,
-                 ahoc_state_t *     /* state pointer in keyword tree */,
-                 u_char *           /* search space */,
-                 uint32_t           /* length of search space */,
-                 aho_buffercallback /* match callback function */,
-                 void *             /* callback_data */);
+  return -1 on failure
+  return 1 on match
+  return 0 on no match
+*/
+int (*ac_search)(
+     const ahoc_t*       /* init & loaded ahoc tree */,
+     ahoc_state_t* /* state pointer in keyword tree */,
+     const char*         /* search space */,
+     size_t              /* length of search space */,
+     aho_buffercallback  /* match callback function */,
+     void*               /* callback_data */);
 
 
 
 /* globals */
 extern uint32_t work_size;
-static char **_keyword;
-int * keywordlencount;
-int * num_keywords;
+static char** _keyword;
+int* keywordlencount;
+int* num_keywords;
 int threshold; //number of signature to have before switching
 int min_threshold; //length of skip to have before switching
 
 ahoc_t* ac_init(void)
 {
-     ahoc_t *retval;
+     ahoc_t* retval;
      int i;
 
      retval = (ahoc_t*) calloc(1, sizeof(ahoc_t));
@@ -124,15 +136,19 @@ ahoc_t* ac_init(void)
      return retval;
 }
 
-static int loadkeyword_helper(ahoc_t *ac, treenode_t *cur, char *keyword, 
-                               int keywordlen, int keymapval)
+static int loadkeyword_helper(
+     ahoc_t* ac,
+     treenode_t* cur,
+     const char* keyword,
+     size_t keywordlen,
+     int keymapval)
 {
-     treenode_t *newNode = NULL;
+     treenode_t* newNode = NULL;
      const int nrank = GETRANK();
      keywordlencount[nrank]++;
-     uint32_t    skiplen;
-     uint8_t     c = (uint8_t) *keyword;
-     if(ac->case_insensitive == 1 && (c >= 'A' && c <= 'Z')) c += 32;
+     size_t    skiplen;
+     unsigned char c = *keyword;
+     if (ac->case_insensitive == 1 && (c >= 'A' && c <= 'Z')) c += 32;
      
      if(keywordlen) {
           if(cur->nodes[c]) {
@@ -148,7 +164,7 @@ static int loadkeyword_helper(ahoc_t *ac, treenode_t *cur, char *keyword,
                cur->nodes[c] = (treenode_t*) calloc(1, sizeof(treenode_t));
                if (cur->nodes[c]) {
                     newNode = cur->nodes[c];
-                    newNode->alpha = (u_char) c;
+                    newNode->alpha = c;
                     newNode->fail_node = ac->root;
                     if(!loadkeyword_helper(ac, newNode, keyword + 1, 
                                        keywordlen - 1, keymapval)) {
@@ -172,7 +188,7 @@ static int loadkeyword_helper(ahoc_t *ac, treenode_t *cur, char *keyword,
           cur->match = (term_info_t*) calloc(1, sizeof(term_info_t));
           if (cur->match) {
                cur->match->keymapval = keymapval;
-               cur->match->key = (u_char*) strdup(_keyword[nrank]);
+               cur->match->key = strdup(_keyword[nrank]);
                cur->match->len = keywordlencount[nrank];
                keywordlencount[nrank] = 0;
 
@@ -196,7 +212,11 @@ static int loadkeyword_helper(ahoc_t *ac, treenode_t *cur, char *keyword,
      return 1;
 }
 
-int ac_loadkeyword(ahoc_t *ac, char *keyword, int keywordlen, int keymapval)
+int ac_loadkeyword(
+     ahoc_t* ac,
+     const char* keyword,
+     size_t keywordlen,
+     int keymapval)
 {
      if(!ac || !ac->root) {
           fprintf(stderr, "uninitialized Aho-Corasick instance\n");
@@ -225,12 +245,16 @@ int ac_loadkeyword(ahoc_t *ac, char *keyword, int keywordlen, int keymapval)
 }
 
 /**
-  \return 1 to tell calling node to delete node* at the given character offset
-  \return 0 when do not delete calling node
-  */
-static int RemoveKeywordHelper(ahoc_t *ac, treenode_t *curNode, char *keyword, int len)
+  return 1 to tell calling node to delete node* at the given character offset
+  return 0 when do not delete calling node
+*/
+static int RemoveKeywordHelper(
+     ahoc_t* ac,
+     treenode_t* curNode,
+     const char* keyword,
+     size_t len)
 {
-     uint8_t  curChar;
+     unsigned char curChar;
      int i, retval;
 
      /* found keyword, we hope */
@@ -256,7 +280,7 @@ static int RemoveKeywordHelper(ahoc_t *ac, treenode_t *curNode, char *keyword, i
      }
 
      curChar = *keyword;
-     if(ac->case_insensitive == 1 && (curChar >= 'A' && curChar <= 'Z')) curChar += 32;
+     if (ac->case_insensitive == 1 && (curChar >= 'A' && curChar <= 'Z')) curChar += 32;
      if(!curNode->nodes[curChar]) {
           /* no path to match keyword */
           return 0;
@@ -290,7 +314,10 @@ static int RemoveKeywordHelper(ahoc_t *ac, treenode_t *curNode, char *keyword, i
      return retval;
 }
 
-int ac_remove_keyword(ahoc_t *ac, char *keyword, int len)
+int ac_remove_keyword(
+     ahoc_t* ac,
+     const char* keyword,
+     size_t len)
 {
      if(!ac || !ac->root) {
           fprintf(stderr, "uninitialized Aho-Corasick instance\n");
@@ -298,32 +325,27 @@ int ac_remove_keyword(ahoc_t *ac, char *keyword, int len)
      }
 
      RemoveKeywordHelper(ac, ac->root, keyword, len);
-
      return 1;
 }
 
-static void ResetFailNodes(ahoc_t *ac, treenode_t *curNode)
+static void ResetFailNodes(ahoc_t* ac, treenode_t* curNode)
 {
-     int c;
-
      if(!curNode) return;
-
-     for(c = 0; c < NUMCHAR; c++) {
+     for(int c = 0; c < NUMCHAR; c++) {
           if(curNode->nodes[c]) {
                ResetFailNodes(ac, curNode->nodes[c]);
           }
      }
-
      curNode->fail_node = ac->root;
 }
 
-int ac_finalize(ahoc_t *ac)
+int ac_finalize(ahoc_t* ac)
 {
      treenode_t *root, *cur, *state;
      qnode_t    *qroot, *qiter, *qtail, *qtmp;
      uint8_t     i, num, children;
 
-     if(!ac || !ac->root) {
+     if (!ac || !ac->root) {
           fprintf(stderr, "uninitialized Aho-Corasick tree\n");
           return 0;
      }
@@ -343,8 +365,6 @@ int ac_finalize(ahoc_t *ac)
      qroot->nodeptr = root;
      qtail = qroot;      /* last node in queue */
 
-     /*fprintf(stderr, "setting level 1 children\n");*/
-     
      /* set depth one children fail states and add to queue */
      cur = root;
      children = cur->children;
@@ -366,19 +386,17 @@ int ac_finalize(ahoc_t *ac)
           qtail->nodeptr->fail_node = root;
      }
 
-     /*fprintf(stderr, "before for\n");*/
-     for(qiter = qroot->next; qiter; qiter = qiter->next) {
+     for (qiter = qroot->next; qiter; qiter = qiter->next) {
           cur = qiter->nodeptr;
 
           /* add children to queue (breadth-first search) */
-          if((children = cur->children) > 0) {
-               for(i = 0, num = 0; num < children; i++) {
+          if ((children = cur->children) > 0) {
+               for (i = 0, num = 0; num < children; i++) {
                     /* check to see if char node exists */
                     if(!cur->nodes[i]) {
                          continue;
                     }
 
-                    /*fprintf(stderr, "child %c\n", (char)i);*/
                     num++;
                     
                     /* add new node to end of queue */
@@ -420,7 +438,6 @@ int ac_finalize(ahoc_t *ac)
      const int nrank = GETRANK();
      if (num_keywords[nrank] < threshold){
           if (ac->max_shift < min_threshold){
-               //fprintf(stderr, "%d Keywords below threshold of %d --> using BMH skipping.\n", num_keywords[nrank], threshold);
                ac_search = &ac_searchstr_skip;
                ac->below_threshold = 1;
                return 1;
@@ -432,15 +449,19 @@ int ac_finalize(ahoc_t *ac)
 }
 
 
-int ac_searchfile(ahoc_t *ac, ahoc_state_t *sPtr, char *fname,
-                  aho_filecallback callback_func, void * callback_data)
+int ac_searchfile(
+     const ahoc_t* ac,
+     ahoc_state_t* sPtr,
+     const char* fname,
+     aho_filecallback callback_func,
+     void* callback_data)
 {
-     FILE       *stream;     /* File containing input stream */
+     FILE* stream;     /* File containing input stream */
      int         c;
      int         callback_ret;
      boolean     pass;
-     u_char     *buf;
-     treenode_t *cur;
+     const char* buf;
+     treenode_t* cur;
 
      if(!ac || !ac->root || !sPtr || !(*sPtr)) {
           fprintf(stderr, "uninitialized Aho-Corasick tree or state ptr\n");
@@ -468,8 +489,8 @@ int ac_searchfile(ahoc_t *ac, ahoc_state_t *sPtr, char *fname,
                          if(!callback_func) {
                               continue;
                          }
-                         callback_ret = callback_func(buf, stream,
-                                                      callback_data);
+                         callback_ret = callback_func(
+                              buf, stream, callback_data);
                          if(callback_ret) {
                               *sPtr = cur;
                               return 1;
@@ -477,10 +498,11 @@ int ac_searchfile(ahoc_t *ac, ahoc_state_t *sPtr, char *fname,
                     }
                     else { 
                          if(callback_func) {
-                              callback_ret = callback_func(buf, stream,
-                                                           callback_data);
-
-                              if(callback_ret) {
+                              callback_ret = callback_func(
+                                   buf,
+                                   stream,
+                                   callback_data);
+                              if (callback_ret) {
                                    *sPtr = cur;
                                    return 1;
                               }
@@ -491,17 +513,17 @@ int ac_searchfile(ahoc_t *ac, ahoc_state_t *sPtr, char *fname,
                }
           }
           else {
-               while(!pass) {
+               while (!pass) {
                     cur = cur->fail_node;
-                    if(cur == ac->root) {
+                    if (cur == ac->root) {
                          if(cur->nodes[c]) {
                               cur = cur->nodes[c];
                          }
                          pass = TRUE;
                     }
-                    else if(cur->nodes[c]) {
+                    else if (cur->nodes[c]) {
                          cur = cur->nodes[c];
-                         if(cur->match) {
+                         if (cur->match) {
                               buf = cur->match->key;
 
                               if(!callback_func) {
@@ -519,23 +541,27 @@ int ac_searchfile(ahoc_t *ac, ahoc_state_t *sPtr, char *fname,
           }
      }
      sysutil_config_fclose(stream);
-
      *sPtr = cur;
-
      return 0;
 }
 
 
 
 
-int ac_searchstr(ahoc_t *ac, ahoc_state_t *tree_state, u_char *buf, uint32_t buflen, 
-                 aho_buffercallback callback_func, void *callback_data)
+int ac_searchstr(
+     const ahoc_t* ac,
+     ahoc_state_t* tree_state,
+     const char* buf,
+     size_t buflen,
+     aho_buffercallback callback_func,
+     void* callback_data)
 {
-     uint8_t     c;
-     u_char     *tmpbuf;
-     int         callback_ret;
-     treenode_t *cur, *failstate;
-     uint32_t    remainingBufLen;
+     unsigned char     c;
+     const char*       tmpbuf;
+     int               callback_ret;
+     treenode_t* cur;
+     treenode_t* failstate;
+     size_t            remainingBufLen;
 
      if(!ac || !ac->root || !tree_state || !(*tree_state)) {
           fprintf(stderr, "uninitialized Aho-Corasick tree or state ptr\n");
@@ -552,15 +578,18 @@ int ac_searchstr(ahoc_t *ac, ahoc_state_t *tree_state, u_char *buf, uint32_t buf
      tmpbuf = buf;
 
      while(remainingBufLen) {
-          c = (uint8_t) *tmpbuf;
+          c = *tmpbuf;
 
           /* matched character */
           if(cur->nodes[c]) {
                cur = cur->nodes[c];
-               if(cur->match) {
-                    callback_ret = callback_func(cur->match->key, tmpbuf+1, 
-                                                 remainingBufLen-1, callback_data);
-                    if(callback_ret) {
+               if (cur->match) {
+                    callback_ret = callback_func(
+                         cur->match->key,
+                         tmpbuf+1,
+                         remainingBufLen-1,
+                         callback_data);
+                    if (callback_ret) {
                          *tree_state = cur;
                          return 1;
                     }
@@ -569,8 +598,11 @@ int ac_searchstr(ahoc_t *ac, ahoc_state_t *tree_state, u_char *buf, uint32_t buf
                /* match also on fail node */
                failstate = cur->fail_node;
                while(failstate->match) {
-                    callback_ret = callback_func(cur->fail_node->match->key, tmpbuf+1,
-                                                 remainingBufLen-1, callback_data);
+                    callback_ret = callback_func(
+                         cur->fail_node->match->key,
+                         tmpbuf+1,
+                         remainingBufLen-1,
+                         callback_data);
                     if(callback_ret) {
                          *tree_state = cur;
                          return 1;
@@ -586,7 +618,6 @@ int ac_searchstr(ahoc_t *ac, ahoc_state_t *tree_state, u_char *buf, uint32_t buf
           }
 
           tmpbuf++;
-               //printf("Remaining %u\n", remainingBufLen); fflush(stdout);
           remainingBufLen--;
      }
 
@@ -597,7 +628,11 @@ int ac_searchstr(ahoc_t *ac, ahoc_state_t *tree_state, u_char *buf, uint32_t buf
 
 
 /** updates Boyer-Moore shift for mismatched characters */
-static void update_searchbuf(ahoc_t *ac, u_char **buf, uint32_t *len, uint8_t c)
+static void update_searchbuf(
+     const ahoc_t* ac,
+     const char** buf,
+     size_t* len,
+     unsigned char c)
 {
      if((ac->cshift[c] < ac->max_shift) && 
         (ac->cshift[c] <= *len)) {
@@ -615,14 +650,20 @@ static void update_searchbuf(ahoc_t *ac, u_char **buf, uint32_t *len, uint8_t c)
 }
 
 
-int ac_searchstr_skip(ahoc_t *ac, ahoc_state_t *tree_state, u_char *str, uint32_t len, 
-                      aho_buffercallback callback_func, void *callback_data)
+int ac_searchstr_skip(
+     const ahoc_t* ac,
+     ahoc_state_t* tree_state,
+     const char* str,
+     size_t len,
+     aho_buffercallback callback_func,
+     void* callback_data)
 {
-     uint8_t     c;
-     u_char     *matchstr;
-     u_char     *searchbuf, *matchbuf;
-     treenode_t *cur;
-     uint32_t    searchlen, matchlen;
+     unsigned char c;
+     const char* matchstr;
+     const char* searchbuf;
+     const char* matchbuf;
+     treenode_t* cur;
+     size_t      searchlen, matchlen;
      int         callback_ret;
 
      if(!ac || !ac->root) {
@@ -637,7 +678,7 @@ int ac_searchstr_skip(ahoc_t *ac, ahoc_state_t *tree_state, u_char *str, uint32_
      searchbuf = str + (len - searchlen);
 
      while(searchlen <= len) {
-          c = (uint8_t) *searchbuf;
+          c = *searchbuf;
 
           /* character match */
           if(cur->nodes[c]) {
@@ -647,19 +688,20 @@ int ac_searchstr_skip(ahoc_t *ac, ahoc_state_t *tree_state, u_char *str, uint32_
 
                /* while character match */
                while(cur->nodes[c]) {
-                    /*printf("matched char %c\n", c);*/
                     cur = cur->nodes[c];
 
                     /* keyword match */
                     if(cur->match) {
-                         /*printf("matched on term\n");*/
                          matchstr = cur->match->key;
 
                          if(callback_func) {
-                              callback_ret = callback_func(matchstr, 
-                                   searchbuf+1, searchlen-1, callback_data);
+                              callback_ret = callback_func(
+                                   matchstr,
+                                   searchbuf+1,
+                                   searchlen-1,
+                                   callback_data);
 
-                              if(callback_ret) {
+                              if (callback_ret) {
                                    return 1;
                               }
                          }
@@ -668,17 +710,16 @@ int ac_searchstr_skip(ahoc_t *ac, ahoc_state_t *tree_state, u_char *str, uint32_
                     /* move forward while match */
                     searchbuf++;
                     searchlen--;
-                    c = (uint8_t) *searchbuf;
+                    c = *searchbuf;
                }
 
                /* skip to next char before match char */
-               update_searchbuf(ac, &matchbuf, &matchlen, (uint8_t)*matchbuf);
+               update_searchbuf(ac, &matchbuf, &matchlen, *matchbuf);
                searchbuf = matchbuf;
                searchlen = matchlen;
                cur = ac->root;
           }
           else {
-               /*printf("mismatched char %c\n", c);*/
                update_searchbuf(ac, &searchbuf, &searchlen, c);
           }
      }
@@ -689,18 +730,13 @@ int ac_searchstr_skip(ahoc_t *ac, ahoc_state_t *tree_state, u_char *str, uint32_
 
 
 
-static void PrintTreeHelper(treenode_t *currentNode)
+static void PrintTreeHelper(const treenode_t *currentNode)
 {
      int i;
 
-     if(!currentNode) return;
+     if (!currentNode) return;
 
      if(currentNode->alpha) {
-          /*
-          printf("currentNode = 0x%x\n", currentNode);
-          printf("failnode = 0x%x\n", currentNode->fail_node);
-          */
-
           fprintf(stderr, "%c", currentNode->alpha);
 
           if(currentNode->match) {
@@ -725,32 +761,28 @@ static void PrintTreeHelper(treenode_t *currentNode)
      fprintf(stderr, "---\n");
 }
 
-void ac_print_tree(ahoc_t *ac)
+void ac_print_tree(const ahoc_t *ac)
 {
      if(!ac) return;
-
-     /*
-     printf("root = 0x%x\n", ac->searchTree);
-     */
      PrintTreeHelper(ac->root);
 }
 
-term_info_t *ac_singlesearch_trans(ahoc_t *ac, 
-				   ahoc_state_t *sPtr, 
-				   u_char *buf, 
-				   uint32_t buflen, 
-				   u_char **retbuf,
-				   uint32_t *retlen,
-				   uint8_t mask_len,
-				   uint8_t case_ins,
-				   uint8_t binary_op)
+const term_info_t* ac_singlesearch_trans(
+     const ahoc_t* ac,
+     ahoc_state_t* sPtr,
+     const char* buf,
+     size_t buflen,
+     const char** retbuf,
+     size_t* retlen,
+     uint8_t mask_len,
+     uint8_t case_ins,
+     uint8_t binary_op)
 {
-  uint8_t     c, c_next;
-  u_char     *tmpbuf = buf;
-  uint32_t    tmpbuflen = buflen;
-  //int         retval;
-  treenode_t *cur;
-  term_info_t *leaf;
+     unsigned char c, c_next;
+     const char* tmpbuf = buf;
+     size_t tmpbuflen = buflen;
+     treenode_t* cur;
+     const term_info_t* leaf;
   
      if(!ac || !ac->root || !sPtr || !(*sPtr)) {
           fprintf(stderr, "uninitialized Aho-Corasick tree or state ptr\n");
@@ -764,28 +796,26 @@ term_info_t *ac_singlesearch_trans(ahoc_t *ac,
 
      cur = *sPtr; 
 
-     while(tmpbuflen > mask_len) {
-          c_next = (uint8_t)*(tmpbuf+mask_len);
-		  c = (uint8_t)*tmpbuf;
-		  
-		  //Always perform case-insensitive matching
-		  if(case_ins == 1){
-			  if((c >='A' && c <= 'Z'))
-				  c+=32;
-			  if((c_next >='A' && c_next <= 'Z'))
-				  c_next+=32;
-		  }
-		  if(binary_op == 2)
-		      c = c_next - c;
-		  else
-		      c = c ^ c_next;
+     while (tmpbuflen > mask_len) {
+          c_next = *(tmpbuf+mask_len);
+          c = *tmpbuf;
+
+          // Always perform case-insensitive matching
+          if (case_ins == 1){
+               if ((c >='A' && c <= 'Z'))
+                    c+=32;
+               if((c_next >='A' && c_next <= 'Z'))
+                    c_next+=32;
+          }
+          if(binary_op == 2)
+               c = c_next - c;
+          else
+               c = c ^ c_next;
           /* matched character */
           if(cur->nodes[c]) {
                cur = cur->nodes[c];
-               if(cur->match) {
-                    //retval = cur->match->keymapval; 
-					leaf = cur->match;
-                    //printf("found match '%d'\n", leaf->keymapval);
+               if (cur->match) {
+                    leaf = cur->match;
                     if(cur->children == 0) {
                          cur = cur->fail_node;
                     }
@@ -798,12 +828,9 @@ term_info_t *ac_singlesearch_trans(ahoc_t *ac,
                }
 
                /* match on fail node */
-               if(cur->fail_node->match) {
-                    /*printf("found match on fail_node '%s'\n", cur->fail_node->match->key);*/
-                    //retval = cur->fail_node->match->keymapval; 
-					leaf = cur->match;
-					//printf("found match failnode '%s'\n", cur->match->key);
-                    if(cur->children == 0) {
+               if (cur->fail_node->match) {
+                    leaf = cur->match;
+                    if (cur->children == 0) {
                          cur = cur->fail_node;
                     }
 
@@ -828,18 +855,19 @@ term_info_t *ac_singlesearch_trans(ahoc_t *ac,
      return NULL;
 }
 
-inline int ac_singlesearch(ahoc_t *ac, 
-                                  ahoc_state_t *sPtr, 
-                                  u_char *buf, 
-                                  uint32_t buflen, 
-                                  u_char **retbuf,
-                                  uint32_t *retlen)
+inline int ac_singlesearch(
+     const ahoc_t *ac,
+     ahoc_state_t *sPtr,
+     const char *buf,
+     size_t buflen,
+     const char** retbuf,
+     size_t* retlen)
 {
-     uint8_t     c;
-     u_char     *tmpbuf = buf;
-     uint32_t    tmpbuflen = buflen;
-     int         retval;
-     treenode_t *cur;
+     unsigned char c;
+     const char* tmpbuf = buf;
+     size_t tmpbuflen = buflen;
+     int retval;
+     treenode_t* cur;
 
      if(!ac || !ac->root || !sPtr || !(*sPtr)) {
           fprintf(stderr, "uninitialized Aho-Corasick tree or state ptr\n");
@@ -854,18 +882,16 @@ inline int ac_singlesearch(ahoc_t *ac,
      cur = *sPtr; 
 
      while(tmpbuflen) {
-          c = (uint8_t) *tmpbuf;
+          c = *tmpbuf;
           // Enable case insensitive checking if needed
           if(ac->case_insensitive == 1 && (c >= 'A' && c <= 'Z')) c += 32;
 
           /* matched character */
           if(cur->nodes[c]) {
-               /*printf("matched char %c\n", c);*/
                cur = cur->nodes[c];
                if(cur->match) {
                     retval = cur->match->keymapval; 
 
-                    /*printf("found match '%s'\n", cur->match->key);*/
                     if(cur->children == 0) {
                          cur = cur->fail_node;
                     }
@@ -879,7 +905,6 @@ inline int ac_singlesearch(ahoc_t *ac,
 
                /* match on fail node */
                if(cur->fail_node->match) {
-                    /*printf("found match on fail_node '%s'\n", cur->fail_node->match->key);*/
                     retval = cur->fail_node->match->keymapval; 
 
                     if(cur->children == 0) {
@@ -907,20 +932,21 @@ inline int ac_singlesearch(ahoc_t *ac,
      return -1;
 }
 
-inline int ac_singlesearch_skip(ahoc_t *ac, 
-                                  ahoc_state_t *sPtr, 
-                                  u_char *buf, 
-                                  uint32_t buflen, 
-                                  u_char **retbuf,
-                                  uint32_t *retlen)
+inline int ac_singlesearch_skip(
+     const ahoc_t* ac,
+     ahoc_state_t* sPtr, 
+     const char* buf, 
+     size_t buflen, 
+     const char** retbuf,
+     size_t* retlen)
 {
-     uint8_t     c;
-     u_char     *tmpbuf = buf;
-     u_char     *searchbuf;
-     uint32_t    tmpbuflen = buflen;
-     int         retval;
-     treenode_t *cur;
-     uint32_t    searchlen;
+     unsigned char c;
+     const char* tmpbuf = buf;
+     const char* searchbuf;
+     size_t tmpbuflen = buflen;
+     int retval;
+     treenode_t* cur;
+     size_t searchlen;
 
      if(!ac || !ac->root || !sPtr || !(*sPtr)) {
           fprintf(stderr, "uninitialized Aho-Corasick tree or state ptr\n");
@@ -941,19 +967,16 @@ inline int ac_singlesearch_skip(ahoc_t *ac,
 
 
      while(searchlen <= tmpbuflen) {
-          c = (uint8_t) *searchbuf
-;
+          c = *searchbuf;
           // Enable case insensitive checking if needed
           if(ac->case_insensitive == 1 && (c >= 'A' && c <= 'Z')) c += 32;
 
           /* matched character */
           if(cur->nodes[c]) {
-               /*printf("matched char %c\n", c);*/
                cur = cur->nodes[c];
                if(cur->match) {
                     retval = cur->match->keymapval; 
 
-                    /*printf("found match '%s'\n", cur->match->key);*/
                     if(cur->children == 0) {
                          cur = cur->fail_node;
                     }
@@ -967,7 +990,6 @@ inline int ac_singlesearch_skip(ahoc_t *ac,
 
                /* match on fail node */
                if(cur->fail_node->match) {
-                    /*printf("found match on fail_node '%s'\n", cur->fail_node->match->key);*/
                     retval = cur->fail_node->match->keymapval; 
 
                     if(cur->children == 0) {
@@ -997,14 +1019,14 @@ inline int ac_singlesearch_skip(ahoc_t *ac,
 
 static void FreeTreeHelper(treenode_t *currentNode)
 {
-     int i;
-
-     if(!currentNode) return;
-     if(currentNode->match) {
-       if(currentNode->match->key) free(currentNode->match->key);
-       free(currentNode->match);
+     if (!currentNode) return;
+     if (currentNode->match) {
+          if (currentNode->match->key)
+               free(currentNode->match->key);
+          free(currentNode->match);
      }
-     for(i = 0; i < NUMCHAR; i++) FreeTreeHelper(currentNode->nodes[i]);
+     for (int i = 0; i < NUMCHAR; i++)
+          FreeTreeHelper(currentNode->nodes[i]);
      free(currentNode);
 }
 

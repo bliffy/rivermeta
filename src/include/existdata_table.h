@@ -1,44 +1,20 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef _existdata_table_h
 #define _existdata_table_h
 
 #include "stringhash5.h"
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
-//generic type
-typedef stringhash5_t edt_t;
-typedef stringhash5_walker_t edtw_t;
-typedef stringhash5_sh_opts_t edt_sh_opts_t;
+// generic type
+typedef stringhash5_t          edt_t;
+typedef stringhash5_walker_t   edtw_t;
+typedef stringhash5_sh_opts_t  edt_sh_opts_t;
 typedef sh5dataread_callback_t edt_dataread_callback_t;
 typedef sh5datadump_callback_t edt_datadump_callback_t;
 
-//aliased, generic function types
+// aliased, generic function types
 typedef void (*edt_callback)(void *, void *);
 typedef int (*edt_visit)(void *, void *);
 
@@ -49,21 +25,34 @@ typedef void (*edt_sh_opts_free)(edt_sh_opts_t *);
 //DEPRECATED
 typedef int (*edt_open_table)(edt_t **, void *, const char *, uint64_t *, int, sh_callback_t);
 //DEPRECATED
-typedef int (*edt_open_table_with_ptrs)(edt_t **, void *, const char *, uint64_t *, int, 
-                                 sh_callback_t, edt_dataread_callback_t);
+typedef int (*edt_open_table_with_ptrs)(
+     edt_t **, void *, const char *,
+     uint64_t *, int, sh_callback_t,
+     edt_dataread_callback_t);
 //CURRENT
-typedef int (*edt_open_sht_table)(edt_t **, void *, uint64_t, uint32_t, edt_sh_opts_t *);
+typedef int (*edt_open_sht_table)(
+     edt_t **, void *, uint64_t,
+     uint32_t, edt_sh_opts_t *);
 typedef edt_t * (*edt_create)(uint32_t, uint64_t, uint32_t);
 //DEPRECATED
-typedef int (*edt_create_shared)(void *, void **, const char *, uint32_t, uint32_t, int *, 
-                                 sh_callback_t, void *, int, void *, uint64_t *, int, sh_callback_t);
+typedef int (*edt_create_shared)(
+     void *, void **, const char *,
+     uint32_t, uint32_t, int *, 
+     sh_callback_t, void *, int,
+     void *, uint64_t *, int,
+     sh_callback_t);
 //DEPRECATED
-typedef int (*edt_create_shared_with_ptrs)(void *, void **, const char *, uint32_t, uint32_t, int *, 
-                                 sh_callback_t, void *, int, void *, uint64_t *, int, sh_callback_t, 
-                                 edt_dataread_callback_t);
+typedef int (*edt_create_shared_with_ptrs)(
+     void *, void **, const char *,
+     uint32_t, uint32_t, int *,
+     sh_callback_t, void *, int,
+     void *, uint64_t *, int,
+     sh_callback_t, edt_dataread_callback_t);
 //CURRENT
-typedef int (*edt_create_shared_sht)(void *, void **, const char *, uint32_t, uint32_t, int *, 
-                                 edt_sh_opts_t *);
+typedef int (*edt_create_shared_sht)(
+     void *, void **, const char *,
+     uint32_t, uint32_t, int *,
+     edt_sh_opts_t *);
 typedef void (*edt_unlock)(edt_t *);
 typedef void * (*edt_find)(edt_t *, void *, int);
 typedef void * (*edt_jump_to_entry)(edt_t *, uint32_t, uint32_t);
@@ -132,8 +121,8 @@ edt_walker_next existdata_table_walker_next = stringhash5_walker_next;
 edt_walker_destroy existdata_table_walker_destroy = stringhash5_walker_destroy;
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _existdata_table_h
 

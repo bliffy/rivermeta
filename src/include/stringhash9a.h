@@ -1,26 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 //STRINGHASH9A - a existance check table.. like an expiring bloom filter.. only not.
 // uses buckets each with 21 items in it.. it expires 
 #ifndef _STRINGHASH9A_H
@@ -37,16 +14,15 @@ SOFTWARE.
 #include "error_print.h"
 #include "shared/kidshare.h"
 #include "shared/sht_lock_init.h"
-#include "cppwrap.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 //macros
 #ifndef SHT_ID_SIZE
 #define SHT_ID_SIZE 13
-#endif // SHT_ID_SIZE
+#endif
 #define SHT9A_ID  "STRINGHASH9A"
 #define SHT5_ID   "STRINGHASH5 "
 #define SH9A_DEPTH 16 //should be matched with cache line size..
@@ -186,37 +162,78 @@ typedef struct _stringhash9a_t {
 
 //prototypes
 //DEPRECATED
-static inline int stringhash9a_open_table(stringhash9a_t **, const char *);
+static inline int stringhash9a_open_table(
+     stringhash9a_t **,
+     const char *);
 //CURRENT
-static inline int stringhash9a_open_sht_table(stringhash9a_t **, uint32_t, 
-                                              stringhash9a_sh_opts_t *);
-static inline stringhash9a_t * stringhash9a_create(uint32_t, uint32_t);
+static inline int stringhash9a_open_sht_table(
+     stringhash9a_t **,
+     uint32_t,
+     stringhash9a_sh_opts_t *);
+static inline stringhash9a_t * stringhash9a_create(
+     uint32_t,
+     uint32_t);
 //DEPRECATED
-static inline int stringhash9a_create_shared(void *, void **, const char *, 
-                                             uint32_t, int *, int, void *);
+static inline int stringhash9a_create_shared(
+     void *,
+     void **,
+     const char *,
+     uint32_t,
+     int *,
+     int,
+     void *);
 //CURRENT
-static inline int stringhash9a_create_shared_sht(void *, void **, const char *, 
-                                                 uint32_t, int *, 
-                                                 stringhash9a_sh_opts_t *);
-static inline int stringhash9a_check(stringhash9a_t *, void *, int);
-static inline uint64_t stringhash9a_drop_cnt(stringhash9a_t *);
-static inline int stringhash9a_set(stringhash9a_t *, void *, int);
-static inline int stringhash9a_delete(stringhash9a_t *, void *, int);
+static inline int stringhash9a_create_shared_sht(
+     void *,
+     void **,
+     const char *,
+     uint32_t,
+     int *,
+     stringhash9a_sh_opts_t *);
+static inline int stringhash9a_check(
+     stringhash9a_t *,
+     void *,
+     int);
+static inline uint64_t stringhash9a_drop_cnt(
+     stringhash9a_t *);
+static inline int stringhash9a_set(
+     stringhash9a_t *,
+     void *,
+     int);
+static inline int stringhash9a_delete(
+     stringhash9a_t *,
+     void *,
+     int);
 static inline void stringhash9a_flush(stringhash9a_t *);
 static inline void stringhash9a_destroy(stringhash9a_t *);
 static inline stringhash9a_t * stringhash9a_read(FILE *);
-static inline int stringhash9a_dump(stringhash9a_t *, FILE *);
-static inline int stringhash9a_check_loc(stringhash9a_t *, ws_hashloc_t *);
-static inline int stringhash9a_check_wsdata(stringhash9a_t *, wsdata_t *);
-static inline int stringhash9a_set_loc(stringhash9a_t * sht, ws_hashloc_t *);
-static inline int stringhash9a_set_wsdata(stringhash9a_t *, wsdata_t *);
-static inline int stringhash9a_delete_loc(stringhash9a_t *, ws_hashloc_t *);
-static inline int stringhash9a_delete_wsdata(stringhash9a_t *, wsdata_t *);
+static inline int stringhash9a_dump(
+     stringhash9a_t *,
+     FILE *);
+static inline int stringhash9a_check_loc(
+     stringhash9a_t *,
+     ws_hashloc_t *);
+static inline int stringhash9a_check_wsdata(
+     stringhash9a_t *,
+     wsdata_t *);
+static inline int stringhash9a_set_loc(
+     stringhash9a_t * sht,
+     ws_hashloc_t *);
+static inline int stringhash9a_set_wsdata(
+     stringhash9a_t *,
+     wsdata_t *);
+static inline int stringhash9a_delete_loc(
+     stringhash9a_t *,
+     ws_hashloc_t *);
+static inline int stringhash9a_delete_wsdata(
+     stringhash9a_t *,
+     wsdata_t *);
 
 
 //compute log2 of an unsigned int
 // by Eric Cole - http://graphics.stanford.edu/~seander/bithacks.htm
-static inline uint32_t sh9a_uint32_log2(uint32_t v) {
+static inline uint32_t sh9a_uint32_log2(uint32_t v)
+{
      static const int MultiplyDeBruijnBitPosition[32] =
      {
           0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
@@ -235,8 +252,8 @@ static inline uint32_t sh9a_uint32_log2(uint32_t v) {
 }
 
 #if defined(WS_PTHREADS) && !defined(OWMR_TABLES)
-static inline int sh9a_create_mutex(stringhash9a_t * sht) {
-
+static inline int sh9a_create_mutex(stringhash9a_t * sht)
+{
      //every 16 indexes we have a mutex
      sht->max_mutex = ((sht->index_size * 2) >> MUTEX_INDEX_SHIFT);
      if (!sht->max_mutex) {
@@ -257,8 +274,9 @@ static inline int sh9a_create_mutex(stringhash9a_t * sht) {
 }
 #endif // WS_PTHREADS && !OWMR_TABLES
 
-static inline int check_sh9a_max_records(uint32_t max_records) {
-
+static inline int check_sh9a_max_records(
+          uint32_t max_records)
+{
      //note the minimum table size for sh9a
      if(max_records < 84) {
           tool_print("Caution: minimum size for sh9a max_records is 84...resizing\n");
@@ -272,17 +290,23 @@ static inline int check_sh9a_max_records(uint32_t max_records) {
      return mxr;
 }
 
-static inline void stringhash9a_sh_opts_alloc(stringhash9a_sh_opts_t ** sh9a_sh_opts) {
+static inline void stringhash9a_sh_opts_alloc(
+          stringhash9a_sh_opts_t ** sh9a_sh_opts)
+{
      *sh9a_sh_opts = (stringhash9a_sh_opts_t *)calloc(1,sizeof(stringhash9a_sh_opts_t));
 }
 
-static inline void stringhash9a_sh_opts_free(stringhash9a_sh_opts_t * sh9a_sh_opts) {
+static inline void stringhash9a_sh_opts_free(
+          stringhash9a_sh_opts_t * sh9a_sh_opts)
+{
      free(sh9a_sh_opts);
 }
 
 //DEPRECATED
-static inline int stringhash9a_open_table(stringhash9a_t ** table, const char * open_table) {
-
+static inline int stringhash9a_open_table(
+          stringhash9a_t ** table,
+          const char * open_table)
+{
      stringhash9a_sh_opts_t * sh9a_sh_opts;
      int ret;
      tool_print("WARNING: 'stringhash9a_open_table' HAS BEEN DEPRECATED. PLEASE USE 'stringhash9a_open_sht_table' INSTEAD.");
@@ -305,8 +329,11 @@ static inline int stringhash9a_open_table(stringhash9a_t ** table, const char * 
 }
 
 //CURRENT
-static inline int stringhash9a_open_sht_table(stringhash9a_t ** table, uint32_t max_records, 
-                                              stringhash9a_sh_opts_t * sh9a_sh_opts) {
+static inline int stringhash9a_open_sht_table(
+          stringhash9a_t ** table,
+          uint32_t max_records,
+          stringhash9a_sh_opts_t * sh9a_sh_opts)
+{
      if (sh9a_sh_opts->open_table) {
           FILE * fp;
           fp = sysutil_config_fopen(sh9a_sh_opts->open_table, "r");
@@ -344,7 +371,9 @@ static inline int stringhash9a_open_sht_table(stringhash9a_t ** table, uint32_t 
      return 0;
 }
 
-static inline stringhash9a_t * sh9a_create_ibits(uint32_t ibits) {
+static inline stringhash9a_t * sh9a_create_ibits(
+          uint32_t ibits)
+{
      stringhash9a_t * sht;
      sht = (stringhash9a_t *)calloc(1, sizeof(stringhash9a_t));
      if (!sht) {
@@ -381,7 +410,10 @@ static inline stringhash9a_t * sh9a_create_ibits(uint32_t ibits) {
 // At long last - the first parameter has a use!  We use the first argument to signal that
 // stringhash9a_create is being called to create a shared table (i.e. the call is made
 // from stringhash9a_create_shared)
-static inline stringhash9a_t * stringhash9a_create(uint32_t is_shared, uint32_t max_records) {
+static inline stringhash9a_t * stringhash9a_create(
+          uint32_t is_shared,
+          uint32_t max_records)
+{
      stringhash9a_t * sht;
 
      //note the minimum table size for sh9a
@@ -411,8 +443,10 @@ static inline stringhash9a_t * stringhash9a_create(uint32_t is_shared, uint32_t 
      return sht;
 }
 
-static inline int stringhash9a_check_params(void ** table, uint32_t max_records) {
-
+static inline int stringhash9a_check_params(
+          void ** table,
+          uint32_t max_records)
+{
      //give an error if max_records does not match the input value for this thread
      if (((stringhash9a_t *)(*table))->max_records != check_sh9a_max_records(max_records)) {
           error_print("stringhash9a table max_records %d not equal to converted input value %d",
@@ -425,11 +459,15 @@ static inline int stringhash9a_check_params(void ** table, uint32_t max_records)
 }
 
 //DEPRECATED
-static inline int stringhash9a_create_shared(void * v_type_table, void ** table, 
-                                             const char * sharelabel, uint32_t max_records, 
-                                             int * sharer_id, int readonly, 
-                                             void * open_table) {
-
+static inline int stringhash9a_create_shared(
+          void * v_type_table,
+          void ** table,
+          const char * sharelabel,
+          uint32_t max_records,
+          int * sharer_id,
+          int readonly,
+          void * open_table)
+{
      stringhash9a_sh_opts_t * sh9a_sh_opts;
      int ret;
      tool_print("WARNING: 'stringhash9a_create_shared' HAS BEEN DEPRECATED. PLEASE USE 'stringhash9a_create_shared_sht' INSTEAD.");
@@ -451,10 +489,14 @@ static inline int stringhash9a_create_shared(void * v_type_table, void ** table,
 }
 
 //CURRENT
-static inline int stringhash9a_create_shared_sht(void * v_type_table, void ** table, 
-                                                 const char * sharelabel, 
-                                                 uint32_t max_records, int * sharer_id, 
-                                                 stringhash9a_sh_opts_t * sh9a_sh_opts) {
+static inline int stringhash9a_create_shared_sht(
+          void * v_type_table,
+          void ** table,
+          const char * sharelabel,
+          uint32_t max_records,
+          int * sharer_id,
+          stringhash9a_sh_opts_t * sh9a_sh_opts)
+{
      int shid;
      
      //sharelabel error checks:  null sharelabel
@@ -601,7 +643,10 @@ static inline int stringhash9a_create_shared_sht(void * v_type_table, void ** ta
 } while (0)
 
 //could be optimized a bit more for loop unrolling
-static inline void sh9a_sort_lru_lower(uint32_t * d, uint8_t mru) {
+static inline void sh9a_sort_lru_lower(
+          uint32_t * d,
+          uint8_t mru)
+{
      uint32_t a = d[mru] & SH9A_DIGEST_MASK;
 
 #define SH9A_SET_DIGEST(X,Y) X = ((X & SH9A_LEFTOVER_MASK) | (Y & SH9A_DIGEST_MASK))
@@ -659,7 +704,10 @@ static inline void print_lru(uint32_t * d, uint32_t m) {
 
 //move mru item to front..  ridiculous code bloat - but it's supposed
 // to loop unravel
-static inline void sh9a_sort_lru_upper(uint32_t * d, uint8_t mru) {
+static inline void sh9a_sort_lru_upper(
+          uint32_t * d,
+          uint8_t mru)
+{
      uint32_t a = 0;
      uint32_t i;
 
@@ -752,8 +800,10 @@ static inline void sh9a_sort_lru_upper(uint32_t * d, uint8_t mru) {
 #undef GCC_VERSION
 
 //given an index and bucket.. find state data...
-static inline int sh9a_lookup_bucket(sh9a_bucket_t * bucket,
-                                     uint32_t digest) {
+static inline int sh9a_lookup_bucket(
+          sh9a_bucket_t * bucket,
+          uint32_t digest)
+{
      int i;
 
      uint32_t * dp = bucket->digest;
@@ -779,8 +829,11 @@ static inline int sh9a_lookup_bucket(sh9a_bucket_t * bucket,
 }
 
 // lookup bucket.. count zeros in bucket
-static inline int sh9a_lookup_bucket2(sh9a_bucket_t * bucket,
-                                      uint32_t digest, uint32_t * zeros) {
+static inline int sh9a_lookup_bucket2(
+          sh9a_bucket_t * bucket,
+          uint32_t digest,
+          uint32_t * zeros)
+{
      int i;
 
      *zeros = 0;
@@ -810,11 +863,12 @@ static inline int sh9a_lookup_bucket2(sh9a_bucket_t * bucket,
 
 #define SH9A_PERMUTE1 0xed31952d18a569ddULL
 #define SH9A_PERMUTE2 0x94e36ad1c8d2654bULL
-static inline void sh9a_gethash(stringhash9a_t * sht,
-                                uint8_t * key, uint32_t keylen,
-                                uint32_t *h1, uint32_t *h2,
-                                uint32_t *pd1, uint32_t *pd2) {
-
+static inline void sh9a_gethash(
+          stringhash9a_t * sht,
+          uint8_t * key, uint32_t keylen,
+          uint32_t *h1, uint32_t *h2,
+          uint32_t *pd1, uint32_t *pd2)
+{
      uint64_t m = evahash64(key, keylen, sht->hash_seed);
      uint64_t p1 = m * SH9A_PERMUTE1;
      uint64_t p2 = m * SH9A_PERMUTE2;
@@ -833,12 +887,16 @@ static inline void sh9a_gethash(stringhash9a_t * sht,
      *pd2 = d2 ? d2 : SH9A_DIGEST_DEFAULT;
 }
 
-static inline void sh9a_gethash2(stringhash9a_t * sht,
-                                 uint8_t * key, uint32_t keylen,
-                                 uint32_t *h1, uint32_t *h2,
-                                 uint32_t *pd1, uint32_t *pd2,
-                                 uint64_t *hash) {
-
+static inline void sh9a_gethash2(
+          stringhash9a_t * sht,
+          uint8_t * key,
+          uint32_t keylen,
+          uint32_t *h1,
+          uint32_t *h2,
+          uint32_t *pd1,
+          uint32_t *pd2,
+          uint64_t *hash)
+{
      uint64_t m = evahash64(key, keylen, sht->hash_seed);
      *hash = m;
      uint64_t p1 = m * SH9A_PERMUTE1;
@@ -858,11 +916,14 @@ static inline void sh9a_gethash2(stringhash9a_t * sht,
      *pd2 = d2 ? d2 : SH9A_DIGEST_DEFAULT;
 }
 
-static inline void sh9a_gethash3(stringhash9a_t * sht,
-                                 uint64_t hash,
-                                 uint32_t *h1, uint32_t *h2,
-                                 uint32_t *pd1, uint32_t *pd2) {
-
+static inline void sh9a_gethash3(
+          stringhash9a_t * sht,
+          uint64_t hash,
+          uint32_t *h1,
+          uint32_t *h2,
+          uint32_t *pd1,
+          uint32_t *pd2)
+{
      uint64_t m = hash;
      uint64_t p1 = m * SH9A_PERMUTE1;
      uint64_t p2 = m * SH9A_PERMUTE2;
@@ -881,8 +942,8 @@ static inline void sh9a_gethash3(stringhash9a_t * sht,
      *pd2 = d2 ? d2 : SH9A_DIGEST_DEFAULT;
 }
 
-static inline void sh9a_shift_new(uint32_t * d, uint32_t a) {
-
+static inline void sh9a_shift_new(uint32_t * d, uint32_t a)
+{
      d[12] &= SH9A_DIGEST_MASK;
      d[12] |= d[9] & SH9A_LEFTOVER_MASK;
      d[13] &= SH9A_DIGEST_MASK;
@@ -929,9 +990,13 @@ static inline void sh9a_shift_new(uint32_t * d, uint32_t a) {
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_check_posthash_shared(stringhash9a_t * sht,
-                                              uint32_t h1, uint32_t h2,
-                                              uint32_t d1, uint32_t d2) {
+static inline int stringhash9a_check_posthash_shared(
+          stringhash9a_t * sht,
+          uint32_t h1,
+          uint32_t h2,
+          uint32_t d1,
+          uint32_t d2)
+{
      //get lookup hashes
      SH9A_SHIFT_KEY(h1, k1)
      SH9A_LOCK(sht, k1)
@@ -951,9 +1016,13 @@ static inline int stringhash9a_check_posthash_shared(stringhash9a_t * sht,
      return 0;
 }
 
-static inline int stringhash9a_check_posthash_serial(stringhash9a_t * sht,
-                                              uint32_t h1, uint32_t h2,
-                                              uint32_t d1, uint32_t d2) {
+static inline int stringhash9a_check_posthash_serial(
+          stringhash9a_t * sht,
+          uint32_t h1,
+          uint32_t h2,
+          uint32_t d1,
+          uint32_t d2)
+{
      //get lookup hashes
      if (sh9a_lookup_bucket(&sht->buckets[h1], d1)) {
           return 1;
@@ -965,9 +1034,13 @@ static inline int stringhash9a_check_posthash_serial(stringhash9a_t * sht,
      return 0;
 }
 
-static inline int stringhash9a_check_posthash(stringhash9a_t * sht,
-                                              uint32_t h1, uint32_t h2,
-                                              uint32_t d1, uint32_t d2) {
+static inline int stringhash9a_check_posthash(
+          stringhash9a_t * sht,
+          uint32_t h1,
+          uint32_t h2,
+          uint32_t d1,
+          uint32_t d2)
+{
      if (sht->is_shared) {
           return stringhash9a_check_posthash_shared(sht, h1, h2, d1, d2);
      }
@@ -977,9 +1050,11 @@ static inline int stringhash9a_check_posthash(stringhash9a_t * sht,
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_check(stringhash9a_t * sht,
-                                     void * key, int keylen) {
-
+static inline int stringhash9a_check(
+          stringhash9a_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
 
@@ -989,10 +1064,12 @@ static inline int stringhash9a_check(stringhash9a_t * sht,
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_check_gethash(stringhash9a_t * sht,
-                                             void * key, int keylen,
-                                             uint64_t * phash) {
-
+static inline int stringhash9a_check_gethash(
+          stringhash9a_t * sht,
+          void * key,
+          int keylen,
+          uint64_t * phash)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
 
@@ -1002,9 +1079,10 @@ static inline int stringhash9a_check_gethash(stringhash9a_t * sht,
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_check_hash(stringhash9a_t * sht,
-                                          uint64_t hash) {
-
+static inline int stringhash9a_check_hash(
+          stringhash9a_t * sht,
+          uint64_t hash)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
 
@@ -1013,8 +1091,12 @@ static inline int stringhash9a_check_hash(stringhash9a_t * sht,
      return stringhash9a_check_posthash(sht, h1, h2, d1, d2);
 }
 
-static inline int sh9a_cmp_epoch(stringhash9a_t * sht, uint32_t h1, uint32_t h2,
-                                 uint32_t d1) {
+static inline int sh9a_cmp_epoch(
+          stringhash9a_t * sht,
+          uint32_t h1,
+          uint32_t h2,
+          uint32_t d1)
+{
      uint8_t e1, e2;
      uint8_t diff1, diff2;
 
@@ -1042,7 +1124,10 @@ static inline int sh9a_cmp_epoch(stringhash9a_t * sht, uint32_t h1, uint32_t h2,
      //return (diff1 >= diff2) ? 1 : 0;
 }
 
-static inline void sh9a_update_bucket_epoch(stringhash9a_t * sht, sh9a_bucket_t * bucket) {
+static inline void sh9a_update_bucket_epoch(
+          stringhash9a_t * sht,
+          sh9a_bucket_t * bucket)
+{
      sht->insert_cnt++;
      if (sht->insert_cnt > sht->max_insert_cnt) {
           sht->insert_cnt = 0;
@@ -1053,9 +1138,13 @@ static inline void sh9a_update_bucket_epoch(stringhash9a_t * sht, sh9a_bucket_t 
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_set_posthash_shared(stringhash9a_t * sht,
-                                            uint32_t h1, uint32_t h2,
-                                            uint32_t d1, uint32_t d2) {
+static inline int stringhash9a_set_posthash_shared(
+          stringhash9a_t * sht,
+          uint32_t h1,
+          uint32_t h2,
+          uint32_t d1,
+          uint32_t d2)
+{
      uint32_t zeros1, zeros2;
 
      SH9A_SHIFT_KEY(h1, k1)
@@ -1102,9 +1191,13 @@ static inline int stringhash9a_set_posthash_shared(stringhash9a_t * sht,
      return 0;
 }
 
-static inline int stringhash9a_set_posthash_serial(stringhash9a_t * sht,
-                                            uint32_t h1, uint32_t h2,
-                                            uint32_t d1, uint32_t d2) {
+static inline int stringhash9a_set_posthash_serial(
+          stringhash9a_t * sht,
+          uint32_t h1,
+          uint32_t h2,
+          uint32_t d1,
+          uint32_t d2)
+{
      uint32_t zeros1, zeros2;
 
      if (sh9a_lookup_bucket2(&sht->buckets[h1], d1, &zeros1) ||
@@ -1146,9 +1239,13 @@ static inline int stringhash9a_set_posthash_serial(stringhash9a_t * sht,
      return 0;
 }
 
-static inline int stringhash9a_set_posthash(stringhash9a_t * sht,
-                                              uint32_t h1, uint32_t h2,
-                                              uint32_t d1, uint32_t d2) {
+static inline int stringhash9a_set_posthash(
+          stringhash9a_t * sht,
+          uint32_t h1,
+          uint32_t h2,
+          uint32_t d1,
+          uint32_t d2)
+{
      if (sht->is_shared) {
           return stringhash9a_set_posthash_shared(sht, h1, h2, d1, d2);
      }
@@ -1157,14 +1254,18 @@ static inline int stringhash9a_set_posthash(stringhash9a_t * sht,
      }
 }
 
-static inline uint64_t stringhash9a_drop_cnt(stringhash9a_t * sht) {
+static inline uint64_t stringhash9a_drop_cnt(
+          stringhash9a_t * sht)
+{
      return sht->drops;
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_set(stringhash9a_t * sht,
-                                   void * key, int keylen) {
-
+static inline int stringhash9a_set(
+          stringhash9a_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
 
@@ -1175,10 +1276,12 @@ static inline int stringhash9a_set(stringhash9a_t * sht,
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_set_gethash(stringhash9a_t * sht,
-                                           void * key, int keylen,
-                                           uint64_t * phash) {
-
+static inline int stringhash9a_set_gethash(
+          stringhash9a_t * sht,
+          void * key,
+          int keylen,
+          uint64_t * phash)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
 
@@ -1189,21 +1292,23 @@ static inline int stringhash9a_set_gethash(stringhash9a_t * sht,
 }
 
 //find records using hashkeys.. return 1 if found
-static inline int stringhash9a_set_hash(stringhash9a_t * sht,
-                                        uint64_t hash) {
-
+static inline int stringhash9a_set_hash(
+          stringhash9a_t * sht,
+          uint64_t hash)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
-
      sh9a_gethash3(sht, hash, &h1, &h2, &d1, &d2);
-
      return stringhash9a_set_posthash(sht, h1, h2, d1, d2);
 }
 
 
 
 //move mru item to front.. for lower 16 items in a bucket
-static inline void sh9a_sort_lru_lower_half(uint32_t * d, uint8_t mru) {
+static inline void sh9a_sort_lru_lower_half(
+          uint32_t * d,
+          uint8_t mru)
+{
      uint32_t a;
      uint32_t i;
      uint32_t x = (mru > 10) ? (mru - 10) : 0;
@@ -1219,7 +1324,10 @@ static inline void sh9a_sort_lru_lower_half(uint32_t * d, uint8_t mru) {
 
 //move mru item to front..  ridiculous code bloat - but it's supposed
 // to perform better than straightforward looping..
-static inline void sh9a_sort_lru_upper_half(uint32_t * d, uint8_t mru) {
+static inline void sh9a_sort_lru_upper_half(
+          uint32_t * d,
+          uint8_t mru)
+{
      uint32_t a;
      uint32_t i;
 
@@ -1305,7 +1413,10 @@ static inline void sh9a_sort_lru_upper_half(uint32_t * d, uint8_t mru) {
 
 //move mru item to front..  ridiculous code bloat - but it's supposed
 // to loop unravel
-static inline void sh9a_delete_lru(uint32_t * d, uint8_t item) {
+static inline void sh9a_delete_lru(
+          uint32_t * d,
+          uint8_t item)
+{
      uint32_t i;
      if (item < 16) {
           for (i = item; i < 15; i++) {
@@ -1360,8 +1471,10 @@ static inline void sh9a_delete_lru(uint32_t * d, uint8_t item) {
 }
 
 //given an index and digest.. find state data...
-static inline int sh9a_delete_bucket(sh9a_bucket_t * bucket,
-                                    uint32_t digest) {
+static inline int sh9a_delete_bucket(
+          sh9a_bucket_t * bucket,
+          uint32_t digest)
+{
      uint32_t i;
      
      uint32_t * dp = bucket->digest;
@@ -1384,9 +1497,11 @@ static inline int sh9a_delete_bucket(sh9a_bucket_t * bucket,
 }
 
 //delete record at hashkey
-static inline int stringhash9a_delete_shared(stringhash9a_t * sht,
-                                      void * key, int keylen) {
-
+static inline int stringhash9a_delete_shared(
+          stringhash9a_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
 
@@ -1412,9 +1527,11 @@ static inline int stringhash9a_delete_shared(stringhash9a_t * sht,
      return 0;
 }
 
-static inline int stringhash9a_delete_serial(stringhash9a_t * sht,
-                                      void * key, int keylen) {
-
+static inline int stringhash9a_delete_serial(
+          stringhash9a_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2;
      uint32_t d1, d2;
 
@@ -1432,8 +1549,11 @@ static inline int stringhash9a_delete_serial(stringhash9a_t * sht,
      return 0;
 }
 
-static inline int stringhash9a_delete(stringhash9a_t * sht,
-                                      void * key, int keylen) {
+static inline int stringhash9a_delete(
+          stringhash9a_t * sht,
+          void * key,
+          int keylen)
+{
      if (sht->is_shared) {
           return stringhash9a_delete_shared(sht, key, keylen);
      }
@@ -1442,14 +1562,18 @@ static inline int stringhash9a_delete(stringhash9a_t * sht,
      }
 }
 
-static inline void stringhash9a_flush(stringhash9a_t * sht) {
+static inline void stringhash9a_flush(stringhash9a_t * sht)
+{
      SH9A_LOCK_ALL(sht)
      memset(sht->buckets, 0, sizeof(sh9a_bucket_t) * (uint64_t)sht->index_size * 2);
      SH9A_UNLOCK_ALL(sht)
      sht->epoch = 1;
 }
 
-static inline int stringhash9a_clean_sharing (void * sht_generic, int * index) {
+static inline int stringhash9a_clean_sharing(
+          void * sht_generic,
+          int * index)
+{
      stringhash9a_t * sht = (stringhash9a_t *)sht_generic;
 
      if (work_size == 1 || sht->sharedata->cnt == 1) {
@@ -1491,7 +1615,9 @@ static inline int stringhash9a_clean_sharing (void * sht_generic, int * index) {
      return 1;
 }
 
-static inline void stringhash9a_destroy(stringhash9a_t * sht) {
+static inline void stringhash9a_destroy(
+          stringhash9a_t * sht)
+{
      int ret = 0;
 
 #ifndef TOOL_NAME
@@ -1527,7 +1653,8 @@ static inline void stringhash9a_destroy(stringhash9a_t * sht) {
 }
 
 //read sh9 table from file..
-static inline stringhash9a_t * stringhash9a_read(FILE * fp) {
+static inline stringhash9a_t * stringhash9a_read(FILE * fp)
+{
      uint32_t ibits, hash_seed;
      char sht_id[SHT_ID_SIZE];
 
@@ -1584,7 +1711,10 @@ static inline stringhash9a_t * stringhash9a_read(FILE * fp) {
 }
 
 //dump sh9 table to file
-static inline int stringhash9a_dump(stringhash9a_t * sht, FILE * fp) {
+static inline int stringhash9a_dump(
+          stringhash9a_t * sht,
+          FILE * fp)
+{
      int rtn;
      char sht_id[SHT_ID_SIZE] = SHT9A_ID;
 
@@ -1604,15 +1734,20 @@ static inline int stringhash9a_dump(stringhash9a_t * sht, FILE * fp) {
 } 
 
 #ifdef _WATERSLIDE_H
-static inline int stringhash9a_check_loc(stringhash9a_t * sht, ws_hashloc_t * loc) {
+static inline int stringhash9a_check_loc(
+          stringhash9a_t * sht,
+          ws_hashloc_t * loc)
+{
      if (loc && loc->len) {
           return stringhash9a_check(sht, loc->offset, loc->len);
      }
      return 0;
 }
 
-static inline int stringhash9a_check_wsdata(stringhash9a_t * sht,
-                                          wsdata_t * wsd) {
+static inline int stringhash9a_check_wsdata(
+          stringhash9a_t * sht,
+          wsdata_t * wsd)
+{
      ws_hashloc_t * loc = wsd->dtype->hash_func(wsd);
      if (loc) {
           return stringhash9a_check(sht, loc->offset, loc->len);
@@ -1621,15 +1756,20 @@ static inline int stringhash9a_check_wsdata(stringhash9a_t * sht,
 }
 
 
-static inline int stringhash9a_set_loc(stringhash9a_t * sht, ws_hashloc_t * loc) {
+static inline int stringhash9a_set_loc(
+          stringhash9a_t * sht,
+          ws_hashloc_t * loc)
+{
      if (loc && loc->len) {
           return stringhash9a_set(sht, loc->offset, loc->len);
      }
      return 0;
 }
 
-static inline int stringhash9a_set_wsdata(stringhash9a_t * sht,
-                                          wsdata_t * wsd) {
+static inline int stringhash9a_set_wsdata(
+          stringhash9a_t * sht,
+          wsdata_t * wsd)
+{
      ws_hashloc_t * loc = wsd->dtype->hash_func(wsd);
      if (loc) {
           return stringhash9a_set(sht, loc->offset, loc->len);
@@ -1638,15 +1778,20 @@ static inline int stringhash9a_set_wsdata(stringhash9a_t * sht,
 }
 
 
-static inline int stringhash9a_delete_loc(stringhash9a_t * sht, ws_hashloc_t * loc) {
+static inline int stringhash9a_delete_loc(
+          stringhash9a_t * sht,
+          ws_hashloc_t * loc)
+{
      if (loc && loc->len) {
           return stringhash9a_delete(sht, loc->offset, loc->len);
      }
      return 0;
 }
 
-static inline int stringhash9a_delete_wsdata(stringhash9a_t * sht,
-                                             wsdata_t * wsd) {
+static inline int stringhash9a_delete_wsdata(
+          stringhash9a_t * sht,
+          wsdata_t * wsd)
+{
      ws_hashloc_t * loc = wsd->dtype->hash_func(wsd);
      if (loc) {
           return stringhash9a_delete(sht, loc->offset, loc->len);
@@ -1656,8 +1801,8 @@ static inline int stringhash9a_delete_wsdata(stringhash9a_t * sht,
 #endif // _WATERSLIDE_H
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _STRINGHASH9A_H
 

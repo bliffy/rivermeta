@@ -1,26 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 //STRINGHASH5
 // Created: July 2009
 // Purpose: for storing data for as long as possible based on a key using
@@ -136,8 +113,8 @@ SOFTWARE.
 #include "shared/kidshare.h"
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+extern "C" {
+#endif
 
 //macros
 #ifndef SHT_ID_SIZE
@@ -212,20 +189,36 @@ typedef uint32_t sh5_digest_t;
 
 // typedefs for callback functions
 typedef void (*sh_callback_t)(void *, void *);
-typedef uint32_t (*sh5datadump_callback_t)(void *, uint32_t, uint32_t, FILE *);
-typedef uint32_t (*sh5dataread_callback_t)(void *, uint32_t, FILE *);
+typedef uint32_t (*sh5datadump_callback_t)(
+     void *,
+     uint32_t,
+     uint32_t,
+     FILE *);
+typedef uint32_t (*sh5dataread_callback_t)(
+     void *,
+     uint32_t,
+     FILE *);
 
 //callback functions
-typedef void (*stringhash5_callback)(void * /*data*/, void * /*calldata*/);
-typedef uint32_t (*sh5_datadump_cb)(void * /*data*/, uint32_t /*max_records*/, 
-                                    uint32_t /*data_alloc*/, FILE * /*fp*/);
-typedef uint32_t (*sh5_dataread_cb)(void * /*data*/, uint32_t /*data_alloc*/, 
-                                    FILE * /*fp*/);
-typedef int (*stringhash5_visit)(void * /*data*/, void * /*calldata*/);
+typedef void (*stringhash5_callback)(
+     void * /*data*/,
+     void * /*calldata*/);
+typedef uint32_t (*sh5_datadump_cb)(
+     void * /*data*/,
+     uint32_t /*max_records*/,
+     uint32_t /*data_alloc*/,
+     FILE * /*fp*/);
+typedef uint32_t (*sh5_dataread_cb)(
+     void * /*data*/,
+     uint32_t /*data_alloc*/,
+     FILE * /*fp*/);
+typedef int (*stringhash5_visit)(
+     void * /*data*/,
+     void * /*calldata*/);
 
 typedef struct _share5_t {
      int cnt;
-     void * table;
+     void* table;
 } share5_t;
 
 //28 bits of digest, 4 bits of pointer to data
@@ -236,17 +229,17 @@ typedef struct _sh5_bucket_t {
 
 typedef struct _stringhash5_sh_opts_t {
      sh_callback_t sh_callback;
-     void * proc; 
+     void* proc; 
      int readonly;
-     const char * open_table;
+     const char* open_table;
      int read_n_scour;
      sh_callback_t sh_scour; 
      sh5dataread_callback_t sh5_dataread_cb;
 } stringhash5_sh_opts_t;
 
 typedef struct _stringhash5_t {
-     sh5_bucket_t * buckets;
-     uint8_t * data;
+     sh5_bucket_t* buckets;
+     uint8_t* data;
      size_t data_alloc;
      size_t max_records;
      uint64_t mem_used;
@@ -254,26 +247,26 @@ typedef struct _stringhash5_t {
      uint32_t all_index_size;
      uint32_t hash_seed;
      stringhash5_callback callback;
-     void ** cb_vproc;
+     void** cb_vproc;
      uint8_t epoch;
      uint32_t einserts;
      uint32_t einsert_max;
      uint64_t mask_index;
      uint64_t drops;
      uint32_t read_success;
-     struct _stringhash5_walker_t ** walkers;
+     struct _stringhash5_walker_t** walkers;
      uint32_t num_walkers;
-     uint32_t * walker_row;
+     uint32_t* walker_row;
      uint64_t nextval;
 
      int is_shared;
-     char * sharelabel;
-     share5_t * sharedata;
-     void * v_type_table;
+     char* sharelabel;
+     share5_t* sharedata;
+     void* v_type_table;
      uint32_t max_mutex;
      uint32_t mutex_index_shift;
-     sh5_mutex_t * mutex;
-     uint32_t * curr_lock;
+     sh5_mutex_t* mutex;
+     uint32_t* curr_lock;
      sh5_mutex_t masterlock;
 #ifdef WS_LOCK_DBG
      WS_MUTEX_DECL(walker_mutex);
@@ -283,9 +276,9 @@ typedef struct _stringhash5_t {
 } stringhash5_t;
 
 typedef struct _stringhash5_walker_t {
-     struct _stringhash5_t * sht;
+     struct _stringhash5_t* sht;
      stringhash5_visit callback;
-     void * cb_vproc;
+     void* cb_vproc;
      uint32_t walker_id;
 } stringhash5_walker_t;
 
@@ -293,63 +286,129 @@ typedef struct _stringhash5_walker_t {
 extern uint32_t work_size;
 
 //prototypes
-static inline void stringhash5_set_callback(stringhash5_t *, stringhash5_callback, void *);
+static inline void stringhash5_set_callback(
+     stringhash5_t *,
+     stringhash5_callback,
+     void *);
 //DEPRECATED
-static inline int stringhash5_open_table(stringhash5_t **, void *, const char *, uint64_t *, 
-                                            int, sh_callback_t);
+static inline int stringhash5_open_table(
+     stringhash5_t **,
+     void *,
+     const char *,
+     uint64_t *,
+     int,
+     sh_callback_t);
 //DEPRECATED
-static inline int stringhash5_open_table_with_ptrs(stringhash5_t **, void *, const char *, 
-                                            uint64_t *, int, sh_callback_t, 
-                                            sh5dataread_callback_t);
+static inline int stringhash5_open_table_with_ptrs(
+     stringhash5_t **,
+     void *,
+     const char *,
+     uint64_t *,
+     int,
+     sh_callback_t,
+     sh5dataread_callback_t);
 //CURRENT
-static inline int stringhash5_open_sht_table(stringhash5_t **, void *, uint64_t, uint32_t, 
-                                            stringhash5_sh_opts_t *);
-static inline stringhash5_t * stringhash5_create(uint32_t, uint64_t, uint32_t);
-static inline void stringhash5_clean_data_field(stringhash5_t *);
+static inline int stringhash5_open_sht_table(
+     stringhash5_t **,
+     void *,
+     uint64_t,
+     uint32_t,
+     stringhash5_sh_opts_t *);
+static inline stringhash5_t* stringhash5_create(
+     uint32_t,
+     uint64_t,
+     uint32_t);
+static inline void stringhash5_clean_data_field(
+     stringhash5_t *);
 static inline uint32_t check_sh5_max_records(uint64_t);
 //DEPRECATED
-static inline int stringhash5_create_shared(void *, void **, const char *, uint32_t, uint32_t, 
-                                            int *, sh_callback_t, void *, int, void *, uint64_t *, 
-                                            int, sh_callback_t);
+static inline int stringhash5_create_shared(
+     void *,
+     void **,
+     const char *,
+     uint32_t,
+     uint32_t,
+     int *,
+     sh_callback_t,
+     void *,
+     int,
+     void *,
+     uint64_t *,
+     int,
+     sh_callback_t);
 //DEPRECATED
-static inline int stringhash5_create_shared_with_ptrs(void *, void **, const char *, uint32_t, uint32_t, 
-                                            int *, sh_callback_t, void *, int, void *, uint64_t *, 
-                                            int, sh_callback_t, sh5dataread_callback_t);
+static inline int stringhash5_create_shared_with_ptrs(
+     void *,
+     void **,
+     const char *,
+     uint32_t,
+     uint32_t,
+     int *,
+     sh_callback_t,
+     void *,
+     int,
+     void *,
+     uint64_t *,
+     int,
+     sh_callback_t,
+     sh5dataread_callback_t);
 //CURRENT
-static inline int stringhash5_create_shared_sht(void *, void **, const char *, uint32_t, uint32_t, 
-                                            int *, stringhash5_sh_opts_t *);
+static inline int stringhash5_create_shared_sht(
+     void *, void **, const char *, uint32_t, uint32_t, 
+     int *, stringhash5_sh_opts_t *);
 static inline void stringhash5_unlock(stringhash5_t *);
-static inline void stringhash5_masterlock_lock(stringhash5_t *);
-static inline void stringhash5_masterlock_unlock(stringhash5_t *);
-static inline void * stringhash5_find(stringhash5_t *, void *, int);
-static inline void * stringhash5_jump_to_entry(stringhash5_t *, uint32_t, uint32_t);
-static inline void stringhash5_mark_as_used(stringhash5_t *, uint32_t, uint32_t);
+static inline void stringhash5_masterlock_lock(
+     stringhash5_t *);
+static inline void stringhash5_masterlock_unlock(
+     stringhash5_t *);
+static inline void * stringhash5_find(
+     stringhash5_t *, void *, int);
+static inline void * stringhash5_jump_to_entry(
+     stringhash5_t *, uint32_t, uint32_t);
+static inline void stringhash5_mark_as_used(
+     stringhash5_t *, uint32_t, uint32_t);
 static inline uint64_t stringhash5_drop_cnt(stringhash5_t *);
-static inline void * stringhash5_find_attach(stringhash5_t *, void *, int);
-static inline int stringhash5_delete(stringhash5_t *, void *, int);
+static inline void * stringhash5_find_attach(
+     stringhash5_t *, void *, int);
+static inline int stringhash5_delete(
+     stringhash5_t *, void *, int);
 static inline void stringhash5_flush(stringhash5_t *);
 static inline void stringhash5_destroy(stringhash5_t *);
-static inline void stringhash5_scour(stringhash5_t *, stringhash5_callback, void *);
-static inline void stringhash5_scour_and_destroy(stringhash5_t *, stringhash5_callback, void *);
+static inline void stringhash5_scour(
+     stringhash5_t *, stringhash5_callback, void *);
+static inline void stringhash5_scour_and_destroy(
+     stringhash5_t *, stringhash5_callback, void *);
 static inline stringhash5_t * stringhash5_read(FILE *);
-static inline stringhash5_t * stringhash5_read_with_ptrs(FILE *, sh5dataread_callback_t);
+static inline stringhash5_t * stringhash5_read_with_ptrs(
+     FILE *, sh5dataread_callback_t);
 static inline int stringhash5_dump(stringhash5_t *, FILE *);
-static inline int stringhash5_dump_with_ptrs(stringhash5_t *, FILE *, sh5datadump_callback_t);
-static inline void * stringhash5_find_loc(stringhash5_t *, ws_hashloc_t *);
-static inline void * stringhash5_find_wsdata(stringhash5_t *, wsdata_t *);
-static inline void * stringhash5_find_attach_loc(stringhash5_t *, ws_hashloc_t *);
-static inline void * stringhash5_find_attach_wsdata(stringhash5_t *, wsdata_t *);
-static inline int stringhash5_delete_loc(stringhash5_t *, ws_hashloc_t *);
-static inline int stringhash5_delete_wsdata(stringhash5_t *, wsdata_t *);
-static inline stringhash5_walker_t * stringhash5_walker_init(stringhash5_t *, stringhash5_visit, 
-                                                             void *);
-static inline int stringhash5_walker_next(stringhash5_walker_t *);
-static inline int stringhash5_walker_destroy(stringhash5_walker_t *);
+static inline int stringhash5_dump_with_ptrs(
+     stringhash5_t *, FILE *, sh5datadump_callback_t);
+static inline void * stringhash5_find_loc(
+     stringhash5_t *, ws_hashloc_t *);
+static inline void * stringhash5_find_wsdata(
+     stringhash5_t *, wsdata_t *);
+static inline void * stringhash5_find_attach_loc(
+     stringhash5_t *, ws_hashloc_t *);
+static inline void * stringhash5_find_attach_wsdata(
+     stringhash5_t *, wsdata_t *);
+static inline int stringhash5_delete_loc(
+     stringhash5_t *, ws_hashloc_t *);
+static inline int stringhash5_delete_wsdata(
+     stringhash5_t *, wsdata_t *);
+static inline stringhash5_walker_t * stringhash5_walker_init(
+     stringhash5_t *, stringhash5_visit, void *);
+static inline int stringhash5_walker_next(
+     stringhash5_walker_t *);
+static inline int stringhash5_walker_destroy(
+     stringhash5_walker_t *);
 
 
-static inline void stringhash5_set_callback(stringhash5_t * sht,
-                                            stringhash5_callback cb,
-                                            void * vproc) {
+static inline void stringhash5_set_callback(
+          stringhash5_t * sht,
+          stringhash5_callback cb,
+          void * vproc)
+{
      SET_NRANK
 
      // first arrival needs to set the (shared) callback function
@@ -371,8 +430,10 @@ static inline void stringhash5_set_callback(stringhash5_t * sht,
 static inline uint32_t sh5_uint32_log2(uint32_t v) {
      static const int MultiplyDeBruijnBitPosition[32] = 
      {
-          0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 
-          31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+          0, 1, 28, 2, 29, 14, 24, 3, 
+          30, 22, 20, 15, 25, 17, 4, 8, 
+          31, 27, 13, 23, 21, 19, 16, 7,
+          26, 12, 18, 6, 11, 5, 10, 9
      };
 
      v |= v >> 1; // first round down to power of 2 
@@ -394,7 +455,9 @@ static inline void sh5_init_buckets(stringhash5_t * sht) {
      }
 }
 
-static inline int stringhash5_create_mutex(stringhash5_t * sht) {
+static inline int stringhash5_create_mutex(
+          stringhash5_t * sht)
+{
 
      //every 32 indexes we have a mutex
      sht->mutex_index_shift = 5;
@@ -453,8 +516,9 @@ static inline uint32_t stringhash5_pad_alloc(uint32_t alloc) {
      }
 }
 
-static inline uint32_t check_sh5_max_records(uint64_t max_records) {
-
+static inline uint32_t check_sh5_max_records(
+          uint64_t max_records)
+{
      //enforce a minimum table size for the sake of robustness
      if(max_records < 4*SH5_DEPTH) {
           tool_print("WARNING: minimum size for sh5 max_records must be at least %d...resizing",
@@ -473,19 +537,27 @@ static inline uint32_t check_sh5_max_records(uint64_t max_records) {
      return max_records;
 }
 
-static inline void stringhash5_sh_opts_alloc(stringhash5_sh_opts_t ** sh5_sh_opts) {
+static inline void stringhash5_sh_opts_alloc(
+          stringhash5_sh_opts_t ** sh5_sh_opts)
+{
      *sh5_sh_opts = (stringhash5_sh_opts_t *)calloc(1,sizeof(stringhash5_sh_opts_t));
 }
 
-static inline void stringhash5_sh_opts_free(stringhash5_sh_opts_t * sh5_sh_opts) {
+static inline void stringhash5_sh_opts_free(
+          stringhash5_sh_opts_t * sh5_sh_opts)
+{
      free(sh5_sh_opts);
 }
 
 //DEPRECATED
-static inline int stringhash5_open_table(stringhash5_t ** table, void * proc, 
-                                         const char * open_table, uint64_t * nextval, 
-                                         int read_n_scour, sh_callback_t sh_scour) { 
-
+static inline int stringhash5_open_table(
+          stringhash5_t ** table,
+          void * proc,
+          const char * open_table,
+          uint64_t * nextval,
+          int read_n_scour,
+          sh_callback_t sh_scour)
+{
      stringhash5_sh_opts_t * sh5_sh_opts;
      int ret;
      tool_print("WARNING: 'stringhash5_open_table' HAS BEEN DEPRECATED. PLEASE USE 'stringhash5_open_sht_table' INSTEAD.");
@@ -516,11 +588,15 @@ static inline int stringhash5_open_table(stringhash5_t ** table, void * proc,
 }
 
 //DEPRECATED
-static inline int stringhash5_open_table_with_ptrs(stringhash5_t ** table, void * proc, 
-                                                   const char * open_table, uint64_t * nextval,
-                                                   int read_n_scour, sh_callback_t sh_scour, 
-                                                   sh5dataread_callback_t sh5_dataread_cb) {
-
+static inline int stringhash5_open_table_with_ptrs(
+          stringhash5_t ** table,
+          void * proc,
+          const char * open_table,
+          uint64_t * nextval,
+          int read_n_scour,
+          sh_callback_t sh_scour,
+          sh5dataread_callback_t sh5_dataread_cb)
+{
      stringhash5_sh_opts_t * sh5_sh_opts;
      int ret;
      tool_print("WARNING: 'stringhash5_open_table_with_ptrs' HAS BEEN DEPRECATED. PLEASE USE 'stringhash5_open_sht_table' INSTEAD.");
@@ -552,9 +628,13 @@ static inline int stringhash5_open_table_with_ptrs(stringhash5_t ** table, void 
 }
 
 //CURRENT
-static inline int stringhash5_open_sht_table(stringhash5_t ** table, void * proc, 
-                                             uint64_t max_records, uint32_t data_alloc, 
-                                             stringhash5_sh_opts_t * sh5_sh_opts) {
+static inline int stringhash5_open_sht_table(
+          stringhash5_t ** table,
+          void * proc,
+          uint64_t max_records,
+          uint32_t data_alloc,
+          stringhash5_sh_opts_t * sh5_sh_opts)
+{
      if (sh5_sh_opts->open_table) {
           FILE * fp;
           fp = sysutil_config_fopen(sh5_sh_opts->open_table, "r");
@@ -616,8 +696,11 @@ static inline int stringhash5_open_sht_table(stringhash5_t ** table, void * proc
 // At long last - the first parameter has a use!  We use the first argument to signal that
 // stringhash5_create is being called to create a shared table (i.e. the call is made
 // from stringhash5_create_shared)
-static inline stringhash5_t * stringhash5_create(uint32_t is_shared, uint64_t max_records,
-                                                 uint32_t data_alloc) {
+static inline stringhash5_t * stringhash5_create(
+          uint32_t is_shared,
+          uint64_t max_records,
+          uint32_t data_alloc)
+{
      stringhash5_t * sht;
 
      if (!data_alloc) {
@@ -697,18 +780,29 @@ static inline stringhash5_t * stringhash5_create(uint32_t is_shared, uint64_t ma
      return sht;
 }
 
-static inline void stringhash5_clean_data_field(stringhash5_t * sht) {
+static inline void stringhash5_clean_data_field(
+          stringhash5_t * sht)
+{
      memset(sht->data, 0, sht->max_records * sht->data_alloc);
 }
 
 //DEPRECATED
 // wrapper function for the deprecated stringhash5_create_shared
-static inline int stringhash5_create_shared(void * v_type_table, void ** table, 
-                     const char * sharelabel, uint32_t max_records, uint32_t data_alloc, 
-                     int * sharer_id, sh_callback_t sh_callback, void * proc, 
-                     int readonly, void * open_table, uint64_t * nextval, 
-                     int read_n_scour, sh_callback_t sh_scour) {
-
+static inline int stringhash5_create_shared(
+          void * v_type_table,
+          void ** table,
+          const char * sharelabel,
+          uint32_t max_records,
+          uint32_t data_alloc,
+          int * sharer_id,
+          sh_callback_t sh_callback,
+          void * proc,
+          int readonly,
+          void * open_table,
+          uint64_t * nextval,
+          int read_n_scour,
+          sh_callback_t sh_scour)
+{
      stringhash5_sh_opts_t * sh5_sh_opts;
      int ret;
      tool_print("WARNING: 'stringhash5_create_shared' HAS BEEN DEPRECATED. PLEASE USE 'stringhash5_create_shared_sht' INSTEAD.");
@@ -724,9 +818,13 @@ static inline int stringhash5_create_shared(void * v_type_table, void ** table,
      sh5_sh_opts->read_n_scour = read_n_scour;
      sh5_sh_opts->sh_scour = sh_scour; 
 
-     ret = stringhash5_create_shared_sht(v_type_table, table, 
-                     sharelabel, max_records, data_alloc, 
-                     sharer_id, sh5_sh_opts);
+     ret = stringhash5_create_shared_sht(
+          v_type_table,
+          table,
+          sharelabel,
+          max_records,
+          data_alloc,
+          sharer_id, sh5_sh_opts);
 
      //free shared sh5 option struct
      stringhash5_sh_opts_free(sh5_sh_opts);
@@ -741,13 +839,22 @@ static inline int stringhash5_create_shared(void * v_type_table, void ** table,
 
 //DEPRECATED
 // wrapper function for the deprecated stringhash5_create_shared_with_ptrs
-static inline int stringhash5_create_shared_with_ptrs(void * v_type_table, void ** table, 
-                     const char * sharelabel, uint32_t max_records, uint32_t data_alloc, 
-                     int * sharer_id, sh_callback_t sh_callback, void * proc, 
-                     int readonly, void * open_table, uint64_t * nextval, 
-                     int read_n_scour, sh_callback_t sh_scour, 
-                     sh5dataread_callback_t sh5_dataread_cb) {
-
+static inline int stringhash5_create_shared_with_ptrs(
+          void * v_type_table,
+          void ** table,
+          const char * sharelabel,
+          uint32_t max_records,
+          uint32_t data_alloc,
+          int * sharer_id,
+          sh_callback_t sh_callback,
+          void * proc,
+          int readonly,
+          void * open_table,
+          uint64_t * nextval,
+          int read_n_scour,
+          sh_callback_t sh_scour,
+          sh5dataread_callback_t sh5_dataread_cb)
+{
      stringhash5_sh_opts_t * sh5_sh_opts;
      int ret;
      tool_print("WARNING: 'stringhash5_create_shared_with_ptrs' HAS BEEN DEPRECATED. PLEASE USE 'stringhash5_create_shared_sht' INSTEAD.");
@@ -764,9 +871,14 @@ static inline int stringhash5_create_shared_with_ptrs(void * v_type_table, void 
      sh5_sh_opts->sh_scour = sh_scour; 
      sh5_sh_opts->sh5_dataread_cb = sh5_dataread_cb;
 
-     ret = stringhash5_create_shared_sht(v_type_table, table, 
-                     sharelabel, max_records, data_alloc, 
-                     sharer_id, sh5_sh_opts);
+     ret = stringhash5_create_shared_sht(
+          v_type_table,
+          table,
+          sharelabel,
+          max_records,
+          data_alloc,
+          sharer_id,
+          sh5_sh_opts);
 
      //free shared sh5 option struct
      stringhash5_sh_opts_free(sh5_sh_opts);
@@ -779,8 +891,11 @@ static inline int stringhash5_create_shared_with_ptrs(void * v_type_table, void 
      return ret;
 }
 
-static inline int stringhash5_check_params(void ** table, uint32_t max_records, uint32_t data_alloc) {
-
+static inline int stringhash5_check_params(
+          void ** table,
+          uint32_t max_records,
+          uint32_t data_alloc)
+{
      //give an error if max_records does not match the input value for this thread
      if (((stringhash5_t *)(*table))->max_records != check_sh5_max_records(max_records)) {
           error_print("stringhash5 table max_records %"PRIu64" not equal to converted input value %d",
@@ -801,9 +916,15 @@ static inline int stringhash5_check_params(void ** table, uint32_t max_records, 
 }
 
 //CURRENT
-static inline int stringhash5_create_shared_sht(void * v_type_table, void ** table, 
-                     const char * sharelabel, uint32_t max_records, uint32_t data_alloc, 
-                     int * sharer_id, stringhash5_sh_opts_t * sh5_sh_opts) {
+static inline int stringhash5_create_shared_sht(
+          void * v_type_table,
+          void ** table,
+          const char * sharelabel,
+          uint32_t max_records,
+          uint32_t data_alloc,
+          int * sharer_id,
+          stringhash5_sh_opts_t * sh5_sh_opts)
+{
      int shid;
      SET_NRANK
 
@@ -969,23 +1090,29 @@ static inline void stringhash5_unlock(stringhash5_t * sht) {
      }
 }
 
-static inline void stringhash5_masterlock_lock(stringhash5_t * sht) {
+static inline void stringhash5_masterlock_lock(
+          stringhash5_t * sht)
+{
      if (sht->is_shared) {
           SHT_LOCK(&sht->masterlock)
      }
 }
 
-static inline void stringhash5_masterlock_unlock(stringhash5_t * sht) {
+static inline void stringhash5_masterlock_unlock(
+          stringhash5_t * sht)
+{
      if (sht->is_shared) {
           SHT_UNLOCK(&sht->masterlock)
      }
 }
 
 //given an index and bucket.. find state data...
-static inline int sh5_lookup_bucket(sh5_bucket_t * bucket,
-                                    uint32_t digest,
-                                    uint32_t *databin,
-                                    uint32_t *digestbin) {
+static inline int sh5_lookup_bucket(
+          sh5_bucket_t * bucket,
+          uint32_t digest,
+          uint32_t *databin,
+          uint32_t *digestbin)
+{
      int i;
 
      sh5_digest_t * dp = bucket->digest;
@@ -1002,11 +1129,15 @@ static inline int sh5_lookup_bucket(sh5_bucket_t * bucket,
 #define SH5_PERMUTE1 (0xed31952d18a569ddULL)
 #define SH5_PERMUTE2 (0x94e36ad1c8d2654bULL)
 
-static inline void sh5_gethash(stringhash5_t * sht,
-                               uint8_t * key, uint32_t keylen,
-                               uint32_t *h1, uint32_t *h2,
-                               uint32_t *pd1, uint32_t *pd2) {
-
+static inline void sh5_gethash(
+          stringhash5_t * sht,
+          uint8_t * key,
+          uint32_t keylen,
+          uint32_t *h1,
+          uint32_t *h2,
+          uint32_t *pd1,
+          uint32_t *pd2)
+{
      uint64_t m = evahash64((uint8_t*)key, keylen, sht->hash_seed);
      uint64_t p1 = m * SH5_PERMUTE1;
      uint64_t p2 = m * SH5_PERMUTE2;
@@ -1027,7 +1158,10 @@ static inline void sh5_gethash(stringhash5_t * sht,
 
 //move mru item to front..  ridiculous code bloat - but it's supposed
 // to loop unravel
-static inline void sh5_sort_lru(sh5_digest_t * d, uint8_t mru) {
+static inline void sh5_sort_lru(
+          sh5_digest_t * d,
+          uint8_t mru)
+{
      uint32_t a = d[mru];
      switch(mru) {
      case 15:
@@ -1065,7 +1199,10 @@ static inline void sh5_sort_lru(sh5_digest_t * d, uint8_t mru) {
 }
 
 //called when epoch is going to be set anyways
-static inline void sh5_sort_lru_noepoch(sh5_digest_t * d, uint8_t mru) {
+static inline void sh5_sort_lru_noepoch(
+          sh5_digest_t * d,
+          uint8_t mru)
+{
      uint32_t a = d[mru];
      switch(mru) {
      case 15:
@@ -1103,9 +1240,11 @@ static inline void sh5_sort_lru_noepoch(sh5_digest_t * d, uint8_t mru) {
 }
 
 //find records using hashkeys.. return 1 if found
-static inline void * stringhash5_find_shared(stringhash5_t * sht,
-                                      void * key, int keylen) {
-
+static inline void * stringhash5_find_shared(
+          stringhash5_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2, d1, d2;
      uint32_t databin, digestbin;
 
@@ -1136,9 +1275,11 @@ static inline void * stringhash5_find_shared(stringhash5_t * sht,
      return NULL;
 }
 
-static inline void * stringhash5_find_serial(stringhash5_t * sht,
-                                      void * key, int keylen) {
-
+static inline void * stringhash5_find_serial(
+          stringhash5_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2, d1, d2;
      uint32_t databin, digestbin;
 
@@ -1163,8 +1304,11 @@ static inline void * stringhash5_find_serial(stringhash5_t * sht,
      return NULL;
 }
 
-static inline void * stringhash5_find(stringhash5_t * sht,
-                                      void * key, int keylen) {
+static inline void * stringhash5_find(
+          stringhash5_t * sht,
+          void * key,
+          int keylen)
+{
      if (sht->is_shared) {
           return stringhash5_find_shared(sht, key, keylen);
      }
@@ -1179,16 +1323,28 @@ static inline void * stringhash5_find(stringhash5_t * sht,
 // If so, assume it's the same node. If not, assume it's different and remove the querying node no longer has a parent.
 //
 // jump straight to a record if the bucket and databin are known 
-static inline void * stringhash5_jump_to_entry_shared(stringhash5_t *sht, uint32_t bucket, uint32_t databin) {
+static inline void * stringhash5_jump_to_entry_shared(
+          stringhash5_t *sht,
+          uint32_t bucket,
+          uint32_t databin)
+{
      SH5_LOCK(sht,bucket)
      return sht->data + (sht->data_alloc * ((size_t)databin + ((size_t)bucket << SH5_DEPTH_BITS)));
 }
 
-static inline void * stringhash5_jump_to_entry_serial(stringhash5_t *sht, uint32_t bucket, uint32_t databin) {
+static inline void * stringhash5_jump_to_entry_serial(
+          stringhash5_t *sht,
+          uint32_t bucket,
+          uint32_t databin)
+{
      return sht->data + (sht->data_alloc * ((size_t)databin + ((size_t)bucket << SH5_DEPTH_BITS)));
 }
 
-static inline void * stringhash5_jump_to_entry(stringhash5_t * sht, uint32_t bucket, uint32_t databin) {
+static inline void * stringhash5_jump_to_entry(
+          stringhash5_t * sht,
+          uint32_t bucket,
+          uint32_t databin)
+{
      if (sht->is_shared) {
           return stringhash5_jump_to_entry_shared(sht, bucket, databin);
      }
@@ -1198,8 +1354,10 @@ static inline void * stringhash5_jump_to_entry(stringhash5_t * sht, uint32_t buc
 }
 
 // given a bucket and databin, find the digestbin
-static inline int sh5_lookup_digestbin(sh5_bucket_t * bucket,
-                                       uint32_t databin) {
+static inline int sh5_lookup_digestbin(
+          sh5_bucket_t * bucket,
+          uint32_t databin)
+{
      int i;
      for (i = 0; i < SH5_DEPTH; i++) {
           if (databin == (bucket->digest[i]>>SH5_DATA_BIN)) {
@@ -1209,7 +1367,11 @@ static inline int sh5_lookup_digestbin(sh5_bucket_t * bucket,
      return -1;
 }
 
-static inline void stringhash5_mark_as_used_shared(stringhash5_t * sht, uint32_t bucket, uint32_t databin) {
+static inline void stringhash5_mark_as_used_shared(
+          stringhash5_t * sht,
+          uint32_t bucket,
+          uint32_t databin)
+{
      SH5_LOCK(sht,bucket)
      sh5_bucket_t *bucket1=&sht->buckets[bucket];
      int32_t digestbin = sh5_lookup_digestbin(bucket1, databin);
@@ -1219,7 +1381,11 @@ static inline void stringhash5_mark_as_used_shared(stringhash5_t * sht, uint32_t
      SH5_UNLOCK(sht,bucket)
 }
 
-static inline void stringhash5_mark_as_used_serial(stringhash5_t * sht, uint32_t bucket, uint32_t databin) {
+static inline void stringhash5_mark_as_used_serial(
+          stringhash5_t * sht,
+          uint32_t bucket,
+          uint32_t databin)
+{
      sh5_bucket_t *bucket1=&sht->buckets[bucket];
      int32_t digestbin = sh5_lookup_digestbin(bucket1, databin);
      if (digestbin != -1) {
@@ -1227,7 +1393,11 @@ static inline void stringhash5_mark_as_used_serial(stringhash5_t * sht, uint32_t
      }
 }
 
-static inline void stringhash5_mark_as_used(stringhash5_t * sht, uint32_t bucket, uint32_t databin) {
+static inline void stringhash5_mark_as_used(
+          stringhash5_t * sht,
+          uint32_t bucket,
+          uint32_t databin)
+{
      if (sht->is_shared) {
           stringhash5_mark_as_used_shared(sht, bucket, databin);
      }
@@ -1236,15 +1406,22 @@ static inline void stringhash5_mark_as_used(stringhash5_t * sht, uint32_t bucket
      }
 }
 
-static inline void stringhash5_get_bucket_databin(stringhash5_t *sht, void *data,
-                                                  uint32_t *bucket, uint32_t *databin) {
+static inline void stringhash5_get_bucket_databin(
+          stringhash5_t *sht,
+          void *data,
+          uint32_t *bucket,
+          uint32_t *databin)
+{
      uint64_t position = (uint64_t)((uint8_t*)data - sht->data)/((uint64_t)sht->data_alloc);
      *bucket= position >> SH5_DEPTH_BITS;
      *databin= position - (*bucket << SH5_DEPTH_BITS);
 }
 
 //steal bits for epoch counter
-static inline uint8_t sh5_get_epoch(stringhash5_t * sht, sh5_digest_t * d) {
+static inline uint8_t sh5_get_epoch(
+          stringhash5_t * sht,
+          sh5_digest_t * d)
+{
      uint32_t epoch =
           ((d[15] & SH5_EPOCH_MASK) >> (SH5_EPOCH_SHIFT - 7)) +
           ((d[14] & SH5_EPOCH_MASK) >> (SH5_EPOCH_SHIFT - 6)) +
@@ -1257,7 +1434,10 @@ static inline uint8_t sh5_get_epoch(stringhash5_t * sht, sh5_digest_t * d) {
      return sht->epoch - (uint8_t)epoch;
 }
 
-static inline void sh5_set_epoch(stringhash5_t * sht, sh5_digest_t * d) {
+static inline void sh5_set_epoch(
+          stringhash5_t * sht,
+          sh5_digest_t * d)
+{
      sht->einserts++;
      if (sht->einserts > sht->einsert_max) {
           sht->epoch++;
@@ -1271,9 +1451,11 @@ static inline void sh5_set_epoch(stringhash5_t * sht, sh5_digest_t * d) {
      }
 }
 
-static inline sh5_bucket_t * sh5_find_oldest_bucket(stringhash5_t * sht,
-                                                  sh5_bucket_t * b1,
-                                                  sh5_bucket_t * b2) {
+static inline sh5_bucket_t * sh5_find_oldest_bucket(
+          stringhash5_t * sht,
+          sh5_bucket_t * b1,
+          sh5_bucket_t * b2)
+{
      uint8_t e1 = sh5_get_epoch(sht, b1->digest);
      uint8_t e2 = sh5_get_epoch(sht, b2->digest);
 
@@ -1284,9 +1466,11 @@ static inline sh5_bucket_t * sh5_find_oldest_bucket(stringhash5_t * sht,
 }
 
 //find lowest bucket depth or oldest bucket
-static inline sh5_bucket_t * sh5_find_best_bucket(stringhash5_t * sht,
-                                                  sh5_bucket_t * b1,
-                                                  sh5_bucket_t * b2) {
+static inline sh5_bucket_t * sh5_find_best_bucket(
+          stringhash5_t * sht,
+          sh5_bucket_t * b1,
+          sh5_bucket_t * b2)
+{
      int d1 = 0;
      int d2 = 0;
 
@@ -1318,14 +1502,18 @@ static inline sh5_bucket_t * sh5_find_best_bucket(stringhash5_t * sht,
      return b1;
 }
 
-static inline uint64_t stringhash5_drop_cnt(stringhash5_t * sht) {
+static inline uint64_t stringhash5_drop_cnt(
+          stringhash5_t * sht)
+{
      return sht->drops;
 }
 
 //find records using hashkeys.. return 1 if found
-static inline void * stringhash5_find_attach_shared(stringhash5_t * sht,
-                                             void * key, int keylen) {
-
+static inline void * stringhash5_find_attach_shared(
+          stringhash5_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2, d1, d2, pairflag;
      uint32_t databin, digestbin;
      SET_NRANK
@@ -1404,9 +1592,11 @@ static inline void * stringhash5_find_attach_shared(stringhash5_t * sht,
      return data;
 }
 
-static inline void * stringhash5_find_attach_serial(stringhash5_t * sht,
-                                                    void * key, int keylen) {
-
+static inline void * stringhash5_find_attach_serial(
+          stringhash5_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2, d1, d2;
      uint32_t databin, digestbin;
 
@@ -1463,8 +1653,11 @@ static inline void * stringhash5_find_attach_serial(stringhash5_t * sht,
      return data;
 }
 
-static inline void * stringhash5_find_attach(stringhash5_t * sht,
-                                      void * key, int keylen) {
+static inline void * stringhash5_find_attach(
+          stringhash5_t * sht,
+          void * key,
+          int keylen)
+{
      if (sht->is_shared) {
           return stringhash5_find_attach_shared(sht, key, keylen);
      }
@@ -1473,7 +1666,10 @@ static inline void * stringhash5_find_attach(stringhash5_t * sht,
      }
 }
 
-static inline void sh5_delete_lru(sh5_digest_t * d, uint8_t item) {
+static inline void sh5_delete_lru(
+          sh5_digest_t * d,
+          uint8_t item)
+{
      uint32_t data = d[item] & SH5_ANTI_DIGEST_MASK;
      uint32_t i;
      for (i = item; i < 15; i++) {
@@ -1483,8 +1679,10 @@ static inline void sh5_delete_lru(sh5_digest_t * d, uint8_t item) {
 }
 
 //given an index and digest.. find state data...
-static inline int sh5_delete_bucket(sh5_bucket_t * bucket,
-                                    uint32_t digest) {
+static inline int sh5_delete_bucket(
+          sh5_bucket_t * bucket,
+          uint32_t digest)
+{
      uint32_t i;
 
      sh5_digest_t * dp = bucket->digest;
@@ -1498,7 +1696,11 @@ static inline int sh5_delete_bucket(sh5_bucket_t * bucket,
 }
 
 //delete record at hashkey
-static inline int stringhash5_delete(stringhash5_t * sht, void * key, int keylen) {
+static inline int stringhash5_delete(
+          stringhash5_t * sht,
+          void * key,
+          int keylen)
+{
      uint32_t h1, h2, d1, d2;
 
      sh5_gethash(sht, (uint8_t*)key, keylen, &h1, &h2, &d1, &d2);
@@ -1517,8 +1719,8 @@ static inline int stringhash5_delete(stringhash5_t * sht, void * key, int keylen
 // NOTE: flush, scour and destroy are serialized by the kids
 //       except when flush is used as an inline flush, the table must be
 //       protected from access by other kids
-static inline void stringhash5_flush(stringhash5_t * sht) {
-
+static inline void stringhash5_flush(stringhash5_t * sht)
+{
      SH5_ALL_LOCK(sht)
      sh5_init_buckets(sht);
      SH5_ALL_UNLOCK(sht)
@@ -1565,8 +1767,11 @@ static inline void stringhash5_destroy(stringhash5_t * sht) {
      }
 }
 
-static inline void stringhash5_scour(stringhash5_t * sht,
-                                     stringhash5_callback cb, void * vproc) {
+static inline void stringhash5_scour(
+          stringhash5_t * sht,
+          stringhash5_callback cb,
+          void * vproc)
+{
      if (!cb) {
           return;
      }
@@ -1591,8 +1796,11 @@ static inline void stringhash5_scour(stringhash5_t * sht,
      SH5_ALL_UNLOCK(sht)
 }
 
-static inline void stringhash5_scour_and_flush(stringhash5_t * sht,
-                                               stringhash5_callback cb, void * vproc) {
+static inline void stringhash5_scour_and_flush(
+          stringhash5_t * sht,
+          stringhash5_callback cb,
+          void * vproc)
+{
      if (!cb) {
           return;
      }
@@ -1619,7 +1827,10 @@ static inline void stringhash5_scour_and_flush(stringhash5_t * sht,
      SH5_ALL_UNLOCK(sht)
 }
 
-static inline int stringhash5_clean_sharing (void * sht_generic, int * index) {
+static inline int stringhash5_clean_sharing(
+          void * sht_generic,
+          int * index)
+{
      stringhash5_t * sht = (stringhash5_t *)sht_generic;
 
      if (work_size == 1 || sht->sharedata->cnt == 1) {
@@ -1655,8 +1866,11 @@ static inline int stringhash5_clean_sharing (void * sht_generic, int * index) {
 }
 
 // Use this function to serialize both scour and destroy in kid proc_destroy calls
-static inline void stringhash5_scour_and_destroy(stringhash5_t * sht,
-                                                 stringhash5_callback cb, void * vproc) {
+static inline void stringhash5_scour_and_destroy(
+          stringhash5_t * sht,
+          stringhash5_callback cb,
+          void * vproc)
+{
      int ret = 0;
 
      // The table is destroyed by the last thread to arrive
@@ -1699,7 +1913,9 @@ static inline void stringhash5_scour_and_destroy(stringhash5_t * sht,
 }
 
 #ifdef DEBUG
-static inline void stringhash5_print_table(stringhash5_t * sht) {
+static inline void stringhash5_print_table(
+          stringhash5_t * sht)
+{
      uint32_t i, j;
      sh5_bucket_t * bucket;
 
@@ -1719,7 +1935,8 @@ static inline void stringhash5_print_table(stringhash5_t * sht) {
 #endif
 
 //function for reading in a table from a file
-static inline stringhash5_t * stringhash5_read(FILE * fp) {
+static inline stringhash5_t * stringhash5_read(FILE * fp)
+{
      char sht_id[SHT_ID_SIZE];
 
      //save initial fp in case we need to back up for an unlabled table
@@ -1827,8 +2044,10 @@ static inline stringhash5_t * stringhash5_read(FILE * fp) {
 }
 
 //function for reading in a table from a file
-static inline stringhash5_t * stringhash5_read_with_ptrs(FILE * fp, 
-                                             sh5dataread_callback_t sh5_dataread_cb) {
+static inline stringhash5_t * stringhash5_read_with_ptrs(
+          FILE * fp,
+          sh5dataread_callback_t sh5_dataread_cb)
+{
      char sht_id[SHT_ID_SIZE];
 
      //save initial fp in case we need to back up for an unlabled table
@@ -1947,7 +2166,10 @@ static inline stringhash5_t * stringhash5_read_with_ptrs(FILE * fp,
 //generally this is serialized, but if it is being done in response
 //to an inline flush, then the table must be protected during writing
 //against access by other threads
-static inline int stringhash5_dump(stringhash5_t * sht, FILE * fp) {
+static inline int stringhash5_dump(
+          stringhash5_t * sht,
+          FILE * fp)
+{
      char sht_id[SHT_ID_SIZE] = SHT5_ID;
      int rtn;
 
@@ -1978,8 +2200,11 @@ static inline int stringhash5_dump(stringhash5_t * sht, FILE * fp) {
      return 1;
 }
 
-static inline int stringhash5_dump_with_ptrs(stringhash5_t * sht, FILE * fp,
-                                             sh5datadump_callback_t sh5_datadump_cb) {
+static inline int stringhash5_dump_with_ptrs(
+          stringhash5_t * sht,
+          FILE * fp,
+          sh5datadump_callback_t sh5_datadump_cb)
+{
      char sht_id[SHT_ID_SIZE] = SHT5_ID;
      int rtn;
 
@@ -2018,15 +2243,20 @@ static inline int stringhash5_dump_with_ptrs(stringhash5_t * sht, FILE * fp,
      return 1;
 }
 
-static inline void * stringhash5_find_loc(stringhash5_t * sht, ws_hashloc_t * loc) {
+static inline void * stringhash5_find_loc(
+          stringhash5_t * sht,
+          ws_hashloc_t * loc)
+{
      if (loc && loc->len) {
           return stringhash5_find(sht, (void *)loc->offset, loc->len);
      }
      return NULL;
 }
 
-static inline void * stringhash5_find_wsdata(stringhash5_t * sht,
-                                             wsdata_t * wsd) {
+static inline void * stringhash5_find_wsdata(
+          stringhash5_t * sht,
+          wsdata_t * wsd)
+{
      ws_hashloc_t * loc = wsd->dtype->hash_func(wsd);
      if (loc) {
           return stringhash5_find(sht, (void *)loc->offset, loc->len);
@@ -2035,15 +2265,20 @@ static inline void * stringhash5_find_wsdata(stringhash5_t * sht,
 }
 
 
-static inline void * stringhash5_find_attach_loc(stringhash5_t * sht, ws_hashloc_t * loc) {
+static inline void * stringhash5_find_attach_loc(
+          stringhash5_t * sht,
+          ws_hashloc_t * loc)
+{
      if (loc && loc->len) {
           return stringhash5_find_attach(sht, (void *)loc->offset, loc->len);
      }
      return NULL;
 }
 
-static inline void * stringhash5_find_attach_wsdata(stringhash5_t * sht,
-                                                    wsdata_t * wsd) {
+static inline void * stringhash5_find_attach_wsdata(
+          stringhash5_t * sht,
+          wsdata_t * wsd)
+{
      ws_hashloc_t * loc = wsd->dtype->hash_func(wsd);
      if (loc) {
           return stringhash5_find_attach(sht, (void *)loc->offset, loc->len);
@@ -2052,15 +2287,20 @@ static inline void * stringhash5_find_attach_wsdata(stringhash5_t * sht,
 }
 
 
-static inline int stringhash5_delete_loc(stringhash5_t * sht, ws_hashloc_t * loc) {
+static inline int stringhash5_delete_loc(
+          stringhash5_t * sht,
+          ws_hashloc_t * loc)
+{
      if (loc && loc->len) {
           return stringhash5_delete(sht, (void *)loc->offset, loc->len);
      }
      return 0;
 }
 
-static inline int stringhash5_delete_wsdata(stringhash5_t * sht,
-                                               wsdata_t * wsd) {
+static inline int stringhash5_delete_wsdata(
+          stringhash5_t * sht,
+          wsdata_t * wsd)
+{
      ws_hashloc_t * loc = wsd->dtype->hash_func(wsd);
      if (loc) {
           return stringhash5_delete(sht, (void *)loc->offset, loc->len);
@@ -2071,10 +2311,11 @@ static inline int stringhash5_delete_wsdata(stringhash5_t * sht,
 //define prototype for walking records in a table a bit at a time..
 // a return 0 deletes record.. a return 1 leaves data
 //look up to 16 records at a time
-static inline stringhash5_walker_t * stringhash5_walker_init(stringhash5_t * sht,
-                                                             stringhash5_visit cb,
-                                                             void * vproc) {
-
+static inline stringhash5_walker_t * stringhash5_walker_init(
+          stringhash5_t * sht,
+          stringhash5_visit cb,
+          void * vproc)
+{
      stringhash5_walker_t * w =
           (stringhash5_walker_t *)calloc(1, sizeof(stringhash5_walker_t));
      if (!w) {
@@ -2118,8 +2359,9 @@ static inline stringhash5_walker_t * stringhash5_walker_init(stringhash5_t * sht
      return w;
 }
 
-static inline int stringhash5_walker_next(stringhash5_walker_t * w) {
-
+static inline int stringhash5_walker_next(
+          stringhash5_walker_t * w)
+{
      if (!w->callback || !w->sht) {
           return 0;
      }
@@ -2171,7 +2413,9 @@ static inline int stringhash5_walker_next(stringhash5_walker_t * w) {
      return calls;
 }
 
-static inline int stringhash5_walker_destroy(stringhash5_walker_t * w) {
+static inline int stringhash5_walker_destroy(
+          stringhash5_walker_t * w)
+{
      fprintf(stderr, "WARNING: function stringhash5_walker_destroy is unnecessary.\n");
      fprintf(stderr, "WARNING: walker memory is now freed by stringhash5_destroy.\n");
      fprintf(stderr, "WARNING: please remove invocations of stringhash5_walker_destroy from your source.\n");
@@ -2179,8 +2423,8 @@ static inline int stringhash5_walker_destroy(stringhash5_walker_t * w) {
 }
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
 #endif // _STRINGHASH5_H
 
