@@ -21,21 +21,21 @@ uint32_t bf_round_calcA[] = {0, 0, 0, 122949829, 141650963, 472882049, 32452843,
 uint32_t bf_round_calcB[] = {0, 0, 0, 15485867, 858599509, 49979687, 67867967, 6571, 104395301, 122949823};
 
 typedef union _bf_idkey_t {
-  uint32_t u32[MAXROUNDS];
-  uint64_t u64[MAXROUNDS/2];
+     uint32_t u32[MAXROUNDS];
+     uint64_t u64[MAXROUNDS/2];
 } bf_idkey_t;
 
 typedef struct _bloomfilter_t {
-  uint64_t   mask;
-  uint64_t   usedbits;
-  uint32_t   records;
-  uint8_t    pwrsize;
-  uint8_t    rounds;
-  bf_idkey_t hashvals;
-  void*      mmap_start;
-  size_t     mmap_length;
-  FILE*      mmap_fp;
-  uint32_t*  bits;
+     uint64_t   mask;
+     uint64_t   usedbits;
+     uint32_t   records;
+     uint8_t    pwrsize;
+     uint8_t    rounds;
+     bf_idkey_t hashvals;
+     void*      mmap_start;
+     size_t     mmap_length;
+     FILE*      mmap_fp;
+     uint32_t*  bits;
 } bloomfilter_t;
 
 /* destructively (re)size BF */

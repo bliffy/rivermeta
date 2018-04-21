@@ -1,26 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef _SHARED_QUEUE_H
 #define _SHARED_QUEUE_H
 
@@ -31,39 +8,41 @@ SOFTWARE.
 #include <malloc.h>
 #endif
 #include <assert.h>
+
 #include "shared/getrank.h"
 #include "error_print.h"
 
-#define MAX_SQUEUE_LEN	(16) // these number of metadata pointers should be enough
-                             // for occasional spikes by proc_kids writing to ext. queue
+//  these number of metadata pointers should be enough
+// for occasional spikes by proc kids writing to ext. queue
+#define MAX_SQUEUE_LEN (16)
+
 #define SHQ_ADD_ATTEMPT_LIMIT (1000)
 
-#define VERIFY_POSIX_MEMALIGN_SUCCESS(x) { if (0 != (x)) {  \
-               fprintf(stderr, "ERROR! posix_memalign failed in %s:%d...", __FILE__, __LINE__); \
-                              if(EINVAL == (x)) { \
-                                   fprintf(stderr, "alignment field is not a power of two or not a multiple of sizeof(void*)."); \
-                              } \
-                              else if(ENOMEM == (x)) { \
-                                   fprintf(stderr, "available memory is insufficient."); \
-                              } \
-                              fprintf(stderr, "\n"); \
-                              exit(-111); \
-               } \
-         }
+#define VERIFY_POSIX_MEMALIGN_SUCCESS(x) \
+     if (0 != (x)) {  \
+          fprintf(stderr, "ERROR! posix_memalign failed in %s:%d...", __FILE__, __LINE__); \
+          if(EINVAL == (x)) { \
+               fprintf(stderr, "alignment field is not a power of two or not a multiple of sizeof(void*)."); \
+          } else if (ENOMEM == (x)) { \
+               fprintf(stderr, "available memory is insufficient."); \
+          } \
+          fprintf(stderr, "\n"); \
+          exit(-111); \
+     }
 
 #ifdef __cplusplus
-CPP_OPEN
-#endif // __cplusplus
+}
+#endif
 
 #ifdef WS_PTHREADS
 
 #define USE_SCHEDYIELD
 
-#ifdef USE_SCHEDYIELD
+#ifdef USE_SCHEDYIELD  // really???
 #define SCHED_YIELD() sched_yield()
 #else
 #define SCHED_YIELD()
-#endif // USE_SCHEDYIELD
+#endif
 
 #ifdef SQ_PERF
 
@@ -134,8 +113,8 @@ extern uint64_t * os, * osf;
 #ifdef USE_ATOMICS
 typedef struct _shared_queue_data_t {
      wsfree_list_node_t node;
-     void *buffer1;
-     void *buffer2;
+     void* buffer1;
+     void* buffer2;
      struct _shared_queue_data_t *next;
 } shared_queue_data_t;
 
@@ -147,14 +126,20 @@ typedef struct _shared_queue_t_ {
      // end of swmr stuff
 
      //define function pointers
-     int (*shared_queue_add_nonblock)(void* /* the queue*/, void*, void*);
-     int (*shared_queue_remove_nonblock)(void* /* the queue*/, void*, void*);
+     int (*shared_queue_add_nonblock)(
+          void* /* the queue*/,
+          void*,
+          void*);
+     int (*shared_queue_remove_nonblock)(
+          void* /* the queue*/,
+          void*,
+          void*);
 
      // beginning of mwmr stuff
      volatile long length;
-     shared_queue_data_t *work_queue_head;
-     shared_queue_data_t *work_queue_tail;
-     wsfree_list_t *free_list;
+     shared_queue_data_t* work_queue_head;
+     shared_queue_data_t* work_queue_tail;
+     wsfree_list_t* free_list;
      // end of mwmr stuff
 #ifdef SQ_PERF
      uint64_t nstore, ncantstore, nidle, dequeue;
@@ -165,56 +150,62 @@ typedef struct _shared_queue_t_ {
      int max_length;
 } shared_queue_t;
 
-static inline void* shared_queue_data_alloc(void *arg)
+static inline void* shared_queue_data_alloc(void* arg)
 {
-     void *dptr = calloc(1, sizeof(shared_queue_data_t));
+     void* dptr = calloc(1, sizeof(shared_queue_data_t));
      if (!dptr) {
           error_print("shared_queue_data_alloc failed:  out of memory in calloc of dptr");
           return NULL;
      }
-
      return dptr;
 }
 
-static inline shared_queue_data_t * shared_queue_swap(shared_queue_data_t *volatile *addr,
-                                                      shared_queue_data_t *newval)
+static inline shared_queue_data_t* shared_queue_swap(
+          shared_queue_data_t* volatile* addr,
+          shared_queue_data_t* newval)
 {
-    shared_queue_data_t *oldval = NULL;
+    shared_queue_data_t* oldval = NULL;
 
     do {
          oldval = *addr;
-    } while (!__sync_bool_compare_and_swap(addr, oldval, newval));
+    } while(!__sync_bool_compare_and_swap(addr, oldval, newval));
     return oldval;
 }
 
 // function prototype declaration
-static inline int swsr_shared_queue_add_nonblock(shared_queue_t*, void*, void*);
-static inline int swsr_shared_queue_remove_nonblock(shared_queue_t *, void**, void**);
-static inline int mwsr_shared_queue_add_nonblock(shared_queue_t*, void*, void*);
-static inline int mwsr_shared_queue_remove_nonblock(shared_queue_t *, void**, void**);
+static inline int swsr_shared_queue_add_nonblock(
+     shared_queue_t*, void*, void*);
+static inline int swsr_shared_queue_remove_nonblock(
+     shared_queue_t*, void**, void**);
+static inline int mwsr_shared_queue_add_nonblock(
+     shared_queue_t*, void*, void*);
+static inline int mwsr_shared_queue_remove_nonblock(
+     shared_queue_t*, void**, void**);
 
-static inline shared_queue_t * sized_shared_queue_init(int queue_length)
+static inline shared_queue_t* sized_shared_queue_init(
+     int queue_length)
 {
-     shared_queue_t *q = NULL;
-     void *buf = NULL;
+     shared_queue_t* q = NULL;
+     void* buf = NULL;
 
      int pm_retval = 0;
-     pm_retval = posix_memalign((void**)&buf, 64, sizeof(shared_queue_t));
+     pm_retval = posix_memalign(
+          (void**)&buf, 64, sizeof(shared_queue_t));
      VERIFY_POSIX_MEMALIGN_SUCCESS(pm_retval);
 
-     q = (shared_queue_t *)buf;
+     q = (shared_queue_t*)buf;
      assert(q);
      memset(q, 0, sizeof(shared_queue_t));
 
      q->free_list = wsfree_list_init(queue_length, shared_queue_data_alloc, NULL);
-     if(!q->free_list) {
+     if (!q->free_list) {
           free(q);
           error_print("sized_shared_queue_init failed in wsfree_list_init of q->free_list");
           return NULL;
      }
 
-     q->elements = (shared_queue_data_t *)calloc(queue_length, sizeof(shared_queue_data_t)); // used for swsr
-     if(!q->elements) {
+     q->elements = (shared_queue_data_t*)calloc(queue_length, sizeof(shared_queue_data_t)); // used for swsr
+     if (!q->elements) {
           free(q);
           error_print("sized_shared_queue_init failed:  out of memory in calloc of q->elements");
           return NULL;
@@ -230,13 +221,12 @@ static inline shared_queue_t * sized_shared_queue_init(int queue_length)
 }
 
 
-static inline shared_queue_t * shared_queue_init(void)
-{
-     return sized_shared_queue_init(MAX_SQUEUE_LEN);
-}
+static inline shared_queue_t* shared_queue_init(void)
+{ return sized_shared_queue_init(MAX_SQUEUE_LEN); }
 
-static inline void shared_queue_exit(shared_queue_t * q) {
-     shared_queue_data_t *data, *next;
+static inline void shared_queue_exit(shared_queue_t* q) {
+     shared_queue_data_t* data;
+     shared_queue_data_t* next;
 
      wsfree_list_element_destroy(q->free_list);
      data = q->work_queue_head;
@@ -249,19 +239,23 @@ static inline void shared_queue_exit(shared_queue_t * q) {
      free(q);
 }
 
-static inline void reset_shq_type(shared_queue_t * q) {
+static inline void reset_shq_type(shared_queue_t* q) {
      assert(q != NULL);
 
-     // swsr case - reset function pointers & reassign the queue type
+     // swsr case - reset function pointers & reassign the
+     // queue type
      q->shared_queue_add_nonblock = (int (*)(void*, void*, void*))&swsr_shared_queue_add_nonblock;
      q->shared_queue_remove_nonblock = (int (*)(void*, void*, void*))&swsr_shared_queue_remove_nonblock;
      QTYPE_SWSR();
 }
 
-//nonblocking versions
+// nonblocking versions
 
 // single-writer, single-reader nonblock add implementation
-static inline int swsr_shared_queue_add_nonblock(shared_queue_t *q, void *data1, void *data2)
+static inline int swsr_shared_queue_add_nonblock(
+          shared_queue_t* q,
+          void* data1,
+          void* data2)
 {
      uint32_t cur_tail = q->tail;
      uint32_t next_tail = (cur_tail + 1) % q->max_length;
@@ -279,18 +273,23 @@ static inline int swsr_shared_queue_add_nonblock(shared_queue_t *q, void *data1,
 }
 
 // multiple-writer, single-reader nonblock add implementation
-static inline int mwsr_shared_queue_add_nonblock(shared_queue_t * q, void * data1, void * data2) {
-     shared_queue_data_t *data = NULL, *prev = NULL;
+static inline int mwsr_shared_queue_add_nonblock(
+          shared_queue_t* q,
+          void* data1,
+          void* data2)
+{
+     shared_queue_data_t* data = NULL;
+     shared_queue_data_t* prev = NULL;
 
      /* pull element off the free list */
-     data = (shared_queue_data_t*) wsfree_list_alloc(q->free_list);
+     data = (shared_queue_data_t*)wsfree_list_alloc(q->free_list);
      if (!data) {
           return 0;  //stack is full
      }
 
      data->buffer1 = data1;
      data->buffer2 = data2;
-     data->next = NULL;
+     data->next    = NULL;
 
      /* put element on the work queue. */
      prev = shared_queue_swap(&q->work_queue_tail, data);
@@ -306,32 +305,39 @@ static inline int mwsr_shared_queue_add_nonblock(shared_queue_t * q, void * data
 
 
 // single-writer, single-reader nonblock remove implementation
-static inline int swsr_shared_queue_remove_nonblock(shared_queue_t *q, void **data1, void **data2)
+static inline int swsr_shared_queue_remove_nonblock(
+          shared_queue_t* q,
+          void** data1,
+          void** data2)
 {
      uint32_t cur_head = q->head;
      COMPILER_FENCE();
-     if (cur_head == q->tail) {
+     if (cur_head == q->tail)
           return 0;
-     }
      *data1 = q->elements[cur_head].buffer1;
      *data2 = q->elements[cur_head].buffer2;
      DECR_LENGTH();
-     COMPILER_FENCE(); // MIGHT need to be a MACHINE_FENCE(), but I don't think so
+     COMPILER_FENCE(); // MIGHT need to be a MACHINE_FENCE()
      q->head = (cur_head + 1) % q->max_length;
      return 1;
 }
 
-// multiple-writer, single-reader nonblock remove implementation
-static inline int mwsr_shared_queue_remove_nonblock(shared_queue_t * q, void ** data1, void ** data2) {
-     shared_queue_data_t *element, *old;
+// multiple-writer, single-reader nonblock
+static inline int mwsr_shared_queue_remove_nonblock(
+          shared_queue_t* q,
+          void** data1,
+          void** data2)
+{
+     shared_queue_data_t* element;
+     shared_queue_data_t* old;
 
      /* find first element in list */
      __sync_synchronize();
-     if (NULL == (element = q->work_queue_head)) {
+     if (NULL == (element = q->work_queue_head))
           return 0;
-     }
 
-     /* remove first element from queue.  Single reader only */
+     /* remove first element from queue.
+        Single reader only */
      if (NULL != element->next) {
           q->work_queue_head = element->next;
      } else {
@@ -362,32 +368,32 @@ static inline int mwsr_shared_queue_remove_nonblock(shared_queue_t * q, void ** 
 }
 
 
-static inline int shared_queue_length(shared_queue_t *q)
-{
-     if(q) {
-           return q->length;
-     }
-
-     return 0;
-}
+static inline int shared_queue_length(shared_queue_t* q)
+{ return (q ? q->length : 0); }
 
 #endif // USE_ATOMICS
 
 
 
 #ifdef USE_ATOMICS
-//a blocking write to a queue...sort of ;)
-//   we attempt SHQ_ADD_ATTEMPT_LIMIT number of times and if unsuccessful, we return
-//   to the calling further ensure blocking by interpreting the return value correctly.
+// a blocking write to a queue...sort of ;)
+//   we attempt SHQ_ADD_ATTEMPT_LIMIT number of times and if
+//   unsuccessful, we return to the calling further ensure
+//   blocking by interpreting the return value correctly.
 //   RETURN VALUES
 //    1 --> successfully added using the blocking call
-//    0 --> unsuccessful at adding due to hitting the SHQ_ADD_ATTEMPT_LIMIT attempts
-static inline int shared_queue_add(shared_queue_t * q, void * data1, void * data2) {
+//    0 --> unsuccessful at adding due to hitting the -
+//          SHQ_ADD_ATTEMPT_LIMIT attempts
+static inline int shared_queue_add(
+          shared_queue_t* q,
+          void* data1,
+          void* data2)
+{
      SQPERF_NRANK();
      uint32_t attempt_limit = 0;
      int ret = 0;
      while (1) {
-          if(q->shared_queue_add_nonblock(q, data1, data2)) {
+          if (q->shared_queue_add_nonblock(q, data1, data2)) {
                ret = 1;
                INCR_STORE();
                INCR_TOTAL_LENGTH();
@@ -395,8 +401,9 @@ static inline int shared_queue_add(shared_queue_t * q, void * data1, void * data
           }
 
           attempt_limit++;
-          if(attempt_limit > SHQ_ADD_ATTEMPT_LIMIT) {
-               // limit on attempts for add has been reached...returning
+          if (attempt_limit > SHQ_ADD_ATTEMPT_LIMIT) {
+               // limit on attempts for add has been
+               // reached...returning
                break;
           }
 
@@ -408,10 +415,16 @@ static inline int shared_queue_add(shared_queue_t * q, void * data1, void * data
      return ret;
 }
 
-//a blocking read from a queue
-static inline void shared_queue_remove(shared_queue_t * q, void ** data1, void ** data2) {
+// a blocking read from a queue
+static inline void shared_queue_remove(
+          shared_queue_t* q,
+          void** data1,
+          void** data2)
+{
      while (1) {
-          if (q->shared_queue_remove_nonblock(q, data1, data2)) {
+          if (q->shared_queue_remove_nonblock(
+                   q, data1, data2))
+          {
                return;
           }
           INCR_IDLE();
@@ -422,16 +435,22 @@ static inline void shared_queue_remove(shared_queue_t * q, void ** data1, void *
 
 #else // !USE_ATOMICS
 typedef struct _shared_queue_t_ {
-     void ** buffer1;
-     void ** buffer2;
+     void** buffer1;
+     void** buffer2;
      int length;
      int max_length;
      int head;
      int tail;
 
      //define function pointers
-     int (*shared_queue_add_nonblock)(void* /* the queue */, void*, void*);
-     int (*shared_queue_remove_nonblock)(void* /* the queue */, void*, void*);
+     int (*shared_queue_add_nonblock)(
+          void* /* the queue */,
+          void*,
+          void*);
+     int (*shared_queue_remove_nonblock)(
+          void* /* the queue */,
+          void*,
+          void*);
 
 #ifdef SQ_PERF
      uint64_t nstore, ncantstore, nidle, dequeue;
@@ -446,25 +465,35 @@ typedef struct _shared_queue_t_ {
 
 
 // function prototype declaration
-static inline int shared_queue_add_nonblock(shared_queue_t*, void*, void*);
-static inline int shared_queue_remove_nonblock(shared_queue_t *, void**, void**);
+static inline int shared_queue_add_nonblock(
+     shared_queue_t*,
+     void*,
+     void*);
+static inline int shared_queue_remove_nonblock(
+     shared_queue_t*,
+     void**,
+     void**);
 
-static inline shared_queue_t * sized_shared_queue_init(int queue_length) {
-
+static inline shared_queue_t* sized_shared_queue_init(
+          int queue_length)
+{
      assert(queue_length > 0);
-     shared_queue_t * q = (shared_queue_t *)calloc(1, sizeof(shared_queue_t));
+     shared_queue_t * q = (shared_queue_t *)calloc(
+          1, sizeof(shared_queue_t));
      if (!q) {
           error_print("shared_queue_init failed:  out of memory in calloc of q");
           return NULL;
      }
 
-     q->buffer1 = (void**)calloc(queue_length, sizeof(void *));
+     q->buffer1 = (void**)calloc(
+          queue_length, sizeof(void *));
      if (!q->buffer1) {
           free(q);
           error_print("shared_queue_init failed:  out of memory in calloc of q->buffer1");
           return NULL;
      }
-     q->buffer2 = (void**)calloc(queue_length, sizeof(void *));
+     q->buffer2 = (void**)calloc(
+          queue_length, sizeof(void *));
      if (!q->buffer2) {
           free(q->buffer1);
           free(q);
@@ -473,7 +502,6 @@ static inline shared_queue_t * sized_shared_queue_init(int queue_length) {
      }
 
      q->max_length = queue_length;
-     //q->max_length = length;
 
      // assign the function pointers
      q->shared_queue_add_nonblock = (int (*)(void*, void*, void*))&shared_queue_add_nonblock;
@@ -488,36 +516,41 @@ static inline shared_queue_t * sized_shared_queue_init(int queue_length) {
 }
 
 
-static inline shared_queue_t * shared_queue_init(void) {
-
+static inline shared_queue_t* shared_queue_init(void) {
      return sized_shared_queue_init(MAX_SQUEUE_LEN);
 }
 
-static inline void shared_queue_exit(shared_queue_t * q) {
+static inline void shared_queue_exit(shared_queue_t* q) {
      free(q->buffer1);
      free(q->buffer2);
      free(q);
 }
 
-// this function in the non-ATOMICS is intentionally left blank; it's also the code seen
-// by SERIAL (as well as the less efficient mutex-lock based PTHREADS)
-static inline void reset_shq_type(shared_queue_t * q) {
-
+// this function in the non-ATOMICS is intentionally left
+// blank; it's also the code seen by SERIAL (as well as the
+// less efficient mutex-lock based PTHREADS)
+static inline void reset_shq_type(shared_queue_t* q) {
+     // ~
 }
 
-//a blocking write to a queue...sort of :)
+// a blocking write to a queue...sort of :)
 //   RETURN VALUES
 //    1 --> successfully added using the blocking call
-//    0 --> unsuccessful at adding due to hitting the SHQ_ADD_ATTEMPT_LIMIT attempts
-static inline int shared_queue_add(shared_queue_t * q, void * data1, void * data2) {
+//    0 --> unsuccessful at adding due to hitting the
+//          SHQ_ADD_ATTEMPT_LIMIT attempts
+static inline int shared_queue_add(
+          shared_queue_t* q,
+          void* data1,
+          void* data2)
+{
      SQPERF_NRANK();
      uint32_t attempt_limit = 0;
      pthread_mutex_lock(&q->mutex);
      while (q->length == q->max_length) {
-
           attempt_limit++;
-          if(attempt_limit > SHQ_ADD_ATTEMPT_LIMIT) {
-               // limit on attempts for add has been reached...returning
+          if (attempt_limit > SHQ_ADD_ATTEMPT_LIMIT) {
+               // limit on attempts for add has been
+               // reached...returning
                pthread_mutex_unlock(&q->mutex);
                return 0;
           }
@@ -537,8 +570,12 @@ static inline int shared_queue_add(shared_queue_t * q, void * data1, void * data
      return 1;
 }
 
-//a blocking read from a queue
-static inline void shared_queue_remove(shared_queue_t * q, void ** data1, void ** data2) {
+// a blocking read from a queue
+static inline void shared_queue_remove(
+          shared_queue_t* q,
+          void** data1,
+          void** data2)
+{
      pthread_mutex_lock(&q->mutex);
      while (q->length == 0) {
           INCR_IDLE();
@@ -553,11 +590,15 @@ static inline void shared_queue_remove(shared_queue_t * q, void ** data1, void *
      pthread_cond_broadcast(&q->cond_spaceavail);
 }
 
-//nonblocking versions
-static inline int shared_queue_add_nonblock(shared_queue_t * q, void * data1, void * data2) {
+// nonblocking versions
+static inline int shared_queue_add_nonblock(
+          shared_queue_t* q,
+          void* data1,
+          void* data2)
+{
      SQPERF_NRANK();
      pthread_mutex_lock(&q->mutex);
-     if (q->length == q->max_length){
+     if (q->length == q->max_length) {
           INCR_CANT_STORE();
           pthread_mutex_unlock(&q->mutex);
           return 0;
@@ -574,7 +615,11 @@ static inline int shared_queue_add_nonblock(shared_queue_t * q, void * data1, vo
      return 1;
 }
 
-static inline int shared_queue_remove_nonblock(shared_queue_t * q, void ** data1, void ** data2) {
+static inline int shared_queue_remove_nonblock(
+          shared_queue_t* q,
+          void** data1,
+          void** data2)
+{
      pthread_mutex_lock(&q->mutex);
      if (q->length == 0) {
           pthread_mutex_unlock(&q->mutex);
@@ -590,16 +635,13 @@ static inline int shared_queue_remove_nonblock(shared_queue_t * q, void ** data1
      return 1;
 }
 
-static inline int shared_queue_length(shared_queue_t * q) {
-     if(!q) {
+static inline int shared_queue_length(shared_queue_t*  q)
+{
+     if (!q)
           return 0;
-     }
-
-     int length; 
      pthread_mutex_lock(&q->mutex);
-     length = q->length;
+     int length = q->length;
      pthread_mutex_unlock(&q->mutex);
-
      return length;
 }
 #endif // !USE_ATOMICS
@@ -607,7 +649,8 @@ static inline int shared_queue_length(shared_queue_t * q) {
 #endif // WS_PTHREADS
 
 #ifdef __cplusplus
-CPP_CLOSE
-#endif // __cplusplus
+}
+#endif
 
-#endif // _SHARED_QUEUE_H
+#endif
+

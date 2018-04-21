@@ -2,8 +2,12 @@
 #define _WSTYPES_H
 
 #include <unistd.h>
+#include <errno.h>
+
 #include "waterslide.h"
 #include "waterslidedata.h"
+#include "timeparse.h"
+
 #include "datatypes/wsdt_string.h"
 #include "datatypes/wsdt_binary.h"
 #include "datatypes/wsdt_fixedstring.h"
@@ -26,9 +30,6 @@
 #include "datatypes/wsdt_monitor.h"
 #include "datatypes/wsdt_vector_double.h"
 #include "datatypes/wsdt_vector_uint32.h"
-#include "timeparse.h"
-#include <unistd.h> // for _SC_PAGESIZE
-#include <errno.h>
 
 #ifndef _WSUTIL
 #define EXT extern
@@ -111,9 +112,9 @@ static inline int dtype_get_double(
 { return member->dtype->to_double(member, dbl); }
 
 static inline wsdata_t * wsdata_create_hugebuffer(
-     uint64_t,
-     char **,
-     uint64_t *);
+          uint64_t,
+          char **,
+          uint64_t *);
 
 // create a wsdata type with a buffer big enough to hold
 // the specified length
