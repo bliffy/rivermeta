@@ -47,7 +47,7 @@ extern "C" {
   #endif // SQ_PERF
 
   // Globals
-  extern uint64_t* os
+  extern uint64_t* os;
   extern uint64_t* osf;
 
   #include "wsfree_list.h"

@@ -267,7 +267,7 @@ static inline void* mimo_run_threaded_graph(
           q_node_t* qcursor;
           ws_subscriber_t* tailsub; 
 
-          for (cursor = mimo->proc_instance_head;i
+          for (cursor = mimo->proc_instance_head;
                cursor != NULL;
                cursor = cursor->next)
           {

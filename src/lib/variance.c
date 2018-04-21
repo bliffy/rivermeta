@@ -3,7 +3,7 @@
 #include "variance.h"
 #include <math.h>
 
-void var_hit(variance *var, double x) {
+void var_hit(variance* var, double x) {
      if (var->window_size>0) {
           if (var->count>=var->window_size) {
                double oldestItem = var->previous_items[var->start];

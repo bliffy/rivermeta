@@ -31,7 +31,7 @@
      }
 
 #ifdef __cplusplus
-}
+extern "C" {
 #endif
 
 #ifdef WS_PTHREADS
