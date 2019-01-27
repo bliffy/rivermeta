@@ -197,8 +197,8 @@ static inline int wsprocbuffer_nested_search(
             }
             else {
                 for (j=0; j<mset_len; j++) {
-                    char* buf;
-                    int blen;
+                    const char* buf;
+                    size_t blen;
                     if (dtype_string_buffer(mset[j], &buf, &blen))
                     {
                         *found = 1;
@@ -206,7 +206,7 @@ static inline int wsprocbuffer_nested_search(
                             proc->kproc,
                             tdata,
                             mset[j],
-                            (uint8_t*)buf,
+                            buf,
                             blen);
                     }
                 }
@@ -254,8 +254,8 @@ static int wsprocbuffer_process_unlabeled(
     int tlen = tuple->len;
     int rtn = 0;
 
-    char* buf;
-    int blen;
+    const char* buf;
+    size_t blen;
     for (int i=0; i<tlen; i++) {
         member = tuple->member[i];
         if (dtype_string_buffer(member, &buf, &blen)) {
@@ -263,7 +263,7 @@ static int wsprocbuffer_process_unlabeled(
                 proc->kproc,
                 input_data,
                 member,
-                (uint8_t*)buf,
+                buf,
                 blen);
         }
     }

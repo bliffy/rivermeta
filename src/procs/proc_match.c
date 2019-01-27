@@ -154,7 +154,7 @@ static int proc_cmd_options(int argc, char ** argv,
                          label_match_make_label(proc->lmatch,
                                                 proc->label_match->name);
                     char *buf = strdup(optarg);
-                    int len = strlen(buf);
+                    size_t len = strlen(buf);
                     sysutil_decode_hex_escapes(buf, &len);
                     ac_loadkeyword(proc->lmatch->ac_struct, buf, len, lid);
                     tool_print("added match string '%s'", optarg);
@@ -241,28 +241,40 @@ proc_process_t proc_input_set(void * vinstance, wsdatatype_t * input_type,
      }
 }
 
-static inline int find_match(proc_instance_t * proc, wsdata_t * wsd, char * content,
-                             int len, wsdata_t * tdata, wsdata_t * tparent) {
+static inline int find_match(
+          proc_instance_t * proc,
+          wsdata_t * wsd,
+          const char * content,
+          size_t len,
+          wsdata_t * tdata,
+          wsdata_t * tparent)
+{
      if (len <= 0) {
           return 0;
      }
      ahoc_state_t ac_ptr = proc->ac_struct->root;
      int mval;
-     u_char * buf = (u_char *)content;
-     uint32_t buflen = (uint32_t)len;
+     const char * buf = content;
+     size_t buflen = len;
      int matches = 0;
 
      while ((mval = ac_singlesearch(proc->ac_struct, &ac_ptr,
-                                 buf, buflen, &buf, &buflen)) >= 0) {
+               buf, buflen, &buf, &buflen)) >= 0) {
           if (wsd) {
-               wslabel_t * mlabel = label_match_get_label(proc->lmatch, mval);
+               wslabel_t * mlabel = label_match_get_label(
+                    proc->lmatch, mval);
                mlabel = mlabel ? mlabel : proc->label_match;
                if (!wsdata_check_label(wsd, mlabel)) {
                    tuple_add_member_label(tdata, wsd, mlabel);
                }
-               if (proc->tag_parent_tuple && !wsdata_check_label(tdata, mlabel)) {
+               if (proc->tag_parent_tuple
+                   && !wsdata_check_label(tdata, mlabel))
+               {
                     if (tparent) {
-                         tuple_add_member_label(tparent, tdata, mlabel);
+                         tuple_add_member_label(
+                              tparent,
+                              tdata,
+                              mlabel);
                     }
                     else {
                          wsdata_add_label(tdata, mlabel);
@@ -274,43 +286,66 @@ static inline int find_match(proc_instance_t * proc, wsdata_t * wsd, char * cont
      return matches ? 1 : 0;
 }
 
-static inline int member_match(proc_instance_t *proc, wsdata_t *member,
-                               wsdata_t * wsd_label, wsdata_t * tdata,
-                               wsdata_t * tparent) {
+static inline int member_match(
+          proc_instance_t * proc,
+          wsdata_t * member,
+          wsdata_t * wsd_label,
+          wsdata_t * tdata,
+          wsdata_t * tparent)
+{
      int found = 0;
-     char * buf;
-     int len;
+     const char * buf;
+     size_t len;
      if (dtype_string_buffer(member, &buf, &len)) {
-          found = find_match(proc, wsd_label, buf, len, tdata, tparent);
+          found = find_match(
+               proc,
+               wsd_label,
+               buf, len,
+               tdata, tparent);
      }
-
      if (found) {
           proc->hits++;
      }
-
      return found;
 }
 
-static int proc_nest_match_callback(void * vinstance, void * ignore,
-                              wsdata_t * tdata, wsdata_t * member,
-                              wsdata_t * tparent) {
+static int proc_nest_match_callback(
+          void * vinstance,
+          void * ignore,
+          wsdata_t * tdata,
+          wsdata_t * member,
+          wsdata_t * tparent)
+{
      proc_instance_t * proc = (proc_instance_t*)vinstance;
-     return member_match(proc, member, member, tdata, tparent);
+
+     return member_match(
+          proc,
+          member,
+          member,
+          tdata,
+          tparent);
 }
 
-static int proc_process_meta(void * vinstance, wsdata_t* input_data,
-                             ws_doutput_t * dout, int type_index) {
-
+static int proc_process_meta(
+          void * vinstance,
+          wsdata_t * input_data,
+          ws_doutput_t * dout,
+          int type_index)
+{
      proc_instance_t * proc = (proc_instance_t*)vinstance;
-
      proc->meta_process_cnt++;
 
-     int found = tuple_nested_search2(input_data, &proc->nest,
-                                     proc_nest_match_callback,
-                                     proc, NULL);
+     int found = tuple_nested_search2(
+          input_data,
+          &proc->nest,
+          proc_nest_match_callback,
+          proc,
+          NULL);
 
      if (found || proc->do_tag[type_index]) {
-          if (proc->label_match && found && proc->do_tag[type_index]) {
+          if (proc->label_match && found
+              && proc->do_tag[type_index])
+          {
                wsdata_add_label(input_data, proc->label_match);
           }
           ws_set_outdata(input_data, proc->outtype_tuple, dout);
@@ -320,24 +355,37 @@ static int proc_process_meta(void * vinstance, wsdata_t* input_data,
      return 1;
 }
 
-static int proc_nest_notmatch_callback(void * vinstance, void * ignore,
-                              wsdata_t * tdata, wsdata_t * member) {
+static int proc_nest_notmatch_callback(
+          void * vinstance,
+          void * ignore,
+          wsdata_t * tdata,
+          wsdata_t * member)
+{
      proc_instance_t * proc = (proc_instance_t*)vinstance;
      return member_match(proc, member, NULL, NULL, NULL);
 }
 
-static int proc_process_meta_inverse(void * vinstance, wsdata_t* input_data,
-                                     ws_doutput_t * dout, int type_index) {
-
+static int proc_process_meta_inverse(
+          void * vinstance,
+          wsdata_t * input_data,
+          ws_doutput_t * dout,
+          int type_index)
+{
      proc_instance_t * proc = (proc_instance_t*)vinstance;
-
      proc->meta_process_cnt++;
 
-     int found = tuple_nested_search(input_data, &proc->nest,
-                                     proc_nest_notmatch_callback,
-                                     proc, NULL);
+     int found = tuple_nested_search(
+          input_data,
+          &proc->nest,
+          proc_nest_notmatch_callback,
+          proc,
+          NULL);
+
      if (!found) {
-          ws_set_outdata(input_data, proc->outtype_tuple, dout);
+          ws_set_outdata(
+               input_data,
+               proc->outtype_tuple,
+               dout);
           proc->outcnt++;
      }
 
@@ -347,9 +395,12 @@ static int proc_process_meta_inverse(void * vinstance, wsdata_t* input_data,
 //// proc processing function assigned to a specific data type in proc_io_init
 //return 1 if output is available
 // return 0 if not output
-static int proc_process_allstr(void * vinstance, wsdata_t* input_data,
-                        ws_doutput_t * dout, int type_index) {
-
+static int proc_process_allstr(
+          void * vinstance,
+          wsdata_t * input_data,
+          ws_doutput_t * dout,
+          int type_index)
+{
      proc_instance_t * proc = (proc_instance_t*)vinstance;
      wsdt_tuple_t * tuple = input_data->data;
 

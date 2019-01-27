@@ -34,8 +34,11 @@ SOFTWARE.
 ws_hashloc_t * wsdt_binary_hash(wsdata_t*);
 ws_hashloc_t * wsdt_tsbinary_hash(wsdata_t*);
 
-static int wsdt_print_binary_wsdata(FILE * stream, wsdata_t * wsdata,
-                                    uint32_t printtype) {
+static int wsdt_print_binary_wsdata(
+          FILE * stream,
+          wsdata_t * wsdata,
+          uint32_t printtype)
+{
      wsdt_binary_t * str = (wsdt_binary_t*)wsdata->data;
      if (!str->buf) {
           return 0;
@@ -44,12 +47,12 @@ static int wsdt_print_binary_wsdata(FILE * stream, wsdata_t * wsdata,
      switch (printtype) {
      case WS_PRINTTYPE_TEXT:
           fprintf(stream,"\n");
-          sysutil_print_content(stream, (uint8_t*)str->buf, str->len); 
+          sysutil_print_content(stream, str->buf, str->len); 
           return 1;
           break;
      case WS_PRINTTYPE_HTML:
           fprintf(stream,"\n<pre>\n");
-          sysutil_print_content_web(stream, (uint8_t*)str->buf, str->len); 
+          sysutil_print_content_web(stream, str->buf, str->len); 
           fprintf(stream,"</pre>\n");
           return 1;
           break;
@@ -154,7 +157,11 @@ static wsdata_t * wsdt_binary_subelement_string(wsdata_t *ndata,
      return dst;
 }
 
-static int wsdt_to_string_binary(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_binary(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_binary_t *str = (wsdt_binary_t*)wsdata->data;
 
      *buf = str->buf;
@@ -288,17 +295,20 @@ static int wsdt_to_double_binary(wsdata_t *wsdata, double * dbl) {
 }
 
 
-int datatypeloader_init(void * tl) {
-     wsdatatype_t * bdt = wsdatatype_register(tl,
-                                              WSDT_BINARY_STR,
-                                              sizeof(wsdt_binary_t),
-                                              wsdt_binary_hash,
-                                              wsdatatype_default_init,
-                                              wsdatatype_default_delete,
-                                              wsdt_print_binary_wsdata,
-                                              wsdatatype_default_snprint,
-                                              wsdatatype_default_copy,
-                                              wsdatatype_default_serialize);
+int datatypeloader_init(void * tl)
+{
+     wsdatatype_t * bdt = wsdatatype_register(
+          tl,
+          WSDT_BINARY_STR,
+          sizeof(wsdt_binary_t),
+          wsdt_binary_hash,
+          wsdatatype_default_init,
+          wsdatatype_default_delete,
+          wsdt_print_binary_wsdata,
+          wsdatatype_default_snprint,
+          wsdatatype_default_copy,
+          wsdatatype_default_serialize);
+
      bdt->to_string = wsdt_to_string_binary;
      bdt->to_uint32 = wsdt_to_uint32_binary;
      bdt->to_uint64 = wsdt_to_uint64_binary;
@@ -308,45 +318,50 @@ int datatypeloader_init(void * tl) {
 
      wsdatatype_register_alias(tl, bdt, "BIN_TYPE");
 
-     wsdatatype_register_subelement_func(bdt, tl,
-                                         "UINT",
-                                         "UINT_TYPE",
-                                         wsdt_binary_subelement_uint,
-                                         NULL);
+     wsdatatype_register_subelement_func(
+          bdt, tl,
+          "UINT",
+          "UINT_TYPE",
+          wsdt_binary_subelement_uint,
+          NULL);
+     wsdatatype_register_subelement_func(
+          bdt, tl,
+          "INT",
+          "INT_TYPE",
+          wsdt_binary_subelement_int,
+          NULL);
 
-     wsdatatype_register_subelement_func(bdt, tl,
-                                         "INT",
-                                         "INT_TYPE",
-                                         wsdt_binary_subelement_int,
-                                         NULL);
+     wsdatatype_register_subelement_func(
+          bdt, tl,
+          "DOUBLE",
+          "DOUBLE_TYPE",
+          wsdt_binary_subelement_double,
+          NULL);
 
-     wsdatatype_register_subelement_func(bdt, tl,
-                                         "DOUBLE",
-                                         "DOUBLE_TYPE",
-                                         wsdt_binary_subelement_double,
-                                         NULL);
-     
-     wsdatatype_register_subelement_func(bdt, tl,
-                                         "STRING",
-                                         "STRING_TYPE",
-                                         wsdt_binary_subelement_string,
-                                         NULL);
-     
+     wsdatatype_register_subelement_func(
+          bdt, tl,
+          "STRING",
+          "STRING_TYPE",
+          wsdt_binary_subelement_string,
+          NULL);
 
-     wsdatatype_register_subelement(bdt, tl,
-                                    "LENGTH", "INT_TYPE",
-                                    offsetof(wsdt_binary_t, len));
+     wsdatatype_register_subelement(
+          bdt, tl,
+          "LENGTH", "INT_TYPE",
+          offsetof(wsdt_binary_t, len));
 
-     wsdatatype_register(tl,
-                         WSDT_TS_STR WSDT_BINARY_STR, 
-                         sizeof(wsdt_ts_t) + sizeof(wsdt_binary_t),
-                         wsdt_tsbinary_hash,
-                         wsdatatype_default_init,
-                         wsdatatype_default_delete,
-                         wsdatatype_default_print,
-                         wsdatatype_default_snprint,
-                         wsdatatype_default_copy,
-                         wsdatatype_default_serialize);
+     wsdatatype_register(
+          tl,
+          WSDT_TS_STR WSDT_BINARY_STR, 
+          sizeof(wsdt_ts_t) + sizeof(wsdt_binary_t),
+          wsdt_tsbinary_hash,
+          wsdatatype_default_init,
+          wsdatatype_default_delete,
+          wsdatatype_default_print,
+          wsdatatype_default_snprint,
+          wsdatatype_default_copy,
+          wsdatatype_default_serialize);
+
      return 1;
 }
 

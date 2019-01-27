@@ -131,7 +131,10 @@ void wsdt_init_vector_double(wsdata_t * wsdata, wsdatatype_t * dtype)
  * [out] buf   - will point to the buffer containing the string
  * [out] len   - will contain the length of the buffer
  *---------------------------------------------------------------------------*/
-int wsdt_to_string_vector_double(wsdata_t *wsdata, char **buf, int*len)
+int wsdt_to_string_vector_double(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
 {
    wsdt_vector_double_t *dt = (wsdt_vector_double_t *)wsdata->data;
 

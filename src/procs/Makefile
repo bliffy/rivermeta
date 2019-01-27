@@ -8,7 +8,6 @@ CFLAGS += $(PERF_FLAG)
 # Switches for various build options
 
 # HASMAGIC = 1	     # if you have magic.h
-
 # NOPB = 1           # to skip the wsproto build
 # NORE2 = 1          # to skip the re2 build
 

@@ -192,7 +192,7 @@ static inline int stringhash9a_create_shared_sht(
      stringhash9a_sh_opts_t *);
 static inline int stringhash9a_check(
      stringhash9a_t *,
-     void *,
+     const void *,
      int);
 static inline uint64_t stringhash9a_drop_cnt(
      stringhash9a_t *);
@@ -1052,7 +1052,7 @@ static inline int stringhash9a_check_posthash(
 //find records using hashkeys.. return 1 if found
 static inline int stringhash9a_check(
           stringhash9a_t * sht,
-          void * key,
+          const void * key,
           int keylen)
 {
      uint32_t h1, h2;

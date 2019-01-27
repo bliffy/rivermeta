@@ -141,7 +141,7 @@ static inline void exact_match_loadfile(proc_instance_t * proc, char * filename)
      
      FILE* fp;
      char line[LOCAL_INPUT_BUF+1];
-     int len;
+     size_t len;
      char* linep;
      
      // try to open the file
@@ -251,7 +251,7 @@ static int proc_cmd_options(int argc, char ** argv,
           case 'R': // reference string
                {
                     char * buf = strdup(optarg);
-                    int len = strlen(optarg);
+                    size_t len = strlen(optarg);
                     sysutil_decode_hex_escapes(buf, &len);
                     if (!proc->exactmatch_table) {
                          stringhash9a_sh_opts_t * sh9a_sh_opts;
@@ -454,35 +454,42 @@ proc_process_t proc_input_set(void * vinstance, wsdatatype_t * input_type,
      return NULL;
 }
 
-static inline int member_match(proc_instance_t *proc, wsdata_t *member,
-                               wsdata_t * tdata,
-                               wsdata_t * tparent) {
+static inline int member_match(
+          proc_instance_t * proc,
+          wsdata_t * member,
+          wsdata_t * tdata,
+          wsdata_t * tparent)
+{
 
-//     tool_print("in member_match");
-     char * buf;
-     int len;
+     const char * buf;
+     size_t len;
      int match = 0;
      if (dtype_string_buffer(member, &buf, &len)) {
-//          tool_print("what's in buf? %s", buf);
           if (stringhash9a_check(proc->exactmatch_table, buf, len)) {
                match = 1;
           }
      }
      if (match) {
-          tuple_add_member_label(tdata, member, proc->label_match);
+          tuple_add_member_label(
+               tdata, member, proc->label_match);
           if (tparent) {
-               tuple_add_member_label(tparent, tdata, proc->label_match);
+               tuple_add_member_label(
+                    tparent, tdata, proc->label_match);
           }
           else {
                if (!wsdata_check_label(tdata, proc->label_match)) {
-                    wsdata_add_label(tdata, proc->label_match);
+                    wsdata_add_label(
+                         tdata,
+                         proc->label_match);
                }
           }
      }
      else if (proc->label_unmatch) {
-          tuple_add_member_label(tdata, member, proc->label_unmatch);
+          tuple_add_member_label(
+               tdata, member, proc->label_unmatch);
           if (tparent) {
-               tuple_add_member_label(tparent, tdata, proc->label_unmatch);
+               tuple_add_member_label(
+                    tparent, tdata, proc->label_unmatch);
           }
           else {
                if (!wsdata_check_label(tdata, proc->label_unmatch)) {
@@ -495,11 +502,13 @@ static inline int member_match(proc_instance_t *proc, wsdata_t *member,
      return match;
 }
 
-static int proc_nest_match_callback(void * vinstance, void * ignore,
-                                    wsdata_t * tdata, wsdata_t * member,
-                                    wsdata_t * tparent) {
-
-//     tool_print("in proc_nest_match_callback");
+static int proc_nest_match_callback(
+          void * vinstance,
+          void * ignore,
+          wsdata_t * tdata,
+          wsdata_t * member,
+          wsdata_t * tparent)
+{
      proc_instance_t * proc = (proc_instance_t*)vinstance;
      return member_match(proc, member, tdata, tparent);
 }
@@ -549,8 +558,8 @@ static int proc_nest_inverse_callback(void * vinstance, void * ignore,
                                     wsdata_t * tdata, wsdata_t * member) {
      proc_instance_t * proc = (proc_instance_t*)vinstance;
 
-     char * buf;
-     int len;
+     const char * buf;
+     size_t len;
      if (dtype_string_buffer(member, &buf, &len)) {
           if (stringhash9a_check(proc->exactmatch_table, buf, len)) {
                return 1;

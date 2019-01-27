@@ -176,55 +176,68 @@ proc_process_t proc_input_set(void * vinstance, wsdatatype_t * meta_type,
 //// proc processing function assigned to a specific data type in proc_io_init
 //return 1 if output is available
 // return 0 if not output
-static int process_tuple(void * vinstance, wsdata_t* input_data,
-                         ws_doutput_t * dout, int type_index) {
-
+static int process_tuple(
+          void * vinstance,
+          wsdata_t * input_data,
+          ws_doutput_t * dout,
+          int type_index)
+{
      proc_instance_t * proc = (proc_instance_t*)vinstance;
-
      proc->meta_process_cnt++;
 
      wsdata_t ** mset;
      int mset_len;
 
      int found;
-     int i;
-     for (i = 0; i < proc->lset.len; i++) {
+     for (int i = 0; i < proc->lset.len; i++) {
           found = 0;
-          if (tuple_find_label(input_data, proc->lset.labels[i],
-                               &mset_len, &mset)) {
+          if (tuple_find_label(
+                    input_data,
+                    proc->lset.labels[i],
+                    &mset_len,
+                    &mset)) {
                found = 1;
           }
-          if (!found) {
-               if (proc->label_replicate) {
-                    wsdata_t ** submset;
-                    int submset_len;
-                    if (tuple_find_label(input_data, proc->label_replicate,
-                                         &submset_len, &submset) && submset_len) {
-                         if (proc->as_string) {
-                              char * buf = NULL;
-                              int buflen = 0;
-                              if (dtype_string_buffer(submset[0], &buf,
-                                                      &buflen)) {
-                                   wsdt_string_t * str =
-                                        tuple_member_create_wdep(input_data,
-                                                                 dtype_string,
-                                                                 proc->lset.labels[i],
-                                                                 submset[0]);
-                                   if (str) {
-                                        str->buf = buf;
-                                        str->len = buflen;
-                                   }
+          if (found)
+               continue;
+
+          if (proc->label_replicate) {
+               wsdata_t ** submset;
+               int submset_len;
+               if (tuple_find_label(
+                         input_data,
+                         proc->label_replicate,
+                         &submset_len,
+                         &submset) && submset_len)
+               {
+                    if (proc->as_string) {
+                         const char * buf = NULL;
+                         size_t buflen = 0;
+                         if (dtype_string_buffer(
+                                   submset[0],
+                                   &buf,
+                                   &buflen))
+                         {
+                              wsdt_string_t * str;
+                              str = tuple_member_create_wdep(
+                                   input_data,
+                                   dtype_string,
+                                   proc->lset.labels[i],
+                                   submset[0]);
+                              if (str) {
+                                   str->buf = (char*)buf;
+                                   str->len = buflen;
                               }
                          }
-                         else {
-                              tuple_member_add_ptr(input_data, submset[0], proc->lset.labels[i]);
-                         }
                     }
+                    else {
+                         tuple_member_add_ptr(input_data, submset[0], proc->lset.labels[i]);
+                    }
+               }
 
-               }
-               else {
-                    tuple_member_add_ptr(input_data, proc->wsd_newdata, proc->lset.labels[i]);
-               }
+          }
+          else {
+               tuple_member_add_ptr(input_data, proc->wsd_newdata, proc->lset.labels[i]);
           }
      }
 

@@ -37,12 +37,12 @@ static int wsdt_print_bigstring_wsdata(FILE * stream, wsdata_t * wsdata,
      switch (printtype) {
      case WS_PRINTTYPE_TEXT:
           fprintf(stream, "\n");
-          sysutil_print_content(stream, (uint8_t * )fs->buf, fs->len);
+          sysutil_print_content(stream, fs->buf, fs->len);
           return 1;
           break;
      case WS_PRINTTYPE_HTML:
           fprintf(stream, "\n");
-          sysutil_print_content_web(stream, (uint8_t * )fs->buf, fs->len);
+          sysutil_print_content_web(stream, fs->buf, fs->len);
           return 1;
           break;
      case WS_PRINTTYPE_BINARY:
@@ -74,31 +74,38 @@ ws_hashloc_t* wsdt_hash_bigstring(wsdata_t * wsdata) {
      return &wsdata->hashloc;
 }
 
-static int wsdt_to_string_bigstring(wsdata_t *wsdata, char **buf, int*len) {
-     wsdt_bigstring_t *str = (wsdt_bigstring_t*)wsdata->data;
-
+static int wsdt_to_string_bigstring(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
+     wsdt_bigstring_t* str = (wsdt_bigstring_t*)wsdata->data;
      *buf = str->buf;
      *len = str->len;
      return 1;
 }
 
 int datatypeloader_init(void * type_list) {
-     wsdatatype_t *fsdt = wsdatatype_register_generic(type_list,
-                                                      WSDT_BIGSTRING_STR,
-                                                      sizeof(wsdt_bigstring_t));
+     wsdatatype_t * fsdt = wsdatatype_register_generic(
+          type_list,
+          WSDT_BIGSTRING_STR,
+          sizeof(wsdt_bigstring_t));
+
      fsdt->print_func = wsdt_print_bigstring_wsdata;
      fsdt->init_func = wsdt_init_bigstring;
      fsdt->hash_func = wsdt_hash_bigstring;
      fsdt->to_string = wsdt_to_string_bigstring;
 
-     wsdatatype_register_subelement(fsdt, type_list,
-                                    "LENGTH", "INT_TYPE",
-                                    offsetof(wsdt_bigstring_t, len));
+     wsdatatype_register_subelement(
+          fsdt, type_list,
+          "LENGTH", "INT_TYPE",
+          offsetof(wsdt_bigstring_t, len));
 
      wsdatatype_register_alias(type_list, fsdt, "BSTR_TYPE");
 
-     wsdatatype_register_generic_ts(type_list,
-                                    WSDT_TS_STR WSDT_BIGSTRING_STR, 
-                                    sizeof(wsdt_ts_t) + sizeof(wsdt_bigstring_t));
+     wsdatatype_register_generic_ts(
+          type_list,
+          WSDT_TS_STR WSDT_BIGSTRING_STR, 
+          sizeof(wsdt_ts_t) + sizeof(wsdt_bigstring_t));
      return 1;
 }

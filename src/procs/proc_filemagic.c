@@ -243,8 +243,8 @@ static int proc_process_label(void * vinstance, wsdata_t* input_data,
                               &proc->lset);
 
      while (tuple_search_labelset(&iter, &member, &label, &id)) {
-          char * buf;
-          int len;
+          const char * buf;
+          size_t len;
           if (dtype_string_buffer(member, &buf, &len)) {
                decode_str(proc, input_data, (uint8_t*)buf, len);
           }
@@ -268,8 +268,8 @@ static int proc_process_unlabeled(void * vinstance, wsdata_t* input_data,
      for (i = 0; i < tlen; i++) {
           member = tuple->member[i];
           if (member->label_len && member->labels[0] != proc->label_magic) {
-               char * buf;
-               int len;
+               const char * buf;
+               size_t len;
                if (dtype_string_buffer(member, &buf, &len)) {
                     decode_str(proc, input_data, (uint8_t*)buf, len);
                }

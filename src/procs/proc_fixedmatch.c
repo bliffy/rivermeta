@@ -191,7 +191,7 @@ static int proc_cmd_options(int argc, char ** argv,
           case 'R':
                {
                char * buf = strdup(optarg);
-               int len = strlen(optarg);
+               size_t len = strlen(optarg);
                sysutil_decode_hex_escapes(buf, &len);
                fixed_match_load_single(proc->fmatch, buf, len,
                                        proc->cmd_offset,
@@ -202,7 +202,7 @@ static int proc_cmd_options(int argc, char ** argv,
           case 'E':
                { // search for a string from the end
                char * buf = strdup(optarg);
-               int len = strlen(optarg);
+               size_t len = strlen(optarg);
                sysutil_decode_hex_escapes(buf, &len);
                fixed_match_load_single(proc->fmatch, buf, len,
                                        proc->cmd_offset,
@@ -224,11 +224,13 @@ static int proc_cmd_options(int argc, char ** argv,
 }
 
 // dump an wslabel_t to a saved hash table
-static inline uint32_t wslabel_t_dump(void * vdata, uint32_t max_records, 
-                                      uint32_t data_alloc, FILE * fp) {
+static inline uint32_t wslabel_t_dump(
+          void * vdata, uint32_t max_records, 
+          uint32_t data_alloc, FILE * fp)
+{
      uint32_t i, cnt = 0, len, bytes = 0;
      size_t rtn;
-     uint8_t * data = (uint8_t *)vdata;
+     char * data = (char*)vdata;
 
      //determine the number of wslabel_t items that will be dumped
      for (i = 0; i < max_records; i++) {
@@ -259,7 +261,7 @@ static inline uint32_t wslabel_t_dump(void * vdata, uint32_t max_records,
 static inline uint32_t wslabel_t_read(void * vdata, uint32_t data_alloc, FILE * fp) {
      uint32_t i, j, cnt = 0, len, bytes = 0;
      size_t rtn;
-     uint8_t * data = (uint8_t *)vdata;
+     char * data = (char*)vdata;
 
      rtn = fread(&cnt, sizeof(uint32_t), 1, fp);
 
@@ -377,18 +379,22 @@ static inline void local_apply_labels(wsdata_t * tdata, wsdata_t * ref,
      } 
 }
 
-static inline wslabel_t * find_match(proc_instance_t * proc,
-                                     wsdata_t * wsd, char * content,
-                                     int len, wsdata_t * tdata,
-                                     wsdata_t * tparent) {
+static inline wslabel_t * find_match(
+          proc_instance_t * proc,
+          wsdata_t * wsd,
+          const char * content,
+          size_t len,
+          wsdata_t * tdata,
+          wsdata_t * tparent)
+{
      if (len <= 0) {
           return 0;
      }
 
      wslabel_t * label;
 
-     if ((label = fixed_match_search(proc->fmatch,
-                                     (uint8_t*)content, len)) != NULL) {
+     if ((label = fixed_match_search(
+               proc->fmatch, content, len)) != NULL) {
           if (wsd) {
                if (tdata) {
                     tuple_add_member_label(tdata, wsd, label);
@@ -436,11 +442,15 @@ static inline wslabel_t * find_match(proc_instance_t * proc,
      return NULL;
 }
 
-static inline wslabel_t * member_match(proc_instance_t *proc, wsdata_t *member,
-                                       wsdata_t * wsd_label, wsdata_t * tdata,
-                                       wsdata_t * tparent) {
-     char * buf;
-     int len;
+static inline wslabel_t * member_match(
+          proc_instance_t * proc,
+          wsdata_t * member,
+          wsdata_t * wsd_label,
+          wsdata_t * tdata,
+          wsdata_t * tparent)
+{
+     const char * buf;
+     size_t len;
      if (dtype_string_buffer(member, &buf, &len)) {
           if (proc->maxlength && (len > proc->maxlength)) {
                return NULL;

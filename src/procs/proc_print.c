@@ -391,12 +391,16 @@ static int proc_process_label_only(void * vinstance, wsdata_t* input_data,
 
 static inline void local_print_strings(proc_instance_t * proc, wsdata_t * member) {
      wsdt_binary_t * bin = member->data;
-     sysutil_print_content_strings(proc->outfp, (uint8_t*)bin->buf, bin->len, 4);
+     sysutil_print_content_strings(
+          proc->outfp,
+          bin->buf,
+          bin->len,
+          4);
 }
 
 static inline void local_print_hex(proc_instance_t * proc, wsdata_t * member) {
      wsdt_binary_t * bin = member->data;
-     sysutil_print_content_hex(proc->outfp, (uint8_t*)bin->buf, bin->len);
+     sysutil_print_content_hex(proc->outfp, bin->buf, bin->len);
 }
 
 

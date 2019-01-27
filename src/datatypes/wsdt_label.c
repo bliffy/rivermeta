@@ -52,7 +52,11 @@ static ws_hashloc_t* wsdt_hash_label(wsdata_t * wsdata) {
      return &wsdata->hashloc;
 }
 
-static int wsdt_to_string_label(wsdata_t *wsdata, char **buf, int *len) {
+static int wsdt_to_string_label(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_label_t *label = (wsdt_label_t *) wsdata->data;
 
      *buf = (*label)->name;

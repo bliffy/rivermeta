@@ -480,8 +480,8 @@ int wsregister_label_alias(
 
 static int wsdatatype_default_to_string(
         wsdata_t * wsd,
-        char ** s,
-        int * l) {
+        const char ** s,
+        size_t * l) {
     return 0;
 }
 
@@ -783,14 +783,14 @@ void wsdatatype_default_delete(wsdata_t * wsdata) {
 
 int wsdatatype_default_print(
         FILE * fp,
-        const wsdata_t * data,
+        wsdata_t * data,
         ws_printtype_t type)
 { return fwrite(data->data, 1, data->dtype->len, fp); }
 
 int wsdatatype_default_snprint(
         char * buf,
         int buflen,
-        const wsdata_t * data,
+        wsdata_t * data,
         ws_printtype_t type)
 {
     memcpy((void * __restrict__)buf,

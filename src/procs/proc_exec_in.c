@@ -102,7 +102,7 @@ typedef struct _proc_instance_t {
      struct pollfd fds[1];
 
      char * sep;
-     int sep_len;
+     size_t sep_len;
 
      int include_sep;
 
@@ -133,7 +133,9 @@ static int proc_cmd_options(int argc, char ** argv,
           case 'R':
                proc->sep = strdup(optarg);
                proc->sep_len = strlen(optarg);
-               sysutil_decode_hex_escapes(proc->sep, &proc->sep_len); 
+               sysutil_decode_hex_escapes(
+                    proc->sep,
+                    &proc->sep_len); 
                break;
           default:
                return 0;
@@ -387,7 +389,8 @@ static void local_detect_sep(proc_instance_t * proc,
      }
 
      while (len) {
-          char * buf_offset = (char *)memmem(buf, len, proc->sep, proc->sep_len);
+          char * buf_offset = (char *)memmem(
+               buf, len, proc->sep, proc->sep_len);
           if (!buf_offset) {
                add_to_active(proc, wsd, buf, len, remainder);
                return;

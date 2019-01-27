@@ -108,7 +108,7 @@ int ws_set_outdata(
     if (outtype->local_subscribers) {
         has_subscriber = 1;
         job = queue_remove(
-            (nhqueue_t*) doutput->local_job_freeq));
+            (nhqueue_t*) doutput->local_job_freeq);
         if ( job == NULL ) {
             job = (ws_job_t*)malloc(sizeof(ws_job_t));
             if (!job) {
@@ -139,9 +139,9 @@ int ws_set_outdata(
         const int nrank = GETRANK();
         for (scur = outtype->ext_subscribers;
              scur != NULL;
-             scur = scursor->next)
+             scur = scur->next)
         {
-            if ( !scursor->src_label
+            if ( !scur->src_label
                  || wsdata_check_label(wsdata, scur->src_label))
             {
                 wsdata_add_reference(wsdata);

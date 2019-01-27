@@ -301,8 +301,8 @@ static int nest_search_callback_get(void * vproc, void * vevent,
      dprint("key foundyy");
      proc_instance_t * proc = (proc_instance_t*)vproc;
      //search for member key
-     char * buf = NULL;
-     int len = 0;
+     const char * buf = NULL;
+     size_t len = 0;
 
      if (!dtype_string_buffer(member, &buf, &len)) {
           return 0;
@@ -406,10 +406,10 @@ static int proc_set(void * vinstance, wsdata_t * tuple,
 
      if (key && value) {
           dprint("found key and value");
-          char * keybuf = NULL;
-          int keylen = 0;
-          char * valbuf = NULL;
-          int vallen = 0;
+          const char * keybuf = NULL;
+          size_t keylen = 0;
+          const char * valbuf = NULL;
+          size_t vallen = 0;
           
           if (dtype_string_buffer(key, &keybuf, &keylen) && 
               dtype_string_buffer(value, &valbuf, &vallen)) {
@@ -441,8 +441,8 @@ static int nest_search_callback_incr(void * vproc, void * vevent,
                                     wsdata_t * tdata, wsdata_t * member) {
      proc_instance_t * proc = (proc_instance_t*)vproc;
      //search for member key
-     char * buf = NULL;
-     int len = 0;
+     const char * buf = NULL;
+     size_t len = 0;
 
      if (!dtype_string_buffer(member, &buf, &len)) {
           return 0;
@@ -479,8 +479,8 @@ static int nest_search_callback_decr(void * vproc, void * vevent,
                                     wsdata_t * tdata, wsdata_t * member) {
      proc_instance_t * proc = (proc_instance_t*)vproc;
      //search for member key
-     char * buf = NULL;
-     int len = 0;
+     const char * buf = NULL;
+     size_t len = 0;
 
      if (!dtype_string_buffer(member, &buf, &len)) {
           return 0;
@@ -518,8 +518,8 @@ static int nest_search_callback_publish(void * vproc, void * vevent,
      dprint("got publish value");
      proc_instance_t * proc = (proc_instance_t*)vproc;
      //search for member key
-     char * buf = NULL;
-     int len = 0;
+     const char * buf = NULL;
+     size_t len = 0;
 
      if (!dtype_string_buffer(member, &buf, &len)) {
           return 0;

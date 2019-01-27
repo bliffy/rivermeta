@@ -41,7 +41,11 @@ static int wsdt_print_ts_wsdata(FILE * stream, wsdata_t * wsdata,
      return 0;
 }
 
-static int wsdt_to_string_ts(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_ts(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_ts_t * ts = (wsdt_ts_t*)wsdata->data;
 
      char * lbuf = 0;

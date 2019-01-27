@@ -188,9 +188,9 @@ static int proc_process_label(void * vinstance, wsdata_t* input_data,
      tuple_labelset_iter_t iter;
      tuple_init_labelset_iter(&iter, input_data,
                               &proc->lset);
-     int olen = 0;
-     char * buf;
-     int blen;
+     size_t olen = 0;
+     const char * buf;
+     size_t blen;
      int isbinary = 0;
 
      while (tuple_search_labelset(&iter, &member, &label, &id)) {
@@ -211,26 +211,37 @@ static int proc_process_label(void * vinstance, wsdata_t* input_data,
      if (olen) {
           proc->cmb_cnt++;
           char * obuf;
-          int obuf_len = 0;
+          size_t obuf_len = 0;
           if (isbinary) {
-               wsdt_binary_t * bin = tuple_create_binary(input_data, proc->label_combine, olen);
+               wsdt_binary_t * bin = tuple_create_binary(
+                    input_data, proc->label_combine, olen);
                if (!bin) {
-                    ws_set_outdata(input_data, proc->outtype_tuple, dout);
+                    ws_set_outdata(
+                         input_data,
+                         proc->outtype_tuple,
+                         dout);
                     proc->outcnt++;
                     return 1;
                }
                obuf = bin->buf;
           }
           else {
-               wsdt_string_t * str = tuple_create_string(input_data, proc->label_combine, olen);
+               wsdt_string_t * str = tuple_create_string(
+                    input_data,
+                    proc->label_combine,
+                    olen);
                if (!str) {
-                    ws_set_outdata(input_data, proc->outtype_tuple, dout);
+                    ws_set_outdata(
+                         input_data,
+                         proc->outtype_tuple,
+                         dout);
                     proc->outcnt++;
                     return 1;
                }
                obuf = str->buf;
           }
-          tuple_init_labelset_iter(&iter, input_data, &proc->lset);
+          tuple_init_labelset_iter(
+               &iter, input_data, &proc->lset);
           while (tuple_search_labelset(&iter, &member, &label, &id)) {
                if (obuf_len && proc->delim) {
                     memcpy(obuf + obuf_len, proc->delim, proc->delimlen);

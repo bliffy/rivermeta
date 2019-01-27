@@ -92,7 +92,7 @@ const char* stringmatch(
      if (haylen < sm->len) {
           return NULL;
      }
-     char c;
+     int c;
      size_t j = 0;
      while (j <= (haylen - sm->len)) {
           c = haystack[j + sm->len - 1];
@@ -116,7 +116,7 @@ const char* stringmatch_nocase(
      if (haylen < sm->len)
           return NULL;
 
-     char c;
+     int c;
      size_t i=0, j=0;
      while (j <= (haylen - sm->len)) {
           c = haystack[j + sm->len - 1];

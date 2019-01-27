@@ -23,23 +23,23 @@ extern "C" {
 #define MAX_WSD_SEARCH_TERMS 1024
 
 typedef int (*wsdatatype_to_string)(
-     const wsdata_t *,
+     wsdata_t *,
      const char **,
-     int *);
+     size_t *);
 typedef int (*wsdatatype_to_uint64)(
-     const wsdata_t *,
+     wsdata_t *,
      uint64_t *);
 typedef int (*wsdatatype_to_uint32)(
-     const wsdata_t *,
+     wsdata_t *,
      uint32_t *);
 typedef int (*wsdatatype_to_int32)(
-     const wsdata_t *,
+     wsdata_t *,
      int32_t *);
 typedef int (*wsdatatype_to_int64)(
-     const wsdata_t *,
+     wsdata_t *,
      int64_t *);
 typedef int (*wsdatatype_to_double)(
-     const wsdata_t *,
+     wsdata_t *,
      double *);
 
 typedef void (*wsdatatype_init)(
@@ -63,13 +63,13 @@ typedef enum {
 
 typedef int (*wsdatatype_print)(
      FILE * ,
-     const wsdata_t *,
+     wsdata_t *,
      ws_printtype_t );
 
 typedef int (*wsdatatype_snprint)(
      char *,
      int /*len*/,
-     const wsdata_t *,
+     wsdata_t *,
      ws_printtype_t );
 
 typedef int (*wsdatatype_sscan)(
@@ -102,7 +102,7 @@ typedef struct _wsdtype_sub_list_t {
 
 //generic structure for data type, lengths and hash functions
 struct _wsdatatype_t {
-     const char * name;    //name of data type
+     char * name;    //name of data type
      uint64_t namehash;
      int  len;
      wsfree_list_t * freeq;
@@ -342,12 +342,12 @@ uint8_t * wsdatatype_default_serialize(
 
 int wsdatatype_default_print(
      FILE * ,
-     const wsdata_t *,
+     wsdata_t *,
      ws_printtype_t);
 int wsdatatype_default_snprint(
      char *,
      int ,
-     const wsdata_t *,
+     wsdata_t *,
      ws_printtype_t);
 
 static inline wsdata_t * wsdata_alloc(wsdatatype_t * dtype)

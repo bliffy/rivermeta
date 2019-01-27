@@ -71,43 +71,43 @@ EXT wsdatatype_t * dtype_vector_uint32;
 
 // get a string buffer from a data type
 static inline int dtype_string_buffer(
-          const wsdata_t * member,
+          wsdata_t * member,
           const char ** buf,
-          int * len)
+          size_t * len)
 { return member->dtype->to_string(member, buf, len); }
 
 static inline int dtype_get_uint(
-          const wsdata_t * member,
+          wsdata_t * member,
           uint64_t * o64)
 { return member->dtype->to_uint64(member, o64); }
 
 static inline int dtype_get_uint64(
-          const wsdata_t * member,
+          wsdata_t * member,
           uint64_t * o64)
 { return member->dtype->to_uint64(member, o64); }
 
 static inline int dtype_get_uint32(
-          const wsdata_t * member,
+          wsdata_t * member,
           uint32_t * o32)
 { return member->dtype->to_uint32(member, o32); }
 
 static inline int dtype_get_int(
-          const wsdata_t * member,
+          wsdata_t * member,
           int64_t * i64)
 { return member->dtype->to_int64(member, i64); }
 
 static inline int dtype_get_int64(
-          const wsdata_t * member,
+          wsdata_t * member,
           int64_t * i64)
 { return member->dtype->to_int64(member, i64); }
 
 static inline int dtype_get_int32(
-          const wsdata_t * member,
+          wsdata_t * member,
           int32_t * i32)
 { return member->dtype->to_int32(member, i32); }
 
 static inline int dtype_get_double(
-          const wsdata_t * member,
+          wsdata_t * member,
           double * dbl)
 { return member->dtype->to_double(member, dbl); }
 

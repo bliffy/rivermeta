@@ -26,25 +26,35 @@ SOFTWARE.
 #include "waterslidedata.h"
 #include "sysutil.h"
 
-static int wsdt_sscan_fixedstring(wsdata_t * wsdata, char * buf, int len) {
+static int wsdt_sscan_fixedstring(
+          wsdata_t * wsdata,
+          const char * buf,
+          int len)
+{
      wsdt_fixedstring_t * fs = (wsdt_fixedstring_t*)wsdata->data;
      if (len > WSDT_FIXEDSTRING_LEN) {
           len = WSDT_FIXEDSTRING_LEN;
      }
-     memcpy((void * __restrict__)fs->buf, (void * __restrict__)buf, len);
+     memcpy((void * __restrict__)fs->buf,
+            (void * __restrict__)buf,
+            len);
      fs->len = len;
      return 1;
 }
 
-static int wsdt_print_fixedstring_wsdata(FILE * stream, wsdata_t * wsdata,
-                                   uint32_t printtype) {
+static int wsdt_print_fixedstring_wsdata(
+          FILE * stream,
+          wsdata_t * wsdata,
+          uint32_t printtype)
+{
      wsdt_fixedstring_t * fs = (wsdt_fixedstring_t*)wsdata->data;
      int rtn = 0;
      switch (printtype) {
      case WS_PRINTTYPE_HTML:
-          sysutil_print_content_strings_web(stream,
-                                            (uint8_t*)fs->buf,
-                                            fs->len, 4);
+          sysutil_print_content_strings_web(
+               stream,
+               fs->buf,
+               fs->len, 4);
           return 1;
           break;
      case WS_PRINTTYPE_TEXT:
@@ -78,7 +88,11 @@ ws_hashloc_t* wsdt_hash_fixedstring(wsdata_t * wsdata) {
      return &wsdata->hashloc;
 }
 
-static int wsdt_to_string_fixedstring(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_fixedstring(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_fixedstring_t *str = (wsdt_fixedstring_t*)wsdata->data;
 
      *buf = str->buf;

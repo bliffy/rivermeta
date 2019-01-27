@@ -195,7 +195,7 @@ const term_info_t *ac_singlesearch_trans(
      ahoc_state_t* sPtr,
      const char* buf,
      size_t buflen,
-     const char** retbuf,
+     char const ** retbuf,
      size_t* retlen,
      uint8_t mask_len,
      uint8_t case_ins,
@@ -211,7 +211,7 @@ int ac_singlesearch(
      ahoc_state_t* sPtr,
      const char* buf,
      size_t buflen,
-     const char** retbuf,
+     char const ** retbuf,
      size_t* retlen);
 
 /**
@@ -224,7 +224,7 @@ int ac_singlesearch_skip(
      ahoc_state_t* sPtr,
      const char* buf,
      size_t buflen,
-     const char** retbuf,
+     char const ** retbuf,
      size_t* retlen);
 
 #ifdef __cplusplus

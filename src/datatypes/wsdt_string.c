@@ -51,8 +51,8 @@ static int wsdt_print_string_wsdata(FILE * stream, wsdata_t * wsdata,
           if (str->len > 256) {
                fprintf(stream, "\n<pre>");
           }
-          sysutil_print_content_strings_web(stream, (uint8_t*)str->buf,
-                                            str->len, 4);
+          sysutil_print_content_strings_web(
+               stream, str->buf, str->len, 4);
           if (str->len > 256) {
                fprintf(stream, "</pre>\n");
           }
@@ -186,7 +186,11 @@ static wsdata_t * wsdt_string_subelement_ts(wsdata_t *ndata,
      return dst;
 }
 
-static int wsdt_to_string_string(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_string(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_string_t *str = (wsdt_string_t*)wsdata->data;
 
      *buf = str->buf; 

@@ -156,7 +156,7 @@ int procbuffer_init(void *vproc, void *type_table) {
      if ( proc->hexFromStr ) {
           fromLen = strlen(proc->hexFromStr);
           fromString = proc->hexFromStr;
-          int x = fromLen;
+          size_t x = fromLen;
           sysutil_decode_hex_escapes(fromString, &x);
           fromLen = x;
      } else if ( proc->fromStr ) {

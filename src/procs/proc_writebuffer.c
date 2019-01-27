@@ -204,8 +204,8 @@ static inline FILE * open_buffer_file(proc_instance_t * proc) {
 
 static inline int writebuffer(proc_instance_t * proc, wsdata_t * member) {
      dprint("writebuffer");
-     char * buf = NULL;
-     int blen = 0;
+     const char * buf = NULL;
+     size_t blen = 0;
      if (!dtype_string_buffer(member, &buf, &blen)) {
           return 0;
      }
@@ -348,8 +348,8 @@ static int proc_tuple_stdout(void * vinstance, wsdata_t* input_data,
                                proc->lset_buffer.labels[i], &mset_len,
                                &mset)) {
                for (j = 0; j < mset_len; j++) {
-                    char * buf;
-                    int blen;
+                    const char * buf;
+                    size_t blen;
                     if (dtype_string_buffer(mset[j], &buf, &blen)) {
                          fwrite(buf, blen, 1, stdout);
                          fflush(stdout);

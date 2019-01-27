@@ -26,7 +26,11 @@ SOFTWARE.
 #include "waterslidedata.h"
 #include "wstypes.h"
 
-static int wsdt_int_sscan(wsdata_t * wsdata, char * buf, int len) {
+static int wsdt_int_sscan(
+          wsdata_t * wsdata,
+          const char * buf,
+          int len)
+{
      int *pint = (int*)wsdata->data;
      *pint = atoi(buf);
      return 1;
@@ -44,7 +48,11 @@ static int wsdt_print_int(FILE * stream, wsdata_t * wsdata,
      }
 }
 
-static int wsdt_to_string_int(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_int(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_int_t * u = (wsdt_int_t*)wsdata->data;
 
      char * lbuf = 0;

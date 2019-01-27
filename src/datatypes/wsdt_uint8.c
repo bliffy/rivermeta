@@ -37,7 +37,11 @@ static int wsdt_print_uint8(FILE * stream, wsdata_t * wsdata,
       }
 }
 
-static int wsdt_to_string_uint8(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_uint8(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_uint8_t * u = (wsdt_uint8_t*)wsdata->data;
 
      char * lbuf = 0;

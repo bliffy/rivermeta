@@ -169,16 +169,21 @@ proc_process_t proc_input_set(void * vinstance, wsdatatype_t * input_type,
      }
 }
 
-static inline void decode_str(proc_instance_t * proc, wsdata_t * tdata,
-                              uint8_t * buf, int buflen) {
+static inline void decode_str(
+          proc_instance_t * proc,
+          wsdata_t * tdata,
+          const char * buf,
+          size_t buflen) {
      wsdt_binary_t * bstr = tuple_create_binary(tdata, proc->label_decode64, buflen);
      
      if (bstr) {
           if (proc->rfc4648) {
-               bstr->len = wsbase64_decode_buffer_rfc4648(buf, buflen, (uint8_t*)bstr->buf, buflen);
+               bstr->len = wsbase64_decode_buffer_rfc4648(
+                    buf, buflen, bstr->buf, buflen);
           }
           else {
-               bstr->len = wsbase64_decode_buffer(buf, buflen, (uint8_t*)bstr->buf, buflen);
+               bstr->len = wsbase64_decode_buffer(
+                    buf, buflen, bstr->buf, buflen);
           }
      }
 }
@@ -202,10 +207,10 @@ static int proc_process_label(void * vinstance, wsdata_t* input_data,
                               &proc->lset);
 
      while (tuple_search_labelset(&iter, &member, &label, &id)) {
-          char * buf;
-          int blen;
+          const char * buf;
+          size_t blen;
           if (dtype_string_buffer(member, &buf, &blen)) {
-               decode_str(proc, input_data, (uint8_t*)buf, blen);
+               decode_str(proc, input_data, buf, blen);
           }
      }
      
@@ -227,10 +232,10 @@ static int proc_process_unlabeled(void * vinstance, wsdata_t* input_data,
      for (i = 0; i < tlen; i++) {
           member = tuple->member[i];
           if (member->label_len && member->labels[0] != proc->label_decode64) {
-               char * buf;
-               int blen;
+               const char * buf;
+               size_t blen;
                if (dtype_string_buffer(member, &buf, &blen)) {
-                    decode_str(proc, input_data, (uint8_t*)buf, blen);
+                    decode_str(proc, input_data, buf, blen);
                }
           }
      }

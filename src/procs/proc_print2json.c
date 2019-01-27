@@ -182,8 +182,8 @@ static inline void write_to_file(proc_instance_t * proc, wsdata_t * tdata) {
                key= "UNKNOWN";
           }
 
-          int len;
-          char * value;
+          size_t len;
+          const char * value;
           if (member->dtype == dtype_binary) { 
           } else {
                dtype_string_buffer(member, &value, &len);

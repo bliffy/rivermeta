@@ -39,11 +39,11 @@ static int wsdt_print_smallstring_wsdata(FILE * stream, wsdata_t * wsdata,
      switch (printtype) {
      case WS_PRINTTYPE_HTML:
           fprintf(stream, "\n");
-          sysutil_print_content_web(stream, (uint8_t * )fs->buf, fs->len);
+          sysutil_print_content_web(stream, fs->buf, fs->len);
           break;
      case WS_PRINTTYPE_TEXT:
           fprintf(stream, "\n");
-          sysutil_print_content(stream, (uint8_t * )fs->buf, fs->len);
+          sysutil_print_content(stream, fs->buf, fs->len);
           break;
      case WS_PRINTTYPE_BINARY:
           rtn = fwrite(&fs->len, sizeof(int), 1, stream);
@@ -72,7 +72,11 @@ ws_hashloc_t* wsdt_hash_smallstring(wsdata_t * wsdata) {
      return &wsdata->hashloc;
 }
 
-static int wsdt_to_string_smallstring(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_smallstring(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_smallstring_t *str = (wsdt_smallstring_t*)wsdata->data;
 
      *buf = str->buf; 

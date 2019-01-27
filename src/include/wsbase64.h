@@ -109,7 +109,9 @@ static inline int wsbase64_encode(unsigned char * inbuf, int inbuflen, unsigned 
 **
 ** decode 4 '6-bit' characters into 3 8-bit binary bytes
 */
-static inline void wsbase64_decode_block( unsigned char in[4], unsigned char *out)
+static inline void wsbase64_decode_block(
+          const char in[4],
+          char * out)
 {   
     out[ 0 ] = (unsigned char ) (in[0] << 2 | in[1] >> 4);
     out[ 1 ] = (unsigned char ) (in[1] << 4 | in[2] >> 2);
@@ -121,19 +123,24 @@ static inline void wsbase64_decode_block( unsigned char in[4], unsigned char *ou
 **
 ** decode a base64 encoded stream discarding padding, line breaks and noise
 */
-static inline int wsbase64_decode_buffer(unsigned char * inbuf, int inbuflen, unsigned char * outbuf, int outbuflen ) {
-     unsigned char in[4], v;
+static inline int wsbase64_decode_buffer(
+          const char * inbuf,
+          size_t inbuflen,
+          char * outbuf,
+          size_t outbuflen)
+{
+     char in[4], v;
      int outlen = 0;
 
      int i = 0;
      int j;
      for (j = 0; j < inbuflen; j++) {
           v = inbuf[j];
-          v = (unsigned char) ((v < 43 || v > 122) ? 0 : cd64[ v - 43 ]);
+          v = ((v < 43 || v > 122) ? 0 : cd64[ v - 43 ]);
           if (v) {
-               v = (unsigned char) ((v == '$') ? 0 : v - 61);
+               v = ((v == '$') ? 0 : v - 61);
                if (v) {
-                    in[i] = (unsigned char) (v - 1);
+                    in[i] = (v - 1);
                     i++;
                }
           }
@@ -162,9 +169,14 @@ static inline int wsbase64_decode_buffer(unsigned char * inbuf, int inbuflen, un
      return outlen;
 }
 
-static inline int wsbase64_decode_buffer_rfc4648(unsigned char * inbuf, int inbuflen, unsigned char * outbuf, int outbuflen ) {
-     unsigned char in[4], v;
-     int outlen = 0;
+static inline int wsbase64_decode_buffer_rfc4648(
+          const char * inbuf,
+          size_t inbuflen,
+          char * outbuf,
+          size_t outbuflen )
+{
+     char in[4], v;
+     size_t outlen = 0;
 
      int i = 0;
      int j;
@@ -178,9 +190,9 @@ static inline int wsbase64_decode_buffer_rfc4648(unsigned char * inbuf, int inbu
           }
           v = (unsigned char) ((v < 43 || v > 122) ? 0 : cd64[ v - 43 ]);
           if (v) {
-               v = (unsigned char) ((v == '$') ? 0 : v - 61);
+               v = (char) ((v == '$') ? 0 : v - 61);
                if (v) {
-                    in[i] = (unsigned char) (v - 1);
+                    in[i] = (char) (v - 1);
                     i++;
                }
           }

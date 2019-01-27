@@ -44,12 +44,12 @@ static int wsdt_print_mmap_wsdata(FILE * stream, wsdata_t * wsdata,
      switch (printtype) {
      case WS_PRINTTYPE_HTML:
           fprintf(stream,"\n");
-          sysutil_print_content_web(stream, (uint8_t*)mm->buf, mm->len); 
+          sysutil_print_content_web(stream, mm->buf, mm->len); 
           return 1;
           break;
      case WS_PRINTTYPE_TEXT:
           fprintf(stream,"\n");
-          sysutil_print_content(stream, (uint8_t*)mm->buf, mm->len); 
+          sysutil_print_content(stream, mm->buf, mm->len); 
           return 1;
           break;
      case WS_PRINTTYPE_BINARY:
@@ -86,7 +86,11 @@ void wsdt_init_mmap(wsdata_t * wsdata, wsdatatype_t * dtype) {
 }
 
 
-static int wsdt_to_string_mmap(wsdata_t *wsdata, char **buf, int*len) {
+static int wsdt_to_string_mmap(
+          wsdata_t * wsdata,
+          const char ** buf,
+          size_t * len)
+{
      wsdt_mmap_t *str = (wsdt_mmap_t*)wsdata->data;
 
      *buf = str->buf; 

@@ -20,8 +20,9 @@ extern "C" {
 
 
 typedef struct _stringhash3_t {
-     char*  str;
-     void*  data;
+     char const* cstr;
+     char* vstr;
+     void* data;
      struct _stringhash3_t* next;    // hash table link list
      struct _stringhash3_t* prev;
      struct _stringhash3_t* sf_next; // sort table link list
@@ -218,7 +219,7 @@ static inline stringhash3_t* stringhash3_find(
      hash = compute_hash3(sht, pstring);
 
      for (cursor = sht->table[hash]; cursor; cursor = cursor->next) {
-          if (memcmp(cursor->str, pstring, sht->strlen) == 0) {
+          if (memcmp(cursor->vstr, pstring, sht->strlen) == 0) {
                return cursor;
           }
      }
@@ -289,7 +290,7 @@ static inline void sht3_tableremove(
      uint32_t hash;
      if (cursor->prev == NULL) {
           //lookup hash index
-          hash = compute_hash3(sht, cursor->str);
+          hash = compute_hash3(sht, cursor->vstr);
 
           sht->table[hash] = cursor->next;
 
@@ -339,7 +340,6 @@ static inline stringhash3_t* stringhash3_find_attach(
 {
      uint32_t hash;
      stringhash3_t* cursor;
-     const char* str;
      void* data;
      int reinit_cursor = 0;
      
@@ -372,16 +372,14 @@ static inline stringhash3_t* stringhash3_find_attach(
           cursor->sf_next->sf_prev = NULL;
        
           sht->records--;
-             sht->drops++;
+          sht->drops++;
 
           //remove and reuse oldest record
-          reinit_cursor = 1;
      }
      //reuse record in the free_q
      else if (sht->free_q) {
           cursor = sht->free_q;
           sht->free_q = cursor->sf_next;
-          reinit_cursor = 1;
      }
      //create new record
      else {
@@ -391,13 +389,13 @@ static inline stringhash3_t* stringhash3_find_attach(
                return NULL;
           }
           memset(cursor,0,sizeof(stringhash3_t));
-     
-          cursor->str = (char*)malloc(sht->strlen);
-          if (!cursor->str) {
+          cursor->vstr = (char*)malloc(sht->strlen);
+          cursor->cstr = cursor->vstr;
+          if (!cursor->cstr) {
                error_print("failed malloc of stringhash3 cursor->str");
                return NULL;
           }
-          memcpy(cursor->str, pstring, sht->strlen);
+          memcpy(cursor->vstr, pstring, sht->strlen);
                                
           if (sht->data_alloc) {
                cursor->data = (void*)malloc(sht->data_alloc);
@@ -410,12 +408,13 @@ static inline stringhash3_t* stringhash3_find_attach(
      }
 
      if (reinit_cursor) {
-          str = cursor->str;
+          char * str = cursor->vstr;
           data = cursor->data;
           memset(cursor, 0, sizeof(stringhash3_t));
-          cursor->str = str;
+          cursor->vstr = str;
+          cursor->cstr = str;
           cursor->data = data;
-          memcpy(str, pstring, sht->strlen);
+          memcpy((char*)str, pstring, sht->strlen);
           if (sht->data_alloc) {
                memset(data, 0, sht->data_alloc);
           }
@@ -462,8 +461,8 @@ static inline void stringhash3_free(stringhashtable3_t* sht) {
                 if (cursor->data) {
                      free(cursor->data);
                 }
-                if (cursor->str) {
-                    free(cursor->str);
+                if (cursor->vstr) {
+                    free(cursor->vstr);
                 }
                 free(cursor);
                 cursor = next;

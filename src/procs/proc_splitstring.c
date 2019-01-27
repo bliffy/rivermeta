@@ -175,7 +175,7 @@ static int proc_cmd_options(int argc, char ** argv,
                }
                else {
   		    char * buf = strdup(optarg);
-		    int len = strlen(optarg);
+		    size_t len = strlen(optarg);
 		    sysutil_decode_hex_escapes(buf, &len);
                     ac_loadkeyword(proc->aho, buf, len, len);
                     free(buf);
@@ -281,51 +281,67 @@ static inline wslabel_t * get_substring_label(proc_instance_t * proc, int cnt) {
      }
 }
 
-static inline int add_string(proc_instance_t * proc, wsdata_t * tdata, 
-                             uint8_t * str, int len, int isbinary, wsdata_t *dep,
-                             int cnt) {
-
-     char * buf = (char *)str;
-     if (proc->skip && (cnt <= proc->skip)) {
+static inline int add_string(
+          proc_instance_t * proc,
+          wsdata_t * tdata, 
+          const char * str,
+          size_t len,
+          int isbinary,
+          wsdata_t * dep,
+          int cnt)
+{
+     const char * buf = str;
+     if (proc->skip && (cnt <= proc->skip))
           return 0;
-     }
-     if (len <= 0) {
+     if (len <= 0)
           return 0;
-     }
      if (isbinary) {
-          wsdt_binary_t * bin = tuple_member_create_wdep(tdata, dtype_binary,
-                                                         get_substring_label(proc, cnt), dep);
+          wsdt_binary_t * bin = tuple_member_create_wdep(
+               tdata,
+               dtype_binary,
+               get_substring_label(proc, cnt),
+               dep);
           if (bin) {
-               bin->buf = buf;
+               bin->buf = (char*)buf;
                bin->len = len;
           }
      }
      else {
-          wsdt_string_t * str = tuple_member_create_wdep(tdata, dtype_string,
-                                                         get_substring_label(proc, cnt), dep);
+          wsdt_string_t * str = tuple_member_create_wdep(
+               tdata,
+               dtype_string,
+               get_substring_label(proc, cnt),
+               dep);
           if (str) {
-               str->buf = buf;
+               str->buf = (char*)buf;
                str->len = len;
           }
      }
      return 1;
 }
 
-static inline int add_substring(proc_instance_t * proc, wsdata_t * tdata, 
-                                char * str, int len, int isbinary, wsdata_t *dep) {
+static inline int add_substring(
+          proc_instance_t * proc,
+          wsdata_t * tdata,
+          const char * str,
+          size_t len,
+          int isbinary,
+          wsdata_t * dep) {
 
      int cnt = 0;
      int mval;
-     uint8_t * prev;
-     uint32_t plen;
-     uint8_t * buf = (uint8_t*)str;
-     uint32_t buflen = len;
+     const char * prev;
+     size_t plen;
+     const char * buf = str;
+     size_t buflen = len;
      ahoc_state_t ac_ptr = proc->aho->root;
      do {
           prev = buf;
           plen = buflen;
-          mval = ac_singlesearch(proc->aho, &ac_ptr,
-                                 buf, buflen, &buf, &buflen);
+          mval = ac_singlesearch(
+               proc->aho, &ac_ptr,
+               buf, buflen,
+               &buf, &buflen);
 
           dprint("here");
           if (mval < 0) {
@@ -344,7 +360,7 @@ static inline int add_substring(proc_instance_t * proc, wsdata_t * tdata,
           dprint("here2 %.*s", buflen, buf);
 
           if (!proc->onlylast) {
-               int end_offset = buf - mval - prev;
+               size_t end_offset = buf - mval - prev;
                if (end_offset) {
                     cnt++;
                     add_string(proc, tdata, prev, end_offset, isbinary, dep, cnt);
@@ -361,23 +377,27 @@ static inline int add_substring(proc_instance_t * proc, wsdata_t * tdata,
      return 1;
 }
 
-static inline int add_string_tup(proc_instance_t * proc, wsdata_t * tdata, 
-                                 uint8_t * str, int len, int isbinary, wsdata_t *dep,
-                                 int cnt, int carrylen) {
-     char * buf = (char *)str;
-     if (proc->skip && (cnt <= proc->skip)) {
+static inline int add_string_tup(
+          proc_instance_t * proc,
+          wsdata_t * tdata, 
+          const char * str,
+          size_t len,
+          int isbinary,
+          wsdata_t *dep,
+          int cnt,
+          int carrylen)
+{
+     const char * buf = str;
+     if (proc->skip && (cnt <= proc->skip))
           return 0;
-     }
-     if (len <= 0) {
+     if (len <= 0)
           return 0;
-     }
      wsdata_t * newtup = ws_get_outdata(proc->outtype_tuple);
      if (!newtup) {
           return 0;
      }
 
      int i;
-
      for (i = 0; i < carrylen; i++) {
           add_tuple_member(newtup, proc->carry[i]);
      }
@@ -387,7 +407,7 @@ static inline int add_string_tup(proc_instance_t * proc, wsdata_t * tdata,
                tuple_member_create_wdep(newtup, dtype_binary,
                                         get_substring_label(proc, cnt), dep);
           if (bin) {
-               bin->buf = buf;
+               bin->buf = (char*)buf;
                bin->len = len;
           }
      }
@@ -396,7 +416,7 @@ static inline int add_string_tup(proc_instance_t * proc, wsdata_t * tdata,
                tuple_member_create_wdep(newtup, dtype_string,
                                         get_substring_label(proc, cnt), dep);
           if (str) {
-               str->buf = buf;
+               str->buf = (char*)buf;
                str->len = len;
           }
      }
@@ -406,35 +426,45 @@ static inline int add_string_tup(proc_instance_t * proc, wsdata_t * tdata,
 }
 
 
-static inline int add_substring_tup(proc_instance_t * proc, wsdata_t * tdata, 
-                                    char * str, int len, int isbinary,
-                                    wsdata_t *dep, int carrylen) {
+static inline int add_substring_tup(
+          proc_instance_t * proc,
+          wsdata_t * tdata, 
+          const char * str,
+          size_t len,
+          int isbinary,
+          wsdata_t * dep,
+          size_t carrylen) {
 
      int cnt = 0;
      int mval;
-     uint8_t * prev;
-     uint32_t plen;
-     uint8_t * buf = (uint8_t*)str;
-     uint32_t buflen = len;
+     const char * prev;
+     size_t plen;
+     const char * buf = str;
+     size_t buflen = len;
      ahoc_state_t ac_ptr = proc->aho->root;
      do {
           prev = buf;
           plen = buflen;
-          mval = ac_singlesearch(proc->aho, &ac_ptr,
-                                 buf, buflen, &buf, &buflen);
+          mval = ac_singlesearch(
+               proc->aho, &ac_ptr,
+               buf, buflen, &buf, &buflen);
           dprint("here");
           if (mval < 0) {
                cnt++;
-               add_string_tup(proc, tdata, prev, plen, isbinary, dep, cnt,
-                              carrylen);
+               add_string_tup(
+                    proc, tdata, prev,
+                    plen, isbinary, dep,
+                    cnt, carrylen);
                break;
           }
           else if (buflen == 0) {
                if ((plen - mval > 0)) {
                     dprint("here1 %.*s %d %d", plen - mval, prev, mval, buflen);
                     cnt++;
-                    add_string_tup(proc, tdata, prev, plen - mval, isbinary,
-                                   dep, cnt, carrylen);
+                    add_string_tup(
+                         proc, tdata, prev,
+                         plen - mval, isbinary,
+                         dep, cnt, carrylen);
                }
                break;
           }
@@ -444,14 +474,18 @@ static inline int add_substring_tup(proc_instance_t * proc, wsdata_t * tdata,
                int end_offset = buf - mval - prev;
                if (end_offset) {
                     cnt++;
-                    add_string_tup(proc, tdata, prev, end_offset, isbinary, dep, cnt,
-                                   carrylen);
+                    add_string_tup(
+                         proc, tdata, prev,
+                         end_offset, isbinary,
+                         dep, cnt, carrylen);
                }
                //get next split offset
                if (proc->occurances && (len > 0) && (cnt >= proc->occurances)) {
                     cnt++;
-                    add_string_tup(proc, tdata, buf, buflen, isbinary, dep, cnt,
-                                   carrylen);
+                    add_string_tup(
+                         proc, tdata, buf,
+                         buflen, isbinary,
+                         dep, cnt, carrylen);
                     break;
                }
           }
@@ -477,8 +511,8 @@ static int proc_process_meta(void * vinstance, wsdata_t* input_data,
      tuple_init_labelset_iter(&iter, input_data, &proc->lset);
 
      while (tuple_search_labelset(&iter, &member, &label, &id)) {
-          char * buf;
-          int blen;
+          const char * buf;
+          size_t blen;
           if (dtype_string_buffer(member, &buf, &blen)) {
                add_substring(proc, input_data, buf, blen, 
                              (proc->treat_string || member->dtype == dtype_string) ? 0 : 1, member);
@@ -523,8 +557,8 @@ static int proc_process_splittuple(void * vinstance, wsdata_t* input_data,
      }
 
      while (tuple_search_labelset(&iter, &member, &label, &id)) {
-          char * buf;
-          int blen;
+          const char * buf;
+          size_t blen;
           if (dtype_string_buffer(member, &buf, &blen)) {
                add_substring_tup(proc, input_data, buf, blen, 
                                  (proc->treat_string || member->dtype == dtype_string) ? 0 : 1,
@@ -554,8 +588,8 @@ static int proc_process_allstr(void * vinstance, wsdata_t* input_data,
      dprint("doing tuple search");
      for (i = 0; i < tlen; i++) {
           member = tuple->member[i];
-          char * buf;
-          int blen;
+          const char * buf;
+          size_t blen;
           if (dtype_string_buffer(member, &buf, &blen)) {
                add_substring(proc, input_data, buf, blen, 
                              (proc->treat_string || member->dtype == dtype_string) ? 0 : 1, member);
@@ -601,8 +635,8 @@ static int proc_process_splittuple_allstr(void * vinstance, wsdata_t* input_data
      dprint("doing tuple search");
      for (i = 0; i < tlen; i++) {
           member = tuple->member[i];
-          char * buf;
-          int blen;
+          const char * buf;
+          size_t blen;
           if (dtype_string_buffer(member, &buf, &blen)) {
                add_substring_tup(proc, input_data, buf, blen, 
                                  member->dtype == dtype_string ? 0 : 1,

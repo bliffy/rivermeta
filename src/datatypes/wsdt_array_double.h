@@ -36,8 +36,10 @@ typedef struct _wsdt_array_double_t {
      double value[WSDT_ARRAY_DOUBLE_MAX];
 } wsdt_array_double_t;
 
-static inline int wsdt_array_double_add(wsdt_array_double_t * au, double value) {
-
+static inline int wsdt_array_double_add(
+          wsdt_array_double_t * au,
+          double value)
+{
      if (au->len >= WSDT_ARRAY_DOUBLE_MAX) {
           return 0;
      }
@@ -46,7 +48,10 @@ static inline int wsdt_array_double_add(wsdt_array_double_t * au, double value) 
      return 1;
 }
 
-static inline int wsdt_array_double_add_wsdata(wsdata_t * auset, double value) {
+static inline int wsdt_array_double_add_wsdata(
+          wsdata_t * auset,
+          double value)
+{
      wsdt_array_double_t * au = (wsdt_array_double_t*)auset->data;
      return wsdt_array_double_add(au, value);
 }

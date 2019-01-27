@@ -28,8 +28,8 @@ typedef int (*wsprocbuffer_sub_decode)(
      void *,
      wsdata_t *,
      wsdata_t *,
-     uint8_t *,
-     int);
+     const char *,
+     size_t);
 typedef int (*wsprocbuffer_sub_element)(
      void *,
      wsdata_t *,

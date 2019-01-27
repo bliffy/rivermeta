@@ -24,8 +24,11 @@ SOFTWARE.
 #include "datatypeloader.h"
 #include "waterslidedata.h"
 
-static int wsdt_print_array_double_wsdata(FILE * stream, wsdata_t * wsdata,
-                                          uint32_t printtype) {
+static int wsdt_print_array_double_wsdata(
+          FILE * stream,
+          wsdata_t * wsdata,
+          uint32_t printtype)
+{
      wsdt_array_double_t * au = (wsdt_array_double_t*)wsdata->data;
      int rtn = 0;
      int i;
@@ -45,8 +48,12 @@ static int wsdt_print_array_double_wsdata(FILE * stream, wsdata_t * wsdata,
      }
 }
 
-//fast init function.. just zero out the length, not the string
-void wsdt_init_array_double(wsdata_t * wsdata, wsdatatype_t * dtype) {
+// fast init function.. just zero out the length, not
+// the string
+void wsdt_init_array_double(
+          wsdata_t * wsdata,
+          wsdatatype_t * dtype)
+{
      if (wsdata->data) {
           wsdt_array_double_t * ls = (wsdt_array_double_t*)wsdata->data;
           ls->len = 0;
@@ -54,9 +61,10 @@ void wsdt_init_array_double(wsdata_t * wsdata, wsdatatype_t * dtype) {
 }
 
 int datatypeloader_init(void * type_list) {
-     wsdatatype_t *fsdt = wsdatatype_register_generic(type_list,
-                                                      WSDT_ARRAY_DOUBLE_STR,
-                                                      sizeof(wsdt_array_double_t));
+     wsdatatype_t* fsdt = wsdatatype_register_generic(
+          type_list,
+          WSDT_ARRAY_DOUBLE_STR,
+          sizeof(wsdt_array_double_t));
      fsdt->print_func = wsdt_print_array_double_wsdata;
      fsdt->init_func = wsdt_init_array_double;
      return 1;

@@ -87,8 +87,8 @@ static inline int fm_test_cam_len(search_cam_t* cam, int len)
 
 static inline void* fixed_match_search(
           fixed_match_t* task,
-          uint8_t* content,
-          int clen)
+          const char* content,
+          size_t clen)
 {
   search_cam_t* cam;
   stringhash3_t* sh_element;

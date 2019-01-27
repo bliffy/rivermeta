@@ -34,10 +34,13 @@ SOFTWARE.
 #include "sysutil.h"
 
 //change hex string into character string
-static int process_hex_string(char * matchstr, int matchlen) {
+static size_t process_hex_string(
+          char * matchstr,
+          size_t matchlen)
+{
      int i;
      char matchscratchpad[1500];
-     int soffset = 0;
+     size_t soffset = 0;
      
      for (i = 0; i < matchlen; i++) {
           if (isxdigit(matchstr[i])) {
@@ -51,8 +54,9 @@ static int process_hex_string(char * matchstr, int matchlen) {
      }
      
      if (soffset) {
-          //overwrite hex-decoded string on top of origional string..
-          memcpy(matchstr,matchscratchpad, soffset);
+          // overwrite hex-decoded string on top of
+          // origional string..
+          memcpy(matchstr, matchscratchpad, soffset);
      }
      
      return soffset;
@@ -91,7 +95,7 @@ int label_match_loadfile(label_match_t * task, char * thefile) {
      int linelen;
      char * linep;
      char * matchstr;
-     int matchlen;
+     size_t matchlen;
      char * endofstring;
      char * labelstr;
      int label;
@@ -127,7 +131,9 @@ int label_match_loadfile(label_match_t * task, char * thefile) {
                endofstring[0] = '\0';
                matchstr = linep;
                matchlen = strlen(matchstr);
-               sysutil_decode_hex_escapes(matchstr, &matchlen);
+               sysutil_decode_hex_escapes(
+                    matchstr,
+                    &matchlen);
                linep = endofstring + 1;
           }
 
