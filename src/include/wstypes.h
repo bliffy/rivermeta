@@ -31,6 +31,16 @@
 #include "datatypes/wsdt_vector_double.h"
 #include "datatypes/wsdt_vector_uint32.h"
 
+// MingW32/64 doesn't have _SC_PAGESIZE
+#if !defined _SC_PAGESIZE && (defined _WIN32 || defined _WIN64 || defined WINDOWS)
+#include "win_pages.h"
+#define PAGE_SIZE() WinPageSize()
+#define ALIGNED_ALLOC WinAlignedAlloc
+#else
+#define PAGE_SIZE() sysconf(_SC_PAGESIZE)
+#define ALIGNED_ALLOC posix_memalign
+#endif
+
 #ifndef _WSUTIL
 #define EXT extern
 #else
@@ -170,8 +180,8 @@ static inline wsdata_t * wsdata_create_buffer(
           if ((dep = wsdata_alloc(dtype_massivestring))) {
                // char * buf = (char *)malloc(len);
                void * buf;
-               long mem_page_sz = sysconf(_SC_PAGESIZE);
-               int verify = posix_memalign(&buf, mem_page_sz, len);
+               long mem_page_sz = PAGE_SIZE();
+               int verify = ALIGNED_ALLOC(&buf, mem_page_sz, len);
                if (0 != verify)
                {
                     // show reason for error
@@ -238,8 +248,7 @@ static inline wsdata_t * wsdata_create_hugebuffer(
      }
 
      void * buf;
-     int verify = posix_memalign(
-          &buf, sysconf(_SC_PAGESIZE), len);
+     int verify = ALIGNED_ALLOC(&buf, PAGE_SIZE(), len);
      if (0 != verify) {
           // show reason for error
           fprintf(stderr, "wsdata_create_hugebuffer: ERROR! posix_memalign failed...");
@@ -248,7 +257,7 @@ static inline wsdata_t * wsdata_create_hugebuffer(
                fprintf(stderr,
                     "alignment field = %ld is not a power of"
                     " two or not a multiple of sizeof(void*)",
-                    sysconf(_SC_PAGESIZE) );
+                    PAGE_SIZE() );
           }
           else if (ENOMEM == verify)
           {
@@ -326,7 +335,7 @@ static inline wsdata_t * dtype_alloc_binary(int len) {
 
 static inline wsdata_t * dtype_str2ts(
           const char * str,
-          int len)
+          size_t len)
 {
      if (timeparse_detect_date(str, len) != 2)
           return NULL;

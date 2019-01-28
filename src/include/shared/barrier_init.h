@@ -2,7 +2,11 @@
 #define _CREATE_SPIN_BARRIER_H
 
 #include <sys/types.h>
+#if (defined _WIN32 || defined _WIN64 || defined WINDOWS)
+#include "win_mman.h"
+#else
 #include <sys/mman.h>
+#endif
 #include <fcntl.h>
 
 #ifdef __cplusplus

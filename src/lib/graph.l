@@ -49,23 +49,23 @@ endStmt   ((\r\n)|\n|;)+
 
 \"      { string_buf_ptr = string_buf; BEGIN(STR1); }
 <STR1>{
-\"        { /* Closing Quote */ BEGIN(0); *string_buf_ptr++ = '\0'; pglval.sval = strdup(string_buf); return STRINGLIT; }
+\"        { /* Closing Quote */ BEGIN(0); *string_buf_ptr++ = '\0'; pglval.sval = strdup(string_buf); return TK_STRINGLIT; }
 \\\"      { *string_buf_ptr++ = '\"'; }
 [^\"]+    { char *yptr = pgtext;  while(*yptr) *string_buf_ptr++ = *yptr++; }
 }
 
 \'      { string_buf_ptr = string_buf; BEGIN(STR2); }
 <STR2>{
-\'        { /* Closing Quote */ BEGIN(0); *string_buf_ptr++ = '\0'; pglval.sval = strdup(string_buf); return STRINGLIT; }
+\'        { /* Closing Quote */ BEGIN(0); *string_buf_ptr++ = '\0'; pglval.sval = strdup(string_buf); return TK_STRINGLIT; }
 \\\'      { *string_buf_ptr++ = '\''; }
 [^\']+    {    char *yptr = pgtext; while(*yptr) *string_buf_ptr++ = *yptr++; }
 }
 
-{varRef}    { BEGIN(VAR); pglval.sval = strdup(pgtext); return VARREF; }
+{varRef}    { BEGIN(VAR); pglval.sval = strdup(pgtext); return TK_VARREF; }
 <VAR>{
-"."       { return PERIOD; }
-":"       { return COLON; }
-{name}    { pglval.sval = strdup(pgtext); return WORD; }
+"."       { return TK_PERIOD; }
+":"       { return TK_COLON; }
+{name}    { pglval.sval = strdup(pgtext); return TK_WORD; }
 [ },);\t\n|]  { BEGIN(0); unput(*pgtext); }
 }
 
@@ -76,30 +76,30 @@ endStmt   ((\r\n)|\n|;)+
 \n         { pg_lineno++; BEGIN(0); }
 }
 
-{include} { return INCLUDE; }
-"("       { return LPAREN; }
-")"       { return RPAREN; }
-"{"       { return LBRACE; }
-"}"       { return RBRACE; }
-"%extern" { return EXTERN; }
-"%thread" { return THREAD; }
-"%func"   { return FUNC; }
-"%"       { return PERCENT; }
-"@"       { return ATSIGN; }
-"||"      { return DOUBLEPIPE; }
-"@||"     { return ATDOUBLEPIPE; }
-"|"       { return PIPE; }
-","       { return COMMA; }
-"."       { return PERIOD; }
-":"       { return COLON; }
-"->"      { return ARROW; }
-";"       { return ENDSTMT; }
-"\n"      { pg_lineno++; return ENDSTMT; }
-{number}       { pglval.ival = atoi(pgtext); return NUMBER; }
-{word}         { pglval.sval = strdup(pgtext); return WORD; }
+{include} { return TK_INCLUDE; }
+"("       { return TK_LPAREN; }
+")"       { return TK_RPAREN; }
+"{"       { return TK_LBRACE; }
+"}"       { return TK_RBRACE; }
+"%extern" { return TK_EXTERN; }
+"%thread" { return TK_THREAD; }
+"%func"   { return TK_FUNC; }
+"%"       { return TK_PERCENT; }
+"@"       { return TK_ATSIGN; }
+"||"      { return TK_DOUBLEPIPE; }
+"@||"     { return TK_ATDOUBLEPIPE; }
+"|"       { return TK_PIPE; }
+","       { return TK_COMMA; }
+"."       { return TK_PERIOD; }
+":"       { return TK_COLON; }
+"->"      { return TK_ARROW; }
+";"       { return TK_ENDSTMT; }
+"\n"      { pg_lineno++; return TK_ENDSTMT; }
+{number}       { pglval.ival = atoi(pgtext); return TK_NUMBER; }
+{word}         { pglval.sval = strdup(pgtext); return TK_WORD; }
 {whitesp} ;
 <FILEEND><<EOF>> { BEGIN(0); return 0; }
-<<EOF>> { BEGIN(FILEEND); return ENDSTMT; }
+<<EOF>> { BEGIN(FILEEND); return TK_ENDSTMT; }
 %%
 
 int pg_parse_graph(ASTNode *root, SymbolTable *symTab, nhqueue_t *files, const char *str)

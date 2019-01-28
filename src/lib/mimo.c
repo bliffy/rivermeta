@@ -1,25 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -42,6 +20,22 @@ SOFTWARE.
 #include "sht_registry.h"
 #include "shared/kidshare.h"
 #include "graphBuilder.h"
+
+
+// cross-platform macro to get processor count
+#if (defined _WIN32 || defined _WIN64 || defined WINDOWS)
+#include <windows.h>
+int GET_TOTAL_CORES(void) {
+     SYSTEM_INFO si;
+     GetSystemInfo(&si);
+     return si.dwNumberOfProcessors;
+}
+#else
+int GET_TOTAL_CORES(void) {
+     return (int)sysconf(_SC_NPROCESSORS_ONLN);
+}
+#endif
+
 
 // Global Globals
 uint32_t work_size;
@@ -540,7 +534,7 @@ int mimo_compile_graph(mimo_t * mimo) {
      optind = tmp;
 
      work_size = mimo->thread_id+1;
-     int max_cpus = (int)sysconf(_SC_NPROCESSORS_ONLN);
+     int max_cpus = GET_TOTAL_CORES();
      if(work_size > max_cpus) {
           status_print("CAUTION: new work_size %d exceeds max_cpus %d", work_size, max_cpus);
           status_print("         threads will be wrapped around!");

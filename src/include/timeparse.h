@@ -113,11 +113,11 @@ static inline time_t timeparse_file_time2(
 #ifdef _TIMEPARSE_UNUSABLE
 static inline int timeparse_detect_time(
           const char * buf,
-          int len)
+          size_t len)
 { return 0; }
 static inline int timeparse_detect_date(
-          char * buf,
-          int len)
+          const char * buf,
+          size_t len)
 { return 0; }
 
 #else
@@ -126,7 +126,7 @@ static inline int timeparse_detect_date(
 //return 0 if time was not detected
 static inline int timeparse_detect_time(
           const char * buf,
-          int len)
+          size_t len)
 {
      if ( (len < 8) || (len > 15) ) {
           dprint("invalid time - incorrect length");
@@ -140,7 +140,7 @@ static inline int timeparse_detect_time(
      if (len > 8) {
           if (buf[8] != '.')
                return 0;
-          for (int i = 0; i < len; i++) {
+          for (size_t i = 0; i < len; i++) {
                switch ( i ) {
                case 2: case 5: case 8: break;
                default:
@@ -170,7 +170,7 @@ static inline int timeparse_detect_time(
 //return 0 if date was not detected
 static inline int timeparse_detect_date(
           const char * buf,
-          int len)
+          size_t len)
 {
      if ( (len < 10) || (len > 26) ) {
           dprint("invalid date - incorrect length");

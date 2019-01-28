@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 // Prototypes
-extern void clean_exit(int);
+extern void trigger_clean_exit(int);
 extern void setup_exit_signals(void);
 extern int ws_cleanup(mimo_t* mimo);
 

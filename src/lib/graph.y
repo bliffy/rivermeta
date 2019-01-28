@@ -38,12 +38,14 @@ uint32_t gInFuncDecl = 0;
 }
 
 
-%token INCLUDE
-%token LPAREN RPAREN LBRACE RBRACE PERIOD COLON ENDSTMT ATSIGN
-%token THREAD FUNC EXTERN DOUBLEPIPE PIPE ATDOUBLEPIPE COMMA ARROW PERCENT
-%token <sval> WORD STRINGLIT VARREF
-%token <ival> NUMBER
-%left WORD NUMBER STRINGLIT
+%token TK_INCLUDE
+%token TK_LPAREN TK_RPAREN TK_LBRACE TK_RBRACE TK_PERIOD
+%token TK_COLON TK_ENDSTMT TK_ATSIGN
+%token TK_THREAD TK_FUNC TK_EXTERN TK_DOUBLEPIPE TK_PIPE
+%token TK_ATDOUBLEPIPE TK_COMMA TK_ARROW TK_PERCENT
+%token <sval> TK_WORD TK_STRINGLIT TK_VARREF
+%token <ival> TK_NUMBER
+%left TK_WORD TK_NUMBER TK_STRINGLIT
 %type <ival> pipe_sep
 %type <node> statement_list scoped_statements statement
 %type <node> thread_decl func_decl func_header func_call extern_decl pipeline pipe_source
@@ -53,16 +55,15 @@ uint32_t gInFuncDecl = 0;
 %type <sval> varTarget
 %%
 
-root: statement_list { gASTRoot->addChild($1); }
-    ;
+root: statement_list { gASTRoot->addChild($1); };
 
 statement_list: { $$ = new ASTStatementList(); }
-              | statement_list statement ENDSTMT { if ( $2 ) $1->addChild($2); $$ = $1; }
-              | statement_list statement RBRACE { if ( $2 ) $1->addChild($2); $$ = $1; yychar = RBRACE; }
-              | statement_list ENDSTMT { $$ = $1; }
+              | statement_list statement TK_ENDSTMT { if ( $2 ) $1->addChild($2); $$ = $1; }
+              | statement_list statement TK_RBRACE { if ( $2 ) $1->addChild($2); $$ = $1; yychar = TK_RBRACE; }
+              | statement_list TK_ENDSTMT { $$ = $1; }
               ;
 
-scoped_statements:  LBRACE statement_list RBRACE { $$ = $2; }
+scoped_statements:  TK_LBRACE statement_list TK_RBRACE { $$ = $2; }
                  ;
 
 statement: thread_decl { $$ = $1; }
@@ -74,15 +75,15 @@ statement: thread_decl { $$ = $1; }
          ;
 
 
-include: INCLUDE WORD { queue_add(gFileQueue, $2); }
-       | INCLUDE STRINGLIT { queue_add(gFileQueue, $2); }
+include: TK_INCLUDE TK_WORD { queue_add(gFileQueue, $2); }
+       | TK_INCLUDE TK_STRINGLIT { queue_add(gFileQueue, $2); }
        ;
 
-thread_decl: THREAD LPAREN NUMBER COMMA NUMBER RPAREN scoped_statements { unsigned long long tid = (($3 << 32) | $5); $$ = new ASTThreadDecl(tid, true, $7); }
-           | THREAD LPAREN NUMBER RPAREN scoped_statements { $$ = new ASTThreadDecl($3, false, $5); }
+thread_decl: TK_THREAD TK_LPAREN TK_NUMBER TK_COMMA TK_NUMBER TK_RPAREN scoped_statements { unsigned long long tid = (($3 << 32) | $5); $$ = new ASTThreadDecl(tid, true, $7); }
+           | TK_THREAD TK_LPAREN TK_NUMBER TK_RPAREN scoped_statements { $$ = new ASTThreadDecl($3, false, $5); }
            ;
 
-extern_decl: EXTERN varList {
+extern_decl: TK_EXTERN varList {
                     ASTVarList *l = (ASTVarList*)$2;
                     for ( size_t n = 0 ; n < l->childCount() ; n++ ) {
                          l->getVar(n)->setExtern();
@@ -92,7 +93,7 @@ extern_decl: EXTERN varList {
                }
            ;
 
-func_decl: func_header LPAREN optVarList ARROW varList RPAREN scoped_statements {
+func_decl: func_header TK_LPAREN optVarList TK_ARROW varList TK_RPAREN scoped_statements {
                     ASTFuncDecl *decl = (ASTFuncDecl*)$1;
                     decl->addSource($3);
                     decl->addDests($5);
@@ -102,7 +103,7 @@ func_decl: func_header LPAREN optVarList ARROW varList RPAREN scoped_statements 
                     gInFuncDecl--;
                     $$ = $1;
                }
-         | func_header LPAREN optVarList RPAREN scoped_statements {
+         | func_header TK_LPAREN optVarList TK_RPAREN scoped_statements {
                     ASTFuncDecl *decl = (ASTFuncDecl*)$1;
                     decl->addSource($3);
                     decl->addDests(new ASTVarList());
@@ -114,7 +115,7 @@ func_decl: func_header LPAREN optVarList ARROW varList RPAREN scoped_statements 
                }
          ;
 
-func_header: FUNC WORD {
+func_header: TK_FUNC TK_WORD {
                     ASTFuncDecl *decl = new ASTFuncDecl($2, gSymTab.back());
                     $$ = decl;
                     gSymTab.push_back(decl->getSymbolTable());
@@ -122,8 +123,8 @@ func_header: FUNC WORD {
                }
            ;
 
-func_call: PERCENT WORD LPAREN optSourceVars ARROW varList RPAREN { $$ = new ASTFuncCall($2, $4, $6, gSymTab.back()); }
-         | PERCENT WORD LPAREN optSourceVars RPAREN { $$ = new ASTFuncCall($2, $4, new ASTVarList(), gSymTab.back()); }
+func_call: TK_PERCENT TK_WORD TK_LPAREN optSourceVars TK_ARROW varList TK_RPAREN { $$ = new ASTFuncCall($2, $4, $6, gSymTab.back()); }
+         | TK_PERCENT TK_WORD TK_LPAREN optSourceVars TK_RPAREN { $$ = new ASTFuncCall($2, $4, new ASTVarList(), gSymTab.back()); }
          ;
 
 pipeline: pipe_source kid_list sinkVar {
@@ -149,7 +150,7 @@ pipe_source: sourceVars { $$ = $1; }
            ;
 
 sourceVars: sourceVar { $$ = new ASTVarList($1); }
-          | sourceVars COMMA sourceVar { $1->addChild($3); $$ = $1; }
+          | sourceVars TK_COMMA sourceVar { $1->addChild($3); $$ = $1; }
           ;
 
 optSourceVars: { $$ = new ASTVarList(); }
@@ -163,25 +164,25 @@ sourceVar: varRef { $$ = $1; }
          | varRef varTarget varFilter { $$ = $1; ((ASTVar*)$1)->setFilter($3);  ((ASTVar*)$1)->setTargetPort($2); }
          ;
 
-varFilter: PERIOD WORD { $$ = $2;; }
+varFilter: TK_PERIOD TK_WORD { $$ = $2;; }
          ;
 
-varTarget: COLON WORD { $$ = $2; }
+varTarget: TK_COLON TK_WORD { $$ = $2; }
          ;
 
-varRef: VARREF { $$ = new ASTVar($1, gSymTab.back()); }
-      | ATSIGN VARREF { ASTVar *var = new ASTVar($2, gSymTab.back()); var->setBundle(); $$ = var; }
+varRef: TK_VARREF { $$ = new ASTVar($1, gSymTab.back()); }
+      | TK_ATSIGN TK_VARREF { ASTVar *var = new ASTVar($2, gSymTab.back()); var->setBundle(); $$ = var; }
       ;
 
 varList: varRef { $$ = new ASTVarList($1); }
-       | varList COMMA varRef { $1->addChild($3); $$ = $1; }
+       | varList TK_COMMA varRef { $1->addChild($3); $$ = $1; }
        ;
 
 optVarList: { $$ = new ASTVarList(); }
           | varList { $$ = $1; }
           ;
 
-sinkVar: ARROW varRef { $$ = $2; }
+sinkVar: TK_ARROW varRef { $$ = $2; }
        | { $$ = NULL; }
        ;
 
@@ -208,18 +209,18 @@ kid_list: { $$ = new ASTKidList(); }
         ;
 
 /* TODO:   PORT:kid */
-kid_def: WORD COLON kid_def { ((ASTKidDef*)$3)->setSourcePort($1); $$ = $3; }
-       | WORD { $$ = new ASTKidDef($1); }
-       | WORD kid_def { ((ASTKidDef*)$2)->prefaceItem($1); $$ = $2; }
-       | NUMBER { $$ = new ASTKidDef($1); }
-       | NUMBER kid_def { ((ASTKidDef*)$2)->prefaceItem($1); $$ = $2; }
-       | STRINGLIT { $$ = new ASTKidDef($1); }
-       | STRINGLIT kid_def { ((ASTKidDef*)$2)->prefaceItem($1); $$ = $2; }
+kid_def: TK_WORD TK_COLON kid_def { ((ASTKidDef*)$3)->setSourcePort($1); $$ = $3; }
+       | TK_WORD { $$ = new ASTKidDef($1); }
+       | TK_WORD kid_def { ((ASTKidDef*)$2)->prefaceItem($1); $$ = $2; }
+       | TK_NUMBER { $$ = new ASTKidDef($1); }
+       | TK_NUMBER kid_def { ((ASTKidDef*)$2)->prefaceItem($1); $$ = $2; }
+       | TK_STRINGLIT { $$ = new ASTKidDef($1); }
+       | TK_STRINGLIT kid_def { ((ASTKidDef*)$2)->prefaceItem($1); $$ = $2; }
        ;
 
-pipe_sep: PIPE { $$ = ASTKidDef::PIPE; }
-        | DOUBLEPIPE { $$ = ASTKidDef::DOUBLEPIPE; }
-        | ATDOUBLEPIPE { $$ = -1* ASTKidDef::DOUBLEPIPE; }
+pipe_sep: TK_PIPE { $$ = ASTKidDef::PIPE; }
+        | TK_DOUBLEPIPE { $$ = ASTKidDef::DOUBLEPIPE; }
+        | TK_ATDOUBLEPIPE { $$ = -1* ASTKidDef::DOUBLEPIPE; }
         ;
 
 %%

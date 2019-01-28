@@ -27,6 +27,11 @@
 #include <sys/sysctl.h>
 #endif
 
+#if (defined _WIN32 || defined _WIN64 || defined WINDOWS)
+#include <windows.h>
+#define setenv(a,b,c) SetEnvironmentVariable(a,b)
+#endif
+
 // set current release version
 #define WS_MAJOR_VERSION 1
 #define WS_MINOR_VERSION 0
@@ -94,9 +99,16 @@ static inline char* get_executable_path(void)
 
      return path;
 
+#elif (defined _WIN32 || defined _WIN64 || defined WINDOWS )
+
+     char * p = (char*)calloc(1,MAX_PATH);
+     GetModuleFileName(NULL, p, MAX_PATH);
+     return p;
+
 #else
+
      #warning "This platform needs work in get_executable_path(); WS_* environment variables must be manually configured."
-     char *tmp = calloc(1, sizeof(char));
+     char *tmp = (char*)calloc(1, sizeof(char));
      if (!tmp) {
           error_print("failed get_executable_path calloc of tmp");
           return NULL;

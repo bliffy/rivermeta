@@ -1,55 +1,20 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-// TODOs:
-//   - check file/path lengths
-
-// Fileout design 
-//
-// This enables versatility in generating output files for kids.  This
-// is largely encompassed by the notion of a filespec, in which one can 
-// specify environment variables, a dynamic label value, and an arbitrary
-// timespec, as well as directory paths which will becreated as needed at 
-// runtime.  The timespec enables rolling result files, and results can be
-// moved immediately upon completion.  Also, handling (creation/closure)
-// of gzip files. 
-// 
-// Concept:  user can specify arbitrary output filename structure 
-// with support for inclusion of environment variables (init-time) 
-// and label values (process-time).  Specification components:
-//    {ENV} ==> getenv(ENV), or %ENV% if value is not set
-//    [LABEL] ==> (sanitized) value of LABEL if exists, #LABEL# if not
-//    <TIMESTAMP> ==> render current time, modulo timeslice
-// Example: -O [HOSTNAME]as_seen_by_{USER}at<%Y%m%d_%H%M%S>.out -t 20m
-//
-// Also, slashes in (resulting) filenames are parsed and file creation 
-//    walks down the expected directory path.
-// 
-
-
 //#define DEBUG 1
 
 #include "fileout.h"
 #include <fcntl.h>
+
+// cross platform macros
+#if (defined _WIN32 || defined _WIN64 || defined WINDOWS)
+#include <direct.h> // defines _mkdir()
+#define _MKDIR(x) (_mkdir(x)==ENOENT ? 1 : 0)
+#define _LINK(x,y) (0!=CreateSymbolicLinkA(x,y,0))
+#define _UNLINK(x) DeleteFile(x)
+#else
+#define _MKDIR(x) ( \
+     (mkdir(x,S_IRWXU|S_IRWXG|S_IRWXO)==0 || errno==EEXIST))
+#define _LINK(x,y) (-1!=link(x,y))
+#define _UNLINK(x) unlink(x)
+#endif
 
 //function prototypes for local functions
 static void close_fp_callback(void *data, void *fs);
@@ -77,7 +42,7 @@ fileout_initialize(filespec_t *fs, void *type_table)
        if (!make_path(fs->fileprefix)) { 
             error_print("Can't write to destination %s", fs->fileprefix);
                free(fs->outfpdata);
-            clean_exit(1);
+            trigger_clean_exit(1);
             return NULL;
        }
      }
@@ -86,7 +51,7 @@ fileout_initialize(filespec_t *fs, void *type_table)
             // somewhat specious, make_path() will punt upon failure
             error_print("Can't write to destination %s", fs->moveprefix);
                free(fs->outfpdata);
-            clean_exit(1);
+            trigger_clean_exit(1);
             return NULL;
        }
      }
@@ -417,7 +382,7 @@ make_path(char *name)
      char *ptr = strrchr(temp,'/');
      if (ptr) { 
        *ptr = 0;
-       if (mkdir(temp,S_IRWXU | S_IRWXG | S_IRWXO) == 0 || errno == EEXIST) {
+       if ( _MKDIR(temp) ) {
             free(temp);
             return 1;
        }
@@ -433,13 +398,12 @@ make_path(char *name)
        }
        *ptr = 0;
 
-       if (mkdir(temp, S_IRWXU | S_IRWXG | S_IRWXO) == 0 
-           || errno == EEXIST) {
+       if ( _MKDIR(temp) ) {
             // keep looping
        } else {
             error_print("Can't create directory %s (%s)", 
                   temp, strerror(errno));
-            clean_exit(1);
+            trigger_clean_exit(1);
             return 0;
        }            
        *ptr = '/';
@@ -572,19 +536,19 @@ close_fp(fpdata_t *fpd, filespec_t *fs, int eviction) {
 
        if (!make_path(finalname)) {
             error_print("can't make path to %s\n",finalname);
-            clean_exit(1);
+            trigger_clean_exit(1);
        } else {
-            if (link(currentname, finalname) == -1) {
+            if (! _LINK(currentname, finalname) ) {
               if (errno == EEXIST) {
               // dest file already exists
                 do {
                      sprintf(finalname+namelen,"_x%03u",++copyversion);
                      if (fs->extension) { strcat(finalname, fs->extension); }
-                } while ((link(currentname, finalname) == -1 && (errno == EEXIST)) 
+                } while ((!_LINK(currentname, finalname) && (errno == EEXIST)) 
                       && copyversion < MAX_FILE_VERSIONS);
                 if (copyversion >= MAX_FILE_VERSIONS) {
                      error_print("can't find a unique name for %s across %d options\n", finalname, copyversion);
-                     clean_exit(1);
+                     trigger_clean_exit(1);
                      return;
                 }
 /*   Could do this, but would take more testing
@@ -600,7 +564,7 @@ close_fp(fpdata_t *fpd, filespec_t *fs, int eviction) {
                 if ((dst < 0) || (src < 0)) {
                      error_print("issue copying %s to %s: %s",
                            currentname, finalname, strerror(errno));
-                     clean_exit(1);
+                     trigger_clean_exit(1);
                 }
                 while ((result = read(src, buf, sizeof(buf)))) {
                      write(dst, buf, sizeof(buf));
@@ -612,10 +576,10 @@ close_fp(fpdata_t *fpd, filespec_t *fs, int eviction) {
                 // something else untoward happened
                 error_print("problem moving %s to %s: %s",
                          currentname, finalname, strerror(errno));
-                clean_exit(1);
+                trigger_clean_exit(1);
               }
             }
-            unlink(currentname);
+            _UNLINK(currentname);
        }
      }
      if (fpd->expandedname) {
@@ -692,7 +656,7 @@ file_cycle(fpdata_t *fpdata, wsdata_t *input, filespec_t *fs, time_t tm)
      open_file(fpdata, fs);
      if (!fpdata->fp) {
        error_print("Can't open %s (%s)", fpdata->filename, strerror(errno));
-       clean_exit(1);
+       trigger_clean_exit(1);
        return NULL;
      }
      fpdata->ts = currenttime;
@@ -749,7 +713,7 @@ fileout_select_file(wsdata_t *input, filespec_t *fs, time_t tm)
      newfpptr = file_cycle(newfpptr, input, fs, tm);
      if (!newfpptr->fp) {
        // graceful exit; actually handled by file_cycle
-       clean_exit(1);
+       trigger_clean_exit(1);
        return NULL;
      }
      newfpptr->recordcount++;
