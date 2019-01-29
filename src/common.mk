@@ -1,17 +1,29 @@
 
 # General project Makefile contents
 
-# Build verbosity 
-#   Define WS_VERBOSEBUILD for verbose build
+
+# catch for windows (Mingw32/64)
+ifeq ($(OS),Windows_NT)
+  OSNAME=WINDOWS
+else # expect some form of posix
+  OSNAME=$(word 1,$(shell uname))
+  ifndef OSNAME
+    OSNAME=UNKNOWN
+  endif
+endif
+# special case for BSD
+ifeq "$(OSNAME)" "FreeBSD"
+  NODL=1
+  ISFREEBSD=1
+  OSNAME=LINUX
+endif
 
 # As this file (common.mk) is stored at .../src,
 #   derive WS_HOME and WS_BUILTROOT from here
 WS_BUILDROOT := $(patsubst %/,%, $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 WS_HOME := $(patsubst %/,%, $(dir $(abspath $(WS_BUILDROOT))))
 
-ifndef WS_VERBOSEBUILD
-  QUIET = @
-endif
+QUIET = @
 ifdef QUIET
   QUIETOUT = > /dev/null 2>&1
 endif
@@ -55,17 +67,10 @@ ifndef OPT_LEVEL
 endif
 
 CFLAGS = $(OPT_LEVEL) -Wall -fpic -std=gnu99
-ifndef WS_STRIPPED
+ifdef GNU_DEBUG
   CFLAGS += -g
 endif
 CFLAGS += -D_GNU_SOURCE
-ifdef HUGETUPLE
-  CFLAGS += -DHUGETUPLE
-endif
-
-ifdef USEM64
-  CFLAGS += -m64
-endif
 
 WS_INCLUDE = -I$(WS_BUILDROOT)/include -I$(WS_BUILDROOT) -I.
 LDFLAGS += -L$(WS_LIB_DIR) 
@@ -76,30 +81,9 @@ ifndef WSLIB
   WSLIB=$(INSTALL_TARGET)/lib
 endif
 
-
-
-# OS specific items
-
-ifndef OSNAME
-  OSNAME = $(word 1,$(shell uname))
-  ifndef OSNAME
-    OSNAME = "unknown"
-  endif 
-endif
-
-# Handle BSD a little differently
-
-ifeq "$(OSNAME)" "FreeBSD"
-  NODL=1
-  ISFREEBSD=1
-  OSNAME=LINUX
-endif
-
 ifndef NODL
   LDFLAGS += -ldl
 endif
-
-# Other options: "SunOS", "Linux", "CYGWIN_NT-5.0", "Darwin"
 
 ifeq "$(OSNAME)" "Darwin"
   CFLAGS += -bundle -undefined dynamic_lookup
@@ -110,31 +94,27 @@ CC = $(QUIET)gcc
 CPP = $(QUIET)g++
 FLEX = $(QUIET)flex
 BISON = $(QUIET)bison
-LINK = $(QUIET)ln -s
-AR = $(QUIET)ar
 RM = $(QUIET)rm -f
-IF = $(QUIET)if
-ifdef ISFREEBSD
-RMDIR = -$(QUIET)rmdir 
-else
-RMDIR = $(QUIET)rmdir --ignore-fail-on-non-empty
-endif
 MKDIR = $(QUIET)mkdir -p
-TAR = $(QUIET)tar
 CD = $(QUIET)cd
-CP = $(QUIET)cp 
-LINK = $(QUIET)ln -s -f
-TOUCH = $(QUIET)touch
-FIND = $(QUIET)find
+CP = $(QUIET)cp
+ifdef ISFREEBSD
+  RMDIR = -$(QUIET)rmdir 
+else
+  RMDIR = $(QUIET)rmdir --ignore-fail-on-non-empty
+endif
+TAR = $(QUIET)tar
+
 ifndef INSTALL_EXEC
   INSTALL_EXEC = install
 endif
 INSTALL = $(QUIET)$(INSTALL_EXEC)
 INSTALL_DIR_CMD = $(INSTALL) -d
+
 WSALIAS = $(QUIET)$(WS_BIN_DIR)/wsalias
 
 SHOWFILE = @echo "    $@"
-# to elide errors, for use with CP or INSTALL where there may be no sources
+
 NOERROR = 2>/dev/null || true
 
 CFLAGS += $(WS_INCLUDE)
@@ -151,7 +131,6 @@ endif
 
 ATOMIC_STACK_STATE = -DUSE_ATOMICS=1
 
-#THREAD_DEFS = -DWS_PTHREADS -DUSE_ATOMIC_STACK=1 $(ATOMIC_STACK_STATE)
 THREAD_DEFS = -DWS_PTHREADS -DUSE_MUTEX_HOMED_FREE_LIST=1 $(ATOMIC_STACK_STATE) $(HWLOC_CFLAGS)
 
 WS_SFX = .ws_so
