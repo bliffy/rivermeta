@@ -1,7 +1,12 @@
 
-# WS Procs (a.k.a. kids)
+# This section builds the individual modules for
+# data processing. Separate bindings are created
+# for serial and parallel.
 
-include ../common.mk
+BASE_DIR=../..
+SRC_ROOT=..
+
+include $(SRC_ROOT)/common.mk
 
 CFLAGS += $(PERF_FLAG)
 
@@ -14,28 +19,27 @@ CFLAGS += $(PERF_FLAG)
 ifndef NOPB
   CFLAGS += -DPBMETA
 endif
-
-#CFLAGS += $(WS_INCLUDE) $(WS_DEFS)
 CFLAGS += -Wno-unknown-pragmas -Wno-strict-aliasing
 LDFLAGS += -shared 
 
 MODULES = $(patsubst %.c, $(WS_PROCS_DIR)/%$(WS_SFX), $(wildcard *.c))
 MODULES += $(patsubst %.cc, $(WS_PROCS_DIR)/%$(WS_SFX), $(wildcard *.cc))
 
+
 all: $(WS_PROCS_DIR) $(MODULES) 
 
 $(WS_PROCS_DIR): 
 	$(MKDIR) $(WS_PROCS_DIR)
 
-#********
+###########################################
 
-$(WS_PROCS_DIR)/proc_calc$(WS_SFX): proc_calc.c $(WS_BUILDROOT)/include/wscalc.h
+$(WS_PROCS_DIR)/proc_calc$(WS_SFX): proc_calc.c $(WS_INC_DIR)/wscalc.h
 
-$(WS_PROCS_DIR)/proc_tcpcatch$(WS_SFX): proc_tcpcatch.c $(WS_BUILDROOT)/include/tcp_rw.h
+$(WS_PROCS_DIR)/proc_tcpcatch$(WS_SFX): proc_tcpcatch.c $(WS_INC_DIR)/tcp_rw.h
 	$(SHOWFILE) 
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 
-$(WS_PROCS_DIR)/proc_tcpthrow$(WS_SFX): proc_tcpthrow.c $(WS_BUILDROOT)/include/tcp_rw.h
+$(WS_PROCS_DIR)/proc_tcpthrow$(WS_SFX): proc_tcpthrow.c $(WS_INC_DIR)/tcp_rw.h
 	$(SHOWFILE) 
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 
@@ -45,7 +49,7 @@ $(WS_PROCS_DIR)/proc_filemagic$(WS_SFX): proc_filemagic.c
 	$(CC) $(CFLAGS) $< -o $@ -lmagic $(LDFLAGS)
 else
 $(WS_PROCS_DIR)/proc_filemagic$(WS_SFX): proc_filemagic.c
-	@echo " not building $@, set HASMAGIC=1 to build"
+	$(SKIPFILE)
 
 endif
 
@@ -76,9 +80,9 @@ $(WS_PROCS_DIR)/proc_lastn$(WS_SFX): proc_lastn.c
 	$(SHOWFILE) 
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 $(WS_PROCS_DIR)/proc_wsproto_in$(WS_SFX): proc_wsproto_in.cc
-	@echo " not building $@, unset NOPB to build"
+	$(SKIPFILE)
 $(WS_PROCS_DIR)/proc_wsproto_out$(WS_SFX): proc_wsproto_out.cc
-	@echo " not building $@, unset NOPB to build"
+	$(SKIPFILE)
 endif
 
 ifndef NORE2
@@ -87,7 +91,7 @@ $(WS_PROCS_DIR)/proc_re2$(WS_SFX): proc_re2.cc
 	$(CPP) $(CPPFLAGS) -I$(RE2INCLUDE) $< -o $@ $(RE2LIB)/libre2.a $(LDFLAGS)
 else
 $(WS_PROCS_DIR)/proc_re2$(WS_SFX): proc_re2.cc
-	@echo " not building $@, unset NORE2 to build"
+	$(SKIPFILE)
 endif
 
 ifdef HASDPU
@@ -98,7 +102,7 @@ $(WS_PROCS_DIR)/proc_dpu$(WS_SFX): proc_dpu.c
 	$(CC) $(CFLAGS) $(DPUFLAGS) $< -o $@ $(DPULIB) $(LDFLAGS)
 else
 $(WS_PROCS_DIR)/proc_dpu$(WS_SFX): proc_dpu.c
-	@echo " not building $@, set HASDPU=1 to build"
+	$(SKIPFILE)
 endif
 
 ifdef HASRDKAFKA
@@ -110,9 +114,9 @@ $(WS_PROCS_DIR)/proc_kafka_multi_in$(WS_SFX): proc_kafka_multi_in.c
 	$(CC) $(CFLAGS) $< -o $@ -lrdkafka $(LDFLAGS)
 else
 $(WS_PROCS_DIR)/proc_kafka_in$(WS_SFX): proc_kafka_in.c
-	@echo " not building $@, need librdkafka, set HASRDKAFKA=1 to build"
+	$(SKIPFILE)
 $(WS_PROCS_DIR)/proc_kafka_multi_in$(WS_SFX): proc_kafka_multi_in.c
-	@echo " not building $@, need librdkafka, set HASRDKAFKA=1 to build"
+	$(SKIPFILE)
 endif
 
 ifdef HASREDIS
@@ -121,16 +125,15 @@ $(WS_PROCS_DIR)/proc_redis$(WS_SFX): proc_redis.c
 	$(CC) $(CFLAGS) $< -o $@ -lhiredis $(LDFLAGS)
 else
 $(WS_PROCS_DIR)/proc_redis$(WS_SFX): proc_redis.c
-	@echo " not building $@, need libhiredis, set HASREDIS=1 to build"
+	$(SKIPFILE)
 endif
 
 
 ifndef WS_PARALLEL
-# These implement fanout, and so are only useful for pthreads
 $(WS_PROCS_DIR)/proc_workbalance$(WS_SFX): proc_workbalance.c
-	@echo " not building $@, only built for WS_PARALLEL=1"
+	$(QUIET)echo "$@" $(QUIETOUT)
 $(WS_PROCS_DIR)/proc_workreceive$(WS_SFX): proc_workreceive.c
-	@echo " not building $@, only built for WS_PARALLEL=1"
+	$(QUIET)echo "$@" $(QUIETOUT)
 endif
 
 #********

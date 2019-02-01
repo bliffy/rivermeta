@@ -1,4 +1,8 @@
-include ../../common.mk
+
+BASE_DIR=../../..
+SRC_ROOT=../..
+
+include $(SRC_ROOT)/common.mk
 
 # Makefile for waterslide/waterslide-threads build
 # All C files as sources, and chop off the .c for targets
@@ -13,5 +17,5 @@ all: $(MODULES)
 	$(PBEXE) --cpp_out=./. $<
 
 clean:
-	$(RM) *.pb.cc *.pb.h       2> /dev/null
+	$(RM) *.pb.cc *.pb.h  $(QUIETOUT)
 

@@ -20,7 +20,7 @@
 // rarely interested in this output.
 // So set this item to nonzero if you want so_loader
 // verbosity.
-#define SO_LOADER_VERBOSE 0
+#define SO_LOADER_VERBOSE 1
 
 // Globals
 // These would be a problem, if more than one thread were
@@ -137,6 +137,7 @@ void load_datatype_library(
 }
 
 int load_datatype_dir(mimo_t * mimo, const char * dirname) {
+error_print("try to scan %s",dirname);
      int res = wsdir_scan(
           dirname,
           datatype_file_filter,
@@ -185,11 +186,13 @@ static int multiple_datapath_lookup(
      char * dup = strdup(datatype_path);
      char * svptr;
      int rtn = 0;
+error_print("token sequence for [%s]",dup);
      char * tok = strtok_r(dup, PATHDELIM, &svptr);
      while (tok) {
           size_t len = strlen(tok);
           if (len) {
                rtn += load_datatype_dir(mimo, tok);
+error_print("ITERATION: %s",tok);
           }
           tok = strtok_r(NULL, PATHDELIM, &svptr);
      }
@@ -202,7 +205,9 @@ static int multiple_datapath_lookup(
 int load_datatype_libraries(mimo_t * mimo) {
      char * datatype_path = getenv(ENV_WS_DATATYPE_PATH);
      int rtn = 0;
+error_print("default path: [%s]",datatype_path);
      if (!datatype_path) {
+error_print("let's try ./datatypes");
           datatype_path="./datatypes";
 #if SO_LOADER_VERBOSE
           error_print("need to set environment %s",
@@ -264,6 +269,7 @@ void ws_proc_alias_open(
           }
           tok = strtok_r(buf, ALIAS_TOK, &ptok);
           if (tok) {
+error_print("what's all this? %s",tok);
                //module name
                dprint("alias: setting module %s", tok);
                module = listhash_find_attach(
@@ -281,6 +287,7 @@ void ws_proc_alias_open(
           //get aliases
           tok = strtok_r(NULL, ALIAS_TOK, &ptok);
           while (tok) {
+error_print("what's that? %s",tok);
                dprint("alias: setting alias %s", tok);
                listhash_find_attach_reference(
                     mimo->proc_module_list,
@@ -465,8 +472,8 @@ static mimo_directory_list_t * build_kid_dirlist(void) {
      char * buf = dstr;
      char * svptr;
      char * dir = strtok_r(buf, DIRSEP_STR, &svptr);
-
      while (dir) {
+error_print("something diry? %s",dir);
           dlist->directories[j] = dir;
           int len = strlen(dir);
           dprint("adding kid directory path %s", dir);

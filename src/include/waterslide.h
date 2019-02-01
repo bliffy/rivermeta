@@ -123,11 +123,11 @@ static inline char* get_executable_path(void)
 static inline void set_default_env(void)
 {
      // base paths on executable location
-     // any/all values can be overridden by environment variables or
-     // command line options
+     // any/all values can be overridden by environment
+     // variables or command line options
      char wspath[1024];
-     char string1[1024];  // TODO:  Should be longer... PATH_MAX (or some semi-portable version)
-     char currenv[1024];  // BUGBUG: needed because dirname() appears to affect its parameter...what the crap?
+     char string1[1024];
+     char currenv[1024];// BUGBUG: needed because dirname() appears to affect its parameter...what the crap?
 
      if (!getenv(ENV_WS_BASE_DIR)) {
 	  char *exepath = get_executable_path();
@@ -135,9 +135,12 @@ static inline void set_default_env(void)
 	       fprintf(stderr, "*** Can't determine invocation directory; set WS_BASE_DIR environment variable");
 	       exit(1);
 	  }
-	  // chop off /bin/<executable>
-	  strncpy(wspath, dirname(dirname(exepath)), sizeof(wspath)-1);  
-	  wspath[sizeof(wspath)-1] = '\0';
+
+	  //** chop off /<exe-name>
+	  strncpy(wspath,
+                  dirname(exepath),
+                  1023);  
+	  wspath[1023] = '\0';
 	  free(exepath);
      } else {
 	  strncpy(wspath, getenv(ENV_WS_BASE_DIR), 1024);
@@ -147,10 +150,14 @@ static inline void set_default_env(void)
      if (!getenv(ENV_WS_PROC_PATH)) {
           strncpy(string1, wspath, sizeof(string1)-1);
           string1[sizeof(string1)-1] = '\0';
-          strncat(string1, "/procs", sizeof(string1) - strlen(string1) - 1);
+          strncat(string1,
+                  "/procs",
+                  sizeof(string1) - strlen(string1) - 1);
 	  setenv(ENV_WS_PROC_PATH, string1, 0);
      } else {
-          strncpy(currenv, getenv(ENV_WS_PROC_PATH), sizeof(currenv)-1);
+          strncpy(currenv,
+                  getenv(ENV_WS_PROC_PATH),
+                  sizeof(currenv)-1);
           currenv[sizeof(currenv)-1] = '\0';
 	  if (strcmp(dirname(currenv), wspath)) {
 	       fprintf(stderr, "  non-default proc path: %s\n",getenv(ENV_WS_PROC_PATH));
@@ -160,10 +167,14 @@ static inline void set_default_env(void)
      if (!getenv(ENV_WS_ALIAS_PATH)) {
           strncpy(string1, wspath, sizeof(string1)-1);
           string1[sizeof(string1)-1] = '\0';
-          strncat(string1, "/procs/.wsalias", sizeof(string1) - strlen(string1) - 1);
+          strncat(string1,
+                  "/procs/.wsalias",
+                  sizeof(string1) - strlen(string1) - 1);
 	  setenv(ENV_WS_ALIAS_PATH, string1, 0);
      } else {
-          strncpy(currenv, getenv(ENV_WS_ALIAS_PATH), sizeof(currenv)-1);
+          strncpy(currenv,
+                  getenv(ENV_WS_ALIAS_PATH),
+                  sizeof(currenv)-1);
           currenv[sizeof(currenv)-1] = '\0';
 	  if (strcmp(dirname(currenv), wspath)) {
 	       fprintf(stderr, "  non-default alias path: %s\n",getenv(ENV_WS_ALIAS_PATH));
@@ -186,10 +197,14 @@ static inline void set_default_env(void)
      if (!getenv(ENV_WS_CONFIG_PATH)) {
           strncpy(string1, wspath, sizeof(string1)-1);
           string1[sizeof(string1)-1] = '\0';
-          strncat(string1, "/config", sizeof(string1) - strlen(string1) - 1);
+          strncat(string1,
+                  "/config",
+                  sizeof(string1) - strlen(string1) - 1);
 	  setenv(ENV_WS_CONFIG_PATH, string1, 0);
      } else {
-          strncpy(currenv, getenv(ENV_WS_CONFIG_PATH), sizeof(currenv)-1);
+          strncpy(currenv,
+                  getenv(ENV_WS_CONFIG_PATH),
+                  sizeof(currenv)-1);
           currenv[sizeof(currenv)-1] = '\0';
 	  if (strcmp(dirname(currenv), wspath)) {
 	       fprintf(stderr, "  non-default config path: %s\n",getenv(ENV_WS_CONFIG_PATH));

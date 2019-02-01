@@ -1,23 +1,19 @@
-#
-# WS Datatypes
-#
 
-include ../common.mk
+BASE_DIR=../..
+SRC_ROOT=..
 
-CFLAGS += $(PERF_FLAG)
+include $(SRC_ROOT)/common.mk
+
 
 MODULES = $(patsubst %.c, %$(WS_SFX), $(wildcard wsdt_*.c))
 
+CFLAGS += $(PERF_FLAG)
 CFLAGS += -shared 
 
-#DESTDIR = $(WS_HOME)/datatypes/$(PDIR)
 DESTDIR = $(WS_LIB_DIR)
 
-#all: $(PDIR) $(MODULES) $(DESTDIR) 
-all: $(DESTDIR) $(MODULES) 
 
-#$(PDIR):
-#	$(MKDIR) $(PDIR) 
+all: $(DESTDIR) $(MODULES) 
 
 $(DESTDIR):
 	$(MKDIR) $(DESTDIR)
@@ -32,4 +28,5 @@ else
 endif
 
 clean:
-	$(RM) .*.swp *.dSYM ._* *_so 
+	$(RM) .*.swp *.dSYM ._* *_so $(QUIETOUT)
+
