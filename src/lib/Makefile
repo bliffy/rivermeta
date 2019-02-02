@@ -1,8 +1,14 @@
 
-BASE_DIR=../..
+include ../oscheck.mk
+
+ifndef WINDOWS
+  BASE_DIR=../..
+else
+  BASE_DIR=..\..
+endif
 SRC_ROOT=..
 
-include $(SRC_ROOT)/common.mk
+include ../common.mk
 
 CFLAGS += $(PERF_FLAG)
 
@@ -61,7 +67,12 @@ wscalc.tab.c wscalc.tab.h: wscalc.y $(WS_INC_DIR)/wscalc.h
 	$(CPP) $(CPPFLAGS) -c $< -o $@
 
 clean:
-	$(RM) *.so .*.swp *.dSYM ._* *.o shared/*.o $(QUIETOUT)
+	$(RM) *.so .*.swp *.dSYM ._* *.o $(QUIETOUT)
+ifndef ISWINDOWS
+	$(RM) shared/*.o $(QUIETOUT)
+else
+	@if EXIST shared $(RM) shared\*.o $(QUIETOUT)
+endif
 	$(RM) parse_graph.* graph.lex* graph.tab* $(QUIETOUT)
 	$(RM) wscalc.c wscalc.tab* wscalc_int.c $(QUIETOUT)
 	$(RM) wscalc_int.tab.c wscalc_int.tab.h $(QUIETOUT)

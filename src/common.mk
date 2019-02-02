@@ -29,11 +29,17 @@ else
   QUIETOUT = > /dev/null 2>&1
 endif
 
-#WS_BIN_DIR = $(BASE_DIR)/bin
-WS_BIN_DIR = $(BASE_DIR)
-WS_LIB_DIR = $(BASE_DIR)/lib
-WS_PROCS_DIR = $(BASE_DIR)/procs
-WS_INC_DIR = $(SRC_ROOT)/include
+ifndef ISWINDOWS
+  WS_BIN_DIR = $(BASE_DIR)
+  WS_LIB_DIR = $(BASE_DIR)/lib
+  WS_PROCS_DIR = $(BASE_DIR)/procs
+  WS_INC_DIR = $(SRC_ROOT)/include
+else
+  WS_BIN_DIR = $(BASE_DIR)
+  WS_LIB_DIR = $(BASE_DIR)\lib
+  WS_PROCS_DIR = $(BASE_DIR)\procs
+  WS_INC_DIR = $(SRC_ROOT)\include
+endif
 
 ifndef NOPB
   PBDIR = '$(WS_LIB_DIR)/protobuflib'

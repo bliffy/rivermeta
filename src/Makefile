@@ -2,10 +2,12 @@
 # Primary build
 #
 
+include oscheck.mk
+
 BASE_DIR=..
 SRC_ROOT=.
 
-include $(SRC_ROOT)/common.mk
+include common.mk
 
 EXT_DIR=./ext/
 
@@ -48,15 +50,16 @@ $(HWLOC_LINK):
 
 # Hold off on building components until protobuf is done
 rule: $(PBDIR) $(RE2DIR) $(HWLOC_LINK)
-	@echo "Building core libraries"
+	@echo "Building datatypes"
 	$(QUIET)$(MAKE) --no-print-directory -C datatypes 
+	@echo "Building core sources"
 	$(QUIET)$(MAKE) --no-print-directory -C lib 
 	@echo "Building utilities"
 	$(QUIET)$(MAKE) --no-print-directory -C util 
 
 # Note: -<action> : ignore return status
 rule2: rule $(PBDIR) $(RE2DIR) $(HWLOC_LINK)
-	@echo "Making kids"
+	@echo "Building procs"
 ifndef NOPB
 	$(QUIET)$(MAKE) --no-print-directory -C procs/protobuf 
 endif

@@ -3,10 +3,12 @@
 # data processing. Separate bindings are created
 # for serial and parallel.
 
+include ../oscheck.mk
+
 BASE_DIR=../..
 SRC_ROOT=..
 
-include $(SRC_ROOT)/common.mk
+include ../common.mk
 
 CFLAGS += $(PERF_FLAG)
 
@@ -20,6 +22,7 @@ ifndef NOPB
   CFLAGS += -DPBMETA
 endif
 CFLAGS += -Wno-unknown-pragmas -Wno-strict-aliasing
+
 LDFLAGS += -shared 
 
 MODULES = $(patsubst %.c, $(WS_PROCS_DIR)/%$(WS_SFX), $(wildcard *.c))
@@ -157,6 +160,6 @@ $(WS_PROCS_DIR)/%$(WS_SFX): %.cc
 	$(CPP) $(CPPFLAGS) $< -o $@ $(LDFLAGS)
 
 clean:
-	$(RM) *.o .*.swp *.dSYM ._* *.8 *_so 
+	$(RM) *.o .*.swp *.dSYM ._* *.8 *_so  $(QUIETOUT)
 	$(QUIET)$(MAKE) --no-print-directory -C protobuf clean
 

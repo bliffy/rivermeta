@@ -1,14 +1,21 @@
 
-BASE_DIR=../..
+include ../oscheck.mk
+
+ifndef ISWINDOWS
+  BASE_DIR=../..
+else
+  BASE_DIR=..\..
+endif
 SRC_ROOT=..
 
-include $(SRC_ROOT)/common.mk
+include ../common.mk
 
 
 MODULES = $(patsubst %.c, %$(WS_SFX), $(wildcard wsdt_*.c))
 
 CFLAGS += $(PERF_FLAG)
-CFLAGS += -shared 
+
+CFLAGS += -shared
 
 DESTDIR = $(WS_LIB_DIR)
 
@@ -16,6 +23,7 @@ DESTDIR = $(WS_LIB_DIR)
 all: $(DESTDIR) $(MODULES) 
 
 $(DESTDIR):
+	echo want ot make $(DESTDIR)
 	$(MKDIR) $(DESTDIR)
 
 %$(WS_SFX): %.c

@@ -1,6 +1,13 @@
 
-BASE_DIR=../../..
-SRC_ROOT=../..
+include ../../oscheck.mk
+
+ifndef ISWINDOWS
+  BASE_DIR=../../..
+  SRC_ROOT=../..
+else
+  BASE_DIR=..\..\..
+  SRC_ROOT=..\..
+endif
 
 include $(SRC_ROOT)/common.mk
 
