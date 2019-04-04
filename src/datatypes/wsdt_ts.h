@@ -2,7 +2,9 @@
 #define _WSDT_TS_H
 
 #include <time.h>
+#include <sys/time.h>
 #include <stdio.h>
+#include "time_macros.h"
 
 #define WSDT_TS_MSEC(s,u) (((s) * 1000) + (((u) / 1000) % 1000))
 

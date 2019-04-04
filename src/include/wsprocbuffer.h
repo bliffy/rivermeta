@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
 #include <time.h>
 #include <assert.h>
 #include "waterslide.h"
