@@ -1,37 +1,8 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-// infinite tuple containers -- grows tuples as needed for data
-// allows for indexing into tuple
-// in the case of threading, growth of tuple should only occur when reference count on data is 1
-
-// tuple growth -- old tuples sizes are kept around in a linked list for better
-// consistency and easier recovery
-
 #ifndef _WSDT_TUPLE_H
 #define _WSDT_TUPLE_H
 
-//#define DEBUG 1
 #include <stdlib.h>
+
 #include "waterslide.h"
 #include "waterslidedata.h"
 #include "datatypes/wsdt_uint64.h"
@@ -47,17 +18,12 @@ SOFTWARE.
 
 #define WSDT_TUPLE_STR "TUPLE_TYPE"
 
-/*#ifdef HUGETUPLE
-#define WSDT_TUPLE_MAX 1024
-#else
-#define WSDT_TUPLE_MAX 96
-#endif*/
-
-#define WSDT_TUPLE_SMALL_LEN (32)
+#define WSDT_TUPLE_SMALL_LEN  (32)
 #define WSDT_TUPLE_MEDIUM_LEN (128)
-#define WSDT_TUPLE_LARGE_LEN (1024)
-#define WSDT_TUPLE_MAX_LEN (0x3FFFFFFF)
+#define WSDT_TUPLE_LARGE_LEN  (1024)
 
+// TODO: consolidate
+#define WSDT_TUPLE_MAX_LEN    (0x3FFFFFFF)
 #define WSDT_TUPLE_MAX WSDT_TUPLE_LARGE_LEN
 
 //define initial length of huge - but allow it to grow
@@ -69,24 +35,34 @@ SOFTWARE.
 
 #define TUPLE_DEFAULT_HASHKEY (0x123FF13)
 
-//the primary tuple datastructure (please access via helper functions)
+// the primary tuple datastructure (please access via
+// helper functions only)
 typedef struct _wsdt_tuple_t {
+
      wsfree_list_node_t fl_node;
-     uint32_t len; // length of current membership
+
+     uint32_t len; // member count
 #ifdef USE_ATOMICS
      uint32_t add_len; // index for next available write
 #else
      WS_SPINLOCK_DECL(lock);
 #endif
-     uint32_t max; //actual max size of member structure
+     uint32_t max; // actual max size of membership
      uint32_t index_len;
-     struct _wsdt_tuple_t * prev;  //point to previously size tuple
-     wsfree_list_t * freeq;  //point to freeq from which tuple originated
-     int * icnt;  //label index cnt
-     wsdata_t ** index;        //points to local index
-     //the following is a struct hack and is actually size max
+
+     // point to previously size tuple
+     struct _wsdt_tuple_t * prev;
+
+     // point to freeq from which tuple originated
+     wsfree_list_t * freeq;
+
+     int * icnt;  // label index cnt
+     wsdata_t ** index; // points to local index
+
+     // struct hack, actually size 'max'
      wsdata_t * member[WSDT_TUPLE_MIN];
 } wsdt_tuple_t;
+
 
 #define TUPLE_ALLOC_SIZE(max_members, index_len)  \
      (sizeof(wsdt_tuple_t) + \
@@ -106,33 +82,39 @@ typedef struct _wsdt_tuple_t {
 #define TUPLE_INDEX_ARRAY(tuple, index_pos)  \
      (tuple->index + (index_pos * tuple->max))
 
+
 typedef struct _wsdt_tuple_freeq {
      int allocd;
      int freed;
 
      uint32_t index_len;
-     uint32_t *p_ilen;
+     uint32_t * p_ilen;
 #ifndef USE_ATOMICS
      WS_SPINLOCK_DECL(lock);
 #endif
 
-     //for tuple space
+     // for tuple space
      wsfree_list_t * freeq_small;
      wsfree_list_t * freeq_medium;
      wsfree_list_t * freeq_large;
-     //wsstack_t * freeq_huge;  -- huge  are automatically freed
 } wsdt_tuple_freeq_t;
 
 
-//defined below..
-static inline int tuple_attach_member_labels(wsdata_t * wsd_tuple,
-                                             wsdata_t * member);
-static inline int tuple_add_member_label(wsdata_t * wsd_tuple,
-                                         wsdata_t * member, wslabel_t * label);
+// defined below..
+static inline int tuple_attach_member_labels(
+          wsdata_t * wsd_tuple,
+          wsdata_t * member);
+
+static inline int tuple_add_member_label(
+          wsdata_t * wsd_tuple,
+          wsdata_t * member,
+          wslabel_t * label);
 
 // internal tuple allocation / initialization routine
-static inline wsdt_tuple_t * wsdt_tuple_internal_alloc(wsdt_tuple_freeq_t *tfq,
-                                                       int newlen) {
+static inline wsdt_tuple_t * wsdt_tuple_internal_alloc(
+          wsdt_tuple_freeq_t * tfq,
+          int newlen)
+{
      wsdt_tuple_t *newtup;
      int tuplesize = TUPLE_ALLOC_SIZE(newlen, tfq->index_len);
      uint8_t *vtup = (uint8_t*)calloc(1, tuplesize);
@@ -158,8 +140,11 @@ static inline wsdt_tuple_t * wsdt_tuple_internal_alloc(wsdt_tuple_freeq_t *tfq,
      return newtup;
 }
 
-static inline wsdt_tuple_t * wsdt_tuple_alloc(wsdt_tuple_freeq_t * tfq,
-                                              wsfree_list_t * freeq, int newlen) {
+static inline wsdt_tuple_t * wsdt_tuple_alloc(
+          wsdt_tuple_freeq_t * tfq,
+          wsfree_list_t * freeq,
+          int newlen)
+{
      wsdt_tuple_t * newtup = NULL;
      if (freeq) {
 again:
@@ -168,7 +153,8 @@ again:
           if (newtup) {
                if (newtup->index_len != tfq->index_len) {
                     dprint("index size has been modified");
-                    // don't use this tuple, index size has been modified
+                    // don't use this tuple, index
+                    // size has been modified
                     free(newtup);
                     goto again;
                }
@@ -183,7 +169,7 @@ again:
                }
           }
      }
-     //otherwise alloc new data where size = newlen - WSDT_TUPLE_MIN
+     // else alloc new data /w size = newlen - WSDT_TUPLE_MIN
      if (!newtup) {
           newtup = wsdt_tuple_internal_alloc(tfq, newlen);
 #ifdef USE_ATOMICS
@@ -200,8 +186,8 @@ again:
      return newtup;
 }
 
-// the following function should be done prior to destroying a tuple
-// move tuple data to its freeq.
+// the following function should be done prior to
+// destroying a tuple move tuple data to its freeq.
 static inline int wsdt_tuple_recover(wsdata_t * tdata) {
      wsdt_tuple_t * tuple = (wsdt_tuple_t * )tdata->data;
      wsdt_tuple_t * prev;
@@ -217,7 +203,7 @@ static inline int wsdt_tuple_recover(wsdata_t * tdata) {
           //a for huge tuple
           else {
                free(tuple);
-               wsdt_tuple_freeq_t *tfq = (wsdt_tuple_freeq_t*)tdata->dtype->instance;
+               wsdt_tuple_freeq_t * tfq = (wsdt_tuple_freeq_t*)tdata->dtype->instance;
 #ifdef USE_ATOMICS
                (void) __sync_fetch_and_add(&tfq->freed, 1);
 #else
@@ -299,8 +285,12 @@ static inline int tuple_grow_membership(wsdata_t * tdata) {
      return 1;
 }
 
-// call this function when processing data to add a member to the tuple
-static inline int add_tuple_member(wsdata_t * tdata, wsdata_t *member) {
+// call this function when processing data to add a
+// member to the tuple
+static inline int add_tuple_member(
+          wsdata_t * tdata,
+          wsdata_t * member)
+{
      uint32_t tmp;
 
      dprint("add_tuple_member"); 
@@ -315,27 +305,32 @@ static inline int add_tuple_member(wsdata_t * tdata, wsdata_t *member) {
      WS_SPINLOCK_LOCK(&tuple->lock);
      tmp = tuple->len++;
 #endif
-     // XXX: There are two points to note when crossing boundary points on the 
-     //      value of tuple->max:
-     //      1. There is a chance of inserting members in an out of order fashion
-     //         in the tuple->member[] array, e.g., 33rd member may be added before
-     //         the 32nd member. This really doesn't matter as we don't extract
-     //         members by index, but rather by name (as in subtuple)
+     // XXX: There are two points to note when crossing
+     // boundary points on the value of tuple->max:
+     //   1. There is a chance of inserting members in an
+     //      out of order fashion in the tuple->member[]
+     //      array, e.g., 33rd member may be added before
+     //      the 32nd member. This really doesn't matter
+     //      as we don't extract members by index, but
+     //      rather by name (as in subtuple)
      while (tmp >= tuple->max) {
 #ifndef USE_ATOMICS
           WS_SPINLOCK_UNLOCK(&tuple->lock);
 #endif
-          // We appear to be out of tuple space.  Acquire the lock on the
-          // datatype (not on the tuple) to make sure another thread hasn't also
-          // discovered this problem.  The one that acquires the lock resets the
-          // length of the old tuple to be rational!
+          // We appear to be out of tuple space. Acquire
+          // the lock on the datatype (not on the tuple)
+          // to make sure another thread hasn't also
+          // discovered this problem. The one that
+          // acquires the lock resets the length of the
+          // old tuple to be rational!
           if (tdata->isptr) {
                dprint("Attempt to grow tuple from pointer");
                return 0;
           }
 #ifdef USE_ATOMICS
-          // Wait for all previous to have gone, or indication
-          // that somebody else has already grown the tuple.
+          // Wait for all previous to have gone, or
+          // indication that somebody else has already
+          // grown the tuple.
           while ((tuple->len != tmp) && (tuple == tdata->data))
                asm("":::"memory"); // compiler fence
 #endif
@@ -363,7 +358,9 @@ static inline int add_tuple_member(wsdata_t * tdata, wsdata_t *member) {
      }
      tuple->member[tmp] = member;
 #ifdef USE_ATOMICS
-     while (tuple->len != tmp) asm("":::"memory"); // compiler fence
+     while (tuple->len != tmp) {
+          asm("":::"memory"); // compiler fence
+     }
      tuple->len = tmp+1;
 #else
      WS_SPINLOCK_UNLOCK(&tuple->lock);
@@ -377,29 +374,38 @@ static inline int add_tuple_member(wsdata_t * tdata, wsdata_t *member) {
 }
 
 /**
- *  Perform a deep-copy (recursive) from a source to a destination wsdata_t
+ *  Perform a deep-copy (recursive) from a source to a
+ *  destination wsdata_t
  *  @param src  Source Tuple to copy
- *  @param dst  Destination into which the copy should be made
+ *  @param dst  Destination into which the copy should
+ *              be made
  *  @return 1 for success, 0 for failure
  */
-static inline int tuple_deep_copy(wsdata_t* src, wsdata_t* dst) {
+static inline int tuple_deep_copy(
+          wsdata_t * src,
+          wsdata_t * dst)
+{
      wsdt_tuple_t * src_tuple = (wsdt_tuple_t*)src->data;
-     // duplicate container label (not search member labels) ... for hierarchical/nested tuples, these
-     // container labels will wind up being the member search labels for the nested subtuples
+     // duplicate container label (not search member
+     // labels) ... for hierarchical/nested tuples, these
+     // container labels will wind up being the member
+     // search labels for the nested subtuples
      wsdata_duplicate_labels(src, dst);
      uint32_t i;
      for (i = 0; i < src_tuple->len; i++) {
           if(src_tuple->member[i]->dtype == dtype_tuple) {
-               wsdata_t * dst_sub_tuple = wsdata_alloc(dtype_tuple);
+               wsdata_t * dst_sub_tuple = wsdata_alloc(
+                    dtype_tuple);
                if(!dst_sub_tuple) {
                     return 0;
                }
                // recursively copy each subtuple
-               if(!tuple_deep_copy(src_tuple->member[i], dst_sub_tuple)) {
+               if (!tuple_deep_copy(src_tuple->member[i], dst_sub_tuple)) {
                     wsdata_delete(dst_sub_tuple);
                     return 0;
                }
-               // don't assume that add tuple member will always succeed
+               // don't assume that add tuple member will
+               // always succeed
                if(!add_tuple_member(dst, dst_sub_tuple)) {
                     wsdata_delete(dst_sub_tuple);
                     return 0;
@@ -414,8 +420,11 @@ static inline int tuple_deep_copy(wsdata_t* src, wsdata_t* dst) {
      return 1;
 }
 
-static inline wsdata_t * tuple_member_create_wsdata(wsdata_t * tuple, wsdatatype_t * dtype,
-                                                    wslabel_t * label) {
+static inline wsdata_t * tuple_member_create_wsdata(
+          wsdata_t * tuple,
+          wsdatatype_t * dtype,
+          wslabel_t * label)
+{
      if (!dtype || !tuple) {
           return NULL;
      }
@@ -433,8 +442,11 @@ static inline wsdata_t * tuple_member_create_wsdata(wsdata_t * tuple, wsdatatype
      return data;
 }
 
-static inline wsdata_t * tuple_add_subelement(wsdata_t * tuple, wsdata_t * obj,
-                                          wssubelement_t * el) {
+static inline wsdata_t * tuple_add_subelement(
+          wsdata_t * tuple,
+          wsdata_t * obj,
+          wssubelement_t * el)
+{
      wsdata_t * subel = wsdata_get_subelement(obj, el);
      if (subel) {
           add_tuple_member(tuple, subel);
@@ -442,19 +454,26 @@ static inline wsdata_t * tuple_add_subelement(wsdata_t * tuple, wsdata_t * obj,
      return subel;
 }
 
-static inline void * tuple_member_create(wsdata_t * tuple, wsdatatype_t * dtype,
-                                         wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype, label);
+static inline void * tuple_member_create(
+          wsdata_t * tuple,
+          wsdatatype_t * dtype,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype, label);
      if (!data) {
           return NULL;
      }
      return data->data;
 }
 
-static inline wsdata_t * tuple_member_create_double(wsdata_t * tuple,
-                                                    double dbl,
-                                                    wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_double, label);
+static inline wsdata_t * tuple_member_create_double(
+          wsdata_t * tuple,
+          double dbl,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_double, label);
      if (!data) {
           return NULL;
      }
@@ -463,8 +482,11 @@ static inline wsdata_t * tuple_member_create_double(wsdata_t * tuple,
      return data;
 }
 
-static inline wsdata_t * tuple_member_add_ptr(wsdata_t * tuple, wsdata_t * ref,
-                                              wslabel_t * label) {
+static inline wsdata_t * tuple_member_add_ptr(
+          wsdata_t * tuple,
+          wsdata_t * ref,
+          wslabel_t * label)
+{
      wsdata_t * ptr = wsdata_ptr(ref);
      if (ptr) {
           if (label) {
@@ -476,9 +498,12 @@ static inline wsdata_t * tuple_member_add_ptr(wsdata_t * tuple, wsdata_t * ref,
      return NULL;
 }
 
-static inline wsdata_t * tuple_member_add_ptr_mlabel(wsdata_t * tuple, wsdata_t * ref,
-                                                     wslabel_t * label1,
-                                                     wslabel_t * label2) {
+static inline wsdata_t * tuple_member_add_ptr_mlabel(
+          wsdata_t * tuple,
+          wsdata_t * ref,
+          wslabel_t * label1,
+          wslabel_t * label2)
+{
      wsdata_t * ptr = wsdata_ptr(ref);
      if (ptr) {
           if (label1) {
@@ -493,10 +518,13 @@ static inline wsdata_t * tuple_member_add_ptr_mlabel(wsdata_t * tuple, wsdata_t 
      return NULL;
 }
 
-static inline wsdata_t * tuple_member_create_int(wsdata_t * tuple,
-                                                  wsdt_int_t u,
-                                                  wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_int, label);
+static inline wsdata_t * tuple_member_create_int(
+          wsdata_t * tuple,
+          wsdt_int_t u,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_int, label);
      if (!data) {
           return NULL;
      }
@@ -505,11 +533,14 @@ static inline wsdata_t * tuple_member_create_int(wsdata_t * tuple,
      return data;
 }
 
-static inline wsdata_t * tuple_member_create_int_mlabel(wsdata_t * tuple,
-                                                        wsdt_int_t u,
-                                                        wslabel_t * label,
-                                                        wslabel_t * label2) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_int, label);
+static inline wsdata_t * tuple_member_create_int_mlabel(
+          wsdata_t * tuple,
+          wsdt_int_t u,
+          wslabel_t * label,
+          wslabel_t * label2)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_int, label);
      if (!data) {
           return NULL;
      }
@@ -521,10 +552,13 @@ static inline wsdata_t * tuple_member_create_int_mlabel(wsdata_t * tuple,
      return data;
 }
 
-static inline wsdata_t * tuple_member_create_uint(wsdata_t * tuple,
-                                                  wsdt_uint_t u,
-                                                  wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_uint, label);
+static inline wsdata_t * tuple_member_create_uint(
+          wsdata_t * tuple,
+          wsdt_uint_t u,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_uint, label);
      if (!data) {
           return NULL;
      }
@@ -532,12 +566,16 @@ static inline wsdata_t * tuple_member_create_uint(wsdata_t * tuple,
      *ou = u;
      return data;
 }
+
 #define tuple_member_create_uint32 tuple_member_create_uint
 
-static inline wsdata_t * tuple_member_create_uint64(wsdata_t * tuple,
-                                                    wsdt_uint64_t u,
-                                                    wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_uint64, label);
+static inline wsdata_t * tuple_member_create_uint64(
+          wsdata_t * tuple,
+          wsdt_uint64_t u,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_uint64, label);
      if (!data) {
           return NULL;
      }
@@ -546,10 +584,13 @@ static inline wsdata_t * tuple_member_create_uint64(wsdata_t * tuple,
      return data;
 }
 
-static inline wsdata_t * tuple_member_create_uint16(wsdata_t * tuple,
-                                                    wsdt_uint16_t u,
-                                                    wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_uint16, label);
+static inline wsdata_t * tuple_member_create_uint16(
+          wsdata_t * tuple,
+          wsdt_uint16_t u,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_uint16, label);
      if (!data) {
           return NULL;
      }
@@ -558,10 +599,13 @@ static inline wsdata_t * tuple_member_create_uint16(wsdata_t * tuple,
      return data;
 }
 
-static inline wsdata_t * tuple_member_create_ts(wsdata_t * tuple,
-                                                wsdt_ts_t ts,
-                                                wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_ts, label);
+static inline wsdata_t * tuple_member_create_ts(
+          wsdata_t * tuple,
+          wsdt_ts_t ts,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_ts, label);
      if (!data) {
           return NULL;
      }
@@ -571,10 +615,13 @@ static inline wsdata_t * tuple_member_create_ts(wsdata_t * tuple,
      return data;
 }
 
-static inline wsdata_t * tuple_member_create_sec(wsdata_t * tuple,
-                                                time_t sec,
-                                                wslabel_t * label) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype_ts, label);
+static inline wsdata_t * tuple_member_create_sec(
+          wsdata_t * tuple,
+          time_t sec,
+          wslabel_t * label)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype_ts, label);
      if (!data) {
           return NULL;
      }
@@ -584,9 +631,14 @@ static inline wsdata_t * tuple_member_create_sec(wsdata_t * tuple,
      return data;
 }
 
-static inline void * tuple_member_create_wdep(wsdata_t * tuple, wsdatatype_t * dtype,
-                                              wslabel_t * label, wsdata_t * dep) {
-     wsdata_t * data = tuple_member_create_wsdata(tuple, dtype, label);
+static inline void * tuple_member_create_wdep(
+          wsdata_t * tuple,
+          wsdatatype_t * dtype,
+          wslabel_t * label,
+          wsdata_t * dep)
+{
+     wsdata_t * data = tuple_member_create_wsdata(
+          tuple, dtype, label);
      if (!data) {
           return NULL;
      }

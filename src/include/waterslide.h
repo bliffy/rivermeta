@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/time.h>
+
 // items for pthreads
 #include "shared/lock_init.h"
 #include "sht_registry.h"
@@ -37,7 +38,7 @@
 #define WS_MINOR_VERSION 0
 #define WS_SUBMINOR_VERSION 0
 
-//prototype for data structures
+// prototype for data structures
 
 //---------------------
 // defined in mimo.c mimo.h
@@ -224,11 +225,11 @@ extern const char ** global_kid_name;
 extern uint32_t sht_perf;
 #endif
 
-struct _mimo_t;
+struct  _mimo_t;
 typedef struct _mimo_t mimo_t;
-struct _mimo_source_t;
+struct  _mimo_source_t;
 typedef struct _mimo_source_t mimo_source_t;
-struct _mimo_sink_t;
+struct  _mimo_sink_t;
 typedef struct _mimo_sink_t mimo_sink_t;
 
 typedef struct { // The argument list for the threads
@@ -239,12 +240,13 @@ typedef struct { // The argument list for the threads
 
 typedef void (*mimo_ws_driver_callback)(mimo_work_order_t *);
 
-//create a mimo processor.. must be the first thing that is called
+// create a mimo processor.. must be the first thing that
+// is called
 mimo_t * mimo_init(void);
 
 void mimo_set_srand(mimo_t *, unsigned int);
 
-//destroy a mimo processor, frees memory (somewhat..)
+// destroy a mimo processor, frees memory (somewhat..)
 int mimo_destroy(mimo_t*);
 
 //Use the following to specify metadata sources for processing

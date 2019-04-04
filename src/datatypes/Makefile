@@ -16,6 +16,7 @@ MODULES = $(patsubst %.c, %$(WS_SFX), $(wildcard wsdt_*.c))
 CFLAGS += $(PERF_FLAG)
 
 CFLAGS += -shared
+#CFLAGS += -Wl,--no-allow-shlib-undefined,--no-undefined
 
 DESTDIR = $(WS_LIB_DIR)
 

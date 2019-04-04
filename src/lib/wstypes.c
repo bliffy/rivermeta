@@ -26,12 +26,8 @@ wsdatatype_t * dtype_massivestring;
 wsdatatype_t * dtype_hugeblock;
 wsdatatype_t * dtype_mmap;
 wsdatatype_t * dtype_flush;
-wsdatatype_t * dtype_array_uint;
-wsdatatype_t * dtype_array_double;
 wsdatatype_t * dtype_smallstring;
 wsdatatype_t * dtype_tinystring;
-wsdatatype_t * dtype_vector_double;
-wsdatatype_t * dtype_vector_uint32;
 
 void init_wstypes(void * tl) {
 
@@ -83,18 +79,9 @@ void init_wstypes(void * tl) {
           tl, "MMAP_TYPE");
      dtype_flush = wsdatatype_get(
           tl, "FLUSH_TYPE");
-     dtype_array_double = wsdatatype_get(
-          tl, "ARRAY_DOUBLE_TYPE");
-     dtype_array_uint = wsdatatype_get(
-          tl, "ARRAY_UINT_TYPE");
      dtype_smallstring = wsdatatype_get(
           tl, "SMALLSTRING_TYPE");
      dtype_tinystring = wsdatatype_get(
           tl, "TINYSTRING_TYPE");
-     dtype_vector_double = wsdatatype_get(
-          tl, "VECTOR_DOUBLE_TYPE");
-     dtype_vector_uint32 = wsdatatype_get(
-          tl, "VECTOR_UINT32_TYPE");
-
 }
 

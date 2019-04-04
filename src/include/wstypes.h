@@ -28,8 +28,8 @@
 #include "datatypes/wsdt_double.h"
 #include "datatypes/wsdt_ts.h"
 #include "datatypes/wsdt_monitor.h"
-#include "datatypes/wsdt_vector_double.h"
-#include "datatypes/wsdt_vector_uint32.h"
+//#include "datatypes/wsdt_vector_double.h"
+//#include "datatypes/wsdt_vector_uint32.h"
 
 // MingW32/64 doesn't have _SC_PAGESIZE
 #if !defined _SC_PAGESIZE && (defined _WIN32 || defined _WIN64 || defined WINDOWS)
@@ -72,12 +72,12 @@ EXT wsdatatype_t * dtype_labelset;
 EXT wsdatatype_t * dtype_label;
 EXT wsdatatype_t * dtype_mmap;
 EXT wsdatatype_t * dtype_flush;
-EXT wsdatatype_t * dtype_array_uint;
-EXT wsdatatype_t * dtype_array_double;
+//EXT wsdatatype_t * dtype_array_uint;
+//EXT wsdatatype_t * dtype_array_double;
 EXT wsdatatype_t * dtype_smallstring;
 EXT wsdatatype_t * dtype_tinystring;
-EXT wsdatatype_t * dtype_vector_double;
-EXT wsdatatype_t * dtype_vector_uint32;
+//EXT wsdatatype_t * dtype_vector_double;
+//EXT wsdatatype_t * dtype_vector_uint32;
 
 // get a string buffer from a data type
 static inline int dtype_string_buffer(

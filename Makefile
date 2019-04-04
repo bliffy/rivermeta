@@ -17,7 +17,7 @@ all:
 	@$(MAKE) --no-print-directory -C src
 	@echo "Building PARALLEL waterslide"
 	@$(MAKE) WS_PARALLEL=1 --no-print-directory -C src
-	@echo "rivermeta build completed"
+	@echo "Rivermeta build completed"
 
 install:
 	$(MAKE) -C src install
