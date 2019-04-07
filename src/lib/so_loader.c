@@ -113,7 +113,7 @@ void load_datatype_library(
                //launch it..
                d_func(&mimo->datalists);
 #if SO_LOADER_VERBOSE
-               status_print("loaded [%s]", fullname);
+               status_print("loaded [%s]", file);
 #endif
           }
           else {
@@ -122,13 +122,13 @@ void load_datatype_library(
                // dependent datatype on a non-conforming
                // architecture
 #if SO_LOADER_VERBOSE
-               error_print("load failed [%s]", fullname);
+               error_print("load failed [%s]", file);
                print_dl_error();
 #endif
           }
      }
      else {
-          error_print("load failed [%s]", fullname);
+          error_print("load failed [%s]", file);
           print_dl_error();
      }
 
@@ -137,7 +137,9 @@ void load_datatype_library(
 }
 
 int load_datatype_dir(mimo_t * mimo, const char * dirname) {
-error_print("try to scan %s",dirname);
+#if SO_LOADER_VERBOSE
+     status_print("\nscanning for datatypes: %s",dirname);
+#endif
      int res = wsdir_scan(
           dirname,
           datatype_file_filter,
@@ -147,6 +149,9 @@ error_print("try to scan %s",dirname);
           error_print("no datatype path set");
           return 0;
      }
+#if SO_LOADER_VERBOSE
+     status_print("");
+#endif
      return 1;
 }
 
@@ -186,13 +191,14 @@ static int multiple_datapath_lookup(
      char * dup = strdup(datatype_path);
      char * svptr;
      int rtn = 0;
-error_print("token sequence for [%s]",dup);
+//TODO
+//error_print("token sequence for [%s]",dup);
      char * tok = strtok_r(dup, PATHDELIM, &svptr);
      while (tok) {
           size_t len = strlen(tok);
           if (len) {
                rtn += load_datatype_dir(mimo, tok);
-error_print("ITERATION: %s",tok);
+//error_print("ITERATION: %s",tok);
           }
           tok = strtok_r(NULL, PATHDELIM, &svptr);
      }
@@ -205,9 +211,9 @@ error_print("ITERATION: %s",tok);
 int load_datatype_libraries(mimo_t * mimo) {
      char * datatype_path = getenv(ENV_WS_DATATYPE_PATH);
      int rtn = 0;
-error_print("default path: [%s]",datatype_path);
+//status_print("default datatype path: [%s]",datatype_path);
      if (!datatype_path) {
-error_print("let's try ./datatypes");
+//error_print("let's try ./datatypes");
           datatype_path="./datatypes";
 #if SO_LOADER_VERBOSE
           error_print("need to set environment %s",
@@ -219,7 +225,7 @@ error_print("let's try ./datatypes");
      }
      else {
 #if SO_LOADER_VERBOSE
-          status_print("datatype_path %s", datatype_path);
+//          status_print("datatype_path %s", datatype_path);
 #endif
           rtn = multiple_datapath_lookup(mimo, datatype_path);
      }
@@ -473,7 +479,7 @@ static mimo_directory_list_t * build_kid_dirlist(void) {
      char * svptr;
      char * dir = strtok_r(buf, DIRSEP_STR, &svptr);
      while (dir) {
-error_print("something diry? %s",dir);
+//status_print("adding proc dir: [%s]",dir);
           dlist->directories[j] = dir;
           int len = strlen(dir);
           dprint("adding kid directory path %s", dir);
@@ -681,7 +687,8 @@ ws_proc_module_t * ws_proc_module_find(
 
      //test file here.. with stat
 
-     module = ws_proc_module_dlopen(mimo, fullname, modname);     
+     module = ws_proc_module_dlopen(mimo, fullname, modname);
+
      free(fullname);
      return module;
 }

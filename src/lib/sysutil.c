@@ -1,5 +1,5 @@
 //#define _GNU_SOURCE
-#include <time.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include "sysutil.h"
 #include "waterslide.h"
+#include "time_macros.h"
 #include <limits.h>
 
 #define SCRATCHPAD_LEN 1500
@@ -279,7 +280,7 @@ int sysutil_name_timedfile(
      strncpy(workingfile, basefile, prefixlen);
 
      //get name of file...
-     gmtime_r(&filetime, &tmsec);
+     GMTIME_R(&filetime, &tmsec);
 
      //if per hour or per minute or per second
      if (increment % 60) {
@@ -507,7 +508,7 @@ void sysutil_printts(FILE * stream, time_t sec, time_t usec) {
      time_t Time;
      register int s = sec % 86400;
      Time = sec - s;
-     gmtime_r (&Time, &tm);
+     GMTIME_R(&Time, &tm);
      fprintf(stream,"%04d.%02d.%02d %02d:%02d:%02d.%06u",
              tm.tm_year+1900,
              tm.tm_mon+1, tm.tm_mday,
@@ -525,7 +526,7 @@ int sysutil_snprintts(
      time_t Time;
      register int s = sec % 86400;
      Time = sec - s;
-     gmtime_r (&Time, &tm);
+     GMTIME_R(&Time, &tm);
      return snprintf(
           buf, len,
           "%04d.%02d.%02d %02d:%02d:%02d.%06u",
@@ -540,7 +541,7 @@ void sysutil_printts_sec(FILE * stream, time_t tsec) {
      time_t Time;
      register int s = tsec % 86400;
      Time = tsec - s;
-     gmtime_r (&Time, &tm);
+     GMTIME_R(&Time, &tm);
      fprintf(stream,"%04d.%02d.%02d %02d:%02d:%02d",
              tm.tm_year+1900,
              tm.tm_mon+1, tm.tm_mday,
@@ -553,7 +554,7 @@ int sysutil_snprintts_sec(char* buf, size_t len, time_t sec) {
      time_t Time;
      register int s = sec % 86400;
      Time = sec - s;
-     gmtime_r (&Time, &tm);
+     GMTIME_R(&Time, &tm);
      return snprintf(
           buf, len,
           "%04d.%02d.%02d %02d:%02d:%02d",
@@ -568,7 +569,7 @@ int sysutil_snprintts_sec2(char* buf, size_t len, time_t sec) {
      time_t Time;
      register int s = sec % 86400;
      Time = sec - s;
-     gmtime_r (&Time, &tm);
+     GMTIME_R(&Time, &tm);
      return snprintf(
           buf, len,
           "%04d.%02d.%02d_%02d.%02d.%02d",

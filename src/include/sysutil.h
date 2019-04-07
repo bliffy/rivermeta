@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <time.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
 
 #ifdef __cplusplus
 extern "C" {

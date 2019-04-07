@@ -1,8 +1,8 @@
 #ifndef _WSDT_TS_H
 #define _WSDT_TS_H
 
-#include <time.h>
 #include <stdio.h>
+#include "time_macros.h"
 
 #define WSDT_TS_MSEC(s,u) (((s) * 1000) + (((u) / 1000) % 1000))
 
@@ -17,7 +17,7 @@ static inline int wsdt_print_ts_sec(
 
      s = tsec % 86400;
      stime = tsec - s;
-     tp = gmtime_r(&stime, &tdata);
+     tp = GMTIME_R(&stime, &tdata);
      return fprintf(stream,"%04d.%02d.%02d %02d:%02d:%02d",
                     tp->tm_year+1900,
                     tp->tm_mon+1, tp->tm_mday,
@@ -49,7 +49,7 @@ static inline int wsdt_snprint_ts_sec(
 
      s = tsec % 86400;
      stime = tsec - s;
-     tp = gmtime_r(&stime, &tdata);
+     tp = GMTIME_R(&stime, &tdata);
      return snprintf(buf, len, "%04d.%02d.%02d %02d:%02d:%02d",
                     tp->tm_year+1900,
                     tp->tm_mon+1, tp->tm_mday,
