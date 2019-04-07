@@ -10,22 +10,26 @@ SRC_ROOT=..
 
 include ../common.mk
 
-LDFLAGS += -rdynamic -lstdc++
+#LDFLAGS += -rdynamic -lstdc++
+# TODO: fix rpath somehow
+LDFLAGS += -lstdc++ -Wl,-rpath=lib/
 
 UTILS = wsman wsalias
 
 ifdef WS_PARALLEL
 UTILS += waterslide-parallel
+WSCORELIB = -lwaterslide-parallel
 else
 UTILS += waterslide
+WSCORELIB = -lwaterslide
 endif
 
 
 all: $(UTILS)
 
-waterslide: waterslide.c $(WS_LIB_DIR)/libwaterslide.a
+waterslide: waterslide.c $(WS_LIB_DIR)/libwaterslide.so
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ -Wl,--whole-archive $(WS_LIB_DIR)/libwaterslide.a -Wl,--no-whole-archive $(LDFLAGS)
+	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) $(WSCORELIB)
 ifndef ISFREEBSD
 	$(CP) -t $(WS_BIN_DIR) $@
 else
@@ -33,9 +37,9 @@ else
 endif
 
 
-waterslide-parallel: waterslide-parallel.c $(WS_LIB_DIR)/libwaterslide-parallel.a $(HWLOC_LINK)
+waterslide-parallel: waterslide-parallel.c $(WS_LIB_DIR)/libwaterslide-parallel.so $(HWLOC_LINK)
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ -Wl,--whole-archive $(WS_LIB_DIR)/libwaterslide-parallel.a -Wl,--no-whole-archive $(LDFLAGS) $(HWLOC_LINK)
+	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) $(HWLOC_LINK) $(WSCORELIB)
 ifndef ISFREEBSD
 	$(CP) -t $(WS_BIN_DIR) $@
 else
@@ -43,9 +47,9 @@ else
 endif
 
 
-wsman: wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h
+wsman: wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h $(WS_LIB_DIR)/libwaterslide.so
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(WSCORELIB)
 ifndef ISFREEBSD
 	$(CP) -t $(WS_BIN_DIR) $@
 else

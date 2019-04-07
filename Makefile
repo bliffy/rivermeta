@@ -31,11 +31,11 @@ clean:
 	$(RM) wsalias wsman $(QUIETOUT)
 ifndef ISWINDOWS
 	$(RM) $(WS_LIB_DIR)/wsdt_* $(QUIETOUT)
-	$(RM) $(WS_LIB_DIR)/libwaterslid*.a $(QUIETOUT)
+	$(RM) $(WS_LIB_DIR)/libwaterslid*.so $(QUIETOUT)
 	$(RM) $(WS_PROCS_DIR)/proc_*
 else
 	@if EXIST lib $(RM) lib\wsdt_*
-	@if EXIST lib $(RM) lib\libwaterslide*.a
+	@if EXIST lib $(RM) lib\libwaterslide*.so
 	@if EXIST procs $(RM) procs\proc_*
 endif
 

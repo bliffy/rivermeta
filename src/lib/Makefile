@@ -12,6 +12,9 @@ include ../common.mk
 
 CFLAGS += $(PERF_FLAG)
 
+CFLAGS += -fPIC
+CPPFLAGS += -fPIC
+
 FILELIST =  $(patsubst %.c, %.o, $(wildcard *.c))
 FILELIST += $(patsubst %.cc, %.o, $(wildcard *.cc))
 FILELIST += wscalc.o wscalc.tab.o
@@ -22,10 +25,10 @@ FILES = $(FILELIST)
 # NOTE: These 'SUFFIX' are just tagged onto the filenames
 ifdef WS_PARALLEL
   SUFFIX = -p
-  WSARCHIVEFILE = libwaterslide-parallel.a
+  WSARCHIVEFILE = libwaterslide-parallel.so
 else
   SUFFIX = -s
-  WSARCHIVEFILE = libwaterslide.a
+  WSARCHIVEFILE = libwaterslide.so
 endif
 
 MODULES = $(sort $(patsubst %.o, %$(SUFFIX).o, $(FILES)))
@@ -38,8 +41,9 @@ wsperf.c:
 
 $(WSARCHIVEFILE): $(MODULES)
 	$(SHOWFILE)
-	$(RM) $(WSARCHIVEFILE)  # (ar appends)
-	$(AR) rcs $@ $(MODULES)
+#	$(RM) $(WSARCHIVEFILE)  # (ar appends)
+#	$(AR) rcs $@ $(MODULES)
+	$(CC) -shared $(MODULES) -o $@ $(LDFLAGS) -lstdc++
 	$(CP) $@ $(WS_LIB_DIR) 
 
 graph.lex.cc: graph.l graph.tab.hh
