@@ -29,7 +29,7 @@ $(DESTDIR):
 
 %$(WS_SFX): %.c
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $< -o $@ -L$(WS_BIN_DIR) -lwaterslide
+	$(CC) $(CFLAGS) $< -o $@ -L$(WS_LIB_DIR) -lwaterslide
 	$(CP) $@ $(DESTDIR) $(QUIETOUT)
 
 clean:

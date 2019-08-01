@@ -28,7 +28,7 @@ endif
 
 all: $(UTILS)
 
-waterslide: waterslide.c $(WS_BIN_DIR)/$(WS_CORE_LIB)
+waterslide: waterslide.c $(WS_LIB_DIR)/$(WS_CORE_LIB)
 	$(SHOWFILE)
 ifdef ISWINDOWS
 	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) -lwaterslide
@@ -38,7 +38,7 @@ endif
 	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
-waterslide-parallel: waterslide-parallel.c $(WS_BIN_DIR)/$(WS_CORE_LIB) $(HWLOC_LINK)
+waterslide-parallel: waterslide-parallel.c $(WS_LIB_DIR)/$(WS_CORE_LIB) $(HWLOC_LINK)
 	$(SHOWFILE)
 ifdef ISWINDOWS
 	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) $(HWLOC_LINK) -lwaterslide-parallel
@@ -48,7 +48,7 @@ endif
 	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
-wsman: wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h $(WS_BIN_DIR)/$(WS_CORE_LIB)
+wsman: wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h $(WS_LIB_DIR)/$(WS_CORE_LIB)
 	$(SHOWFILE)
 ifdef ISWINDOWS
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) -lwaterslide
