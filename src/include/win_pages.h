@@ -11,7 +11,16 @@
 #define EINVAL 22
 #endif
 
-inline size_t WinPageSize(void) { SYSTEM_INFO si; GetSystemInfo(&si); return si.dwPageSize; }
-inline int WinAlignedAlloc(void** memptr, size_t alignment, size_t size) { return ((*memptr = _aligned_malloc(size, alignment)) != NULL ? 0 : ENOMEM); }
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+static inline size_t WinPageSize(void) { SYSTEM_INFO si; GetSystemInfo(&si); return si.dwPageSize; }
+
+static inline int WinAlignedAlloc(void** memptr, size_t alignment, size_t size) { return ((*memptr = _aligned_malloc(size, alignment)) != NULL ? 0 : ENOMEM); }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

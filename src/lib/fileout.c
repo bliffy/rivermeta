@@ -5,9 +5,11 @@
 
 // cross platform macros
 #if (defined _WIN32 || defined _WIN64 || defined WINDOWS)
+#include <windows.h>
 #include <direct.h> // defines _mkdir()
 #define _MKDIR(x) (_mkdir(x)==ENOENT ? 1 : 0)
-#define _LINK(x,y) (0!=CreateSymbolicLinkA(x,y,0))
+//#define _LINK(x,y) (0!=CreateSymbolicLinkA(x,y,0))
+#define _LINK(x,y) (0!=CreateHardLinkA(x,y,0))
 #define _UNLINK(x) DeleteFile(x)
 #else
 #define _MKDIR(x) ( \
@@ -361,7 +363,12 @@ char * make_basename(
                     strcat(result, "timestamp");
                } else {
                     char tmptm[300];
-                    strftime(tmptm, 300, &fs->namepiece[i][1], gmtime(&basetime));
+                    struct tm tres;
+                    gmtime_r(&basetime, &tres);
+                    strftime(
+                         tmptm, 300,
+                         &fs->namepiece[i][1],
+                         &tres);
                     strcat(result, tmptm);
                     break;
                }

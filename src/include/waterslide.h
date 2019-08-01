@@ -11,7 +11,8 @@
 #include <libgen.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sys/time.h>
+
+#include "time_macros.h"
 
 // items for pthreads
 #include "shared/lock_init.h"

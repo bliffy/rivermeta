@@ -10,61 +10,58 @@ SRC_ROOT=..
 
 include ../common.mk
 
-#LDFLAGS += -rdynamic -lstdc++
-# TODO: fix rpath somehow
-LDFLAGS += -lstdc++ -Wl,-rpath=lib/
-
 UTILS = wsman wsalias
 
-ifdef WS_PARALLEL
-UTILS += waterslide-parallel
-WSCORELIB = -lwaterslide-parallel
+ifndef ISWINDOWS
+  LDFLAGS += -rdynamic -lstdc++
 else
-UTILS += waterslide
-WSCORELIB = -lwaterslide
+  #TODO replace rpath
+  LDFLAGS += -lstdc++ -Wl,-rpath=lib/
+endif
+
+ifdef WS_PARALLEL
+  UTILS += waterslide-parallel
+else
+  UTILS += waterslide
 endif
 
 
 all: $(UTILS)
 
-waterslide: waterslide.c $(WS_LIB_DIR)/libwaterslide.so
+waterslide: waterslide.c $(WS_BIN_DIR)/$(WS_CORE_LIB)
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) $(WSCORELIB)
-ifndef ISFREEBSD
-	$(CP) -t $(WS_BIN_DIR) $@
+ifdef ISWINDOWS
+	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) -lwaterslide
 else
-	$(CP) $@ $(WS_BIN_DIR) 
+	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ -Wl,--whole-archive -lwaterslide -Wl,--no-whole-archive $(LDFLAGS)
 endif
+	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
-waterslide-parallel: waterslide-parallel.c $(WS_LIB_DIR)/libwaterslide-parallel.so $(HWLOC_LINK)
+waterslide-parallel: waterslide-parallel.c $(WS_BIN_DIR)/$(WS_CORE_LIB) $(HWLOC_LINK)
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) $(HWLOC_LINK) $(WSCORELIB)
-ifndef ISFREEBSD
-	$(CP) -t $(WS_BIN_DIR) $@
+ifdef ISWINDOWS
+	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) $(HWLOC_LINK) -lwaterslide-parallel
 else
-	$(CP) $@ $(WS_BIN_DIR) 
+	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ -Wl,--whole-archive -lwaterslide-parallel -Wl,--no-whole-archive $(LDFLAGS)
 endif
+	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
-wsman: wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h $(WS_LIB_DIR)/libwaterslide.so
+wsman: wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h $(WS_BIN_DIR)/$(WS_CORE_LIB)
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(WSCORELIB)
-ifndef ISFREEBSD
-	$(CP) -t $(WS_BIN_DIR) $@
+ifdef ISWINDOWS
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) -lwaterslide
 else
-	$(CP) $@ $(WS_BIN_DIR)
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 endif
+	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
 %: %.c
 	$(SHOWFILE)
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
-ifndef ISFREEBSD
-	$(CP) -t $(WS_BIN_DIR) $@
-else
-	$(CP) $@ $(WS_BIN_DIR) 
-endif
+	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
 clean:

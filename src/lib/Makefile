@@ -12,8 +12,10 @@ include ../common.mk
 
 CFLAGS += $(PERF_FLAG)
 
-CFLAGS += -fPIC
-CPPFLAGS += -fPIC
+ifdef ISWINDOWS
+  CFLAGS += -fPIC
+  CPPFLAGS += -fPIC
+endif
 
 FILELIST =  $(patsubst %.c, %.o, $(wildcard *.c))
 FILELIST += $(patsubst %.cc, %.o, $(wildcard *.cc))
@@ -22,29 +24,34 @@ FILELIST += graph.tab.o graph.lex.o
 
 FILES = $(FILELIST)
 
-# NOTE: These 'SUFFIX' are just tagged onto the filenames
 ifdef WS_PARALLEL
   SUFFIX = -p
-  WSARCHIVEFILE = libwaterslide-parallel.so
 else
   SUFFIX = -s
-  WSARCHIVEFILE = libwaterslide.so
 endif
 
 MODULES = $(sort $(patsubst %.o, %$(SUFFIX).o, $(FILES)))
 
 
-all: $(MODULES) $(WSARCHIVEFILE)
+all: $(MODULES) $(WS_CORE_LIB)
 
 wsperf.c: 
 	$(SHOWFILE)
 
-$(WSARCHIVEFILE): $(MODULES)
+# For linux, we make an archive. But for windows, we make
+# a shared library.
+ifndef ISWINDOWS
+$(WS_CORE_LIB): $(MODULES)
 	$(SHOWFILE)
-#	$(RM) $(WSARCHIVEFILE)  # (ar appends)
-#	$(AR) rcs $@ $(MODULES)
+	$(RM) $(WS_CORE_LIB)  # (ar appends)
+	$(AR) rcs $@ $(MODULES)
+	$(CP) $@ $(WS_LIB_DIR)
+else
+$(WS_CORE_LIB): $(MODULES)
+	$(SHOWFILE)
 	$(CC) -shared $(MODULES) -o $@ $(LDFLAGS) -lstdc++
-	$(CP) $@ $(WS_LIB_DIR) 
+	$(CP) $@ $(WS_BIN_DIR) 
+endif
 
 graph.lex.cc: graph.l graph.tab.hh
 	$(SHOWFILE)
@@ -80,8 +87,8 @@ endif
 	$(RM) parse_graph.* graph.lex* graph.tab* $(QUIETOUT)
 	$(RM) wscalc.c wscalc.tab* wscalc_int.c $(QUIETOUT)
 	$(RM) wscalc_int.tab.c wscalc_int.tab.h $(QUIETOUT)
-	$(RM) libwaterslide.dylib libwaterslide.a $(QUIETOUT)
-	$(RM) libwaterslide-parallel.a $(QUIETOUT)
+	$(RM) libwaterslide$(LIBEND) $(QUIETOUT)
+	$(RM) libwaterslide-parallel$(LIBEND) $(QUIETOUT)
 
 graph.tab$(SUFFIX).o: graph.tab.cc
 graph.lex$(SUFFIX).o: graph.lex.cc ast.h

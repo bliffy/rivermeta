@@ -24,17 +24,13 @@ DESTDIR = $(WS_LIB_DIR)
 all: $(DESTDIR) $(MODULES) 
 
 $(DESTDIR):
-	echo want ot make $(DESTDIR)
+	echo want to make $(DESTDIR)
 	$(MKDIR) $(DESTDIR)
 
 %$(WS_SFX): %.c
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $< -o $@
-ifndef ISFREEBSD
-	$(CP) -t $(DESTDIR) $@
-else
-	$(CP) $@ $(DESTDIR)
-endif
+	$(CC) $(CFLAGS) $< -o $@ -L$(WS_BIN_DIR) -lwaterslide
+	$(CP) $@ $(DESTDIR) $(QUIETOUT)
 
 clean:
 	$(RM) .*.swp *.dSYM ._* *_so $(QUIETOUT)

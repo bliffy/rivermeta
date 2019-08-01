@@ -1,31 +1,7 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 /* program to print out all the help options for each module*/
 /* this program makes use of the aliases file for modules */
 
 #include <getopt.h>
-#include <dirent.h>
-#include <dlfcn.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +13,9 @@ SOFTWARE.
 #include "waterslidedata.h"
 #include "wstypes.h"
 #include "wscalc.h"
+
+#include "dl_assist.h"
+#include "dir_assist.h"
 
 #include "wsman_color.h"
 #include "wsman_map.h"
@@ -65,17 +44,23 @@ map_t * map = NULL;
 
 char * last_kid = NULL;
 
+char errbuf[2048];
+
 int print_module_help(FILE *, const char *);
 int print_module_help_plain(FILE *, const char *);
 int print_module_help_rst(FILE *, const char *);
 
 
-char * get_module_path(const char *name, const char * libpath) {
+char * get_module_path(
+          const char * name,
+          const char * libpath)
+{
      int dlen = strlen(libpath);
      int modlen = strlen(name);
      int prefix = strlen(WS_PROC_MOD_PREFIX);
      int suffix = strlen(WS_PROC_MOD_SUFFIX);
-     char * fullname = (char *)calloc(1,dlen+prefix+modlen+suffix+1);
+     char * fullname = (char *)calloc(
+          1, dlen+prefix+modlen+suffix+1);
      if (!fullname) {
           error_print("failed get_module_path calloc of fullname");
           return NULL;
@@ -90,12 +75,16 @@ char * get_module_path(const char *name, const char * libpath) {
      return fullname;
 }
 
-char * get_module_path_parallel(const char *name, const char * libpath) {
-     int dlen = strlen(libpath);
+char * get_module_path_parallel(
+          const char * name,
+          const char * libpath)
+{
+     int dlen   = strlen(libpath);
      int modlen = strlen(name);
      int prefix = strlen(WS_PROC_MOD_PREFIX);
      int suffix = strlen(WS_PROC_MOD_PARALLEL_SUFFIX);
-     char * fullname = (char *)calloc(1,dlen+prefix+modlen+suffix+1);
+     char * fullname = (char *)calloc(
+          1, dlen+prefix+modlen+suffix+1);
      if (!fullname) {
           error_print("failed get_module_path_parallel calloc of fullname");
           return NULL;
@@ -110,129 +99,175 @@ char * get_module_path_parallel(const char *name, const char * libpath) {
      return fullname;
 }
 
-int search_for_keyword(const char *spath, char * keyword)  {
-     void * sh_file_handle;
+int search_for_keyword(
+          const char * spath,
+          char * keyword)
+{
+     DLHANDLE modh;
      if (spath == NULL) {
           return 0;
      }
+     
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
-          char ** proc_alias  = (char**)dlsym(sh_file_handle,"proc_alias");
-          char * proc_name    = (char *)dlsym(sh_file_handle,"proc_name");
-          char * proc_purpose = (char *)dlsym(sh_file_handle,"proc_purpose");
-          char * proc_description = (char *)dlsym(sh_file_handle,"proc_description");
-          proc_example_t * proc_example = (proc_example_t*)dlsym(sh_file_handle,"proc_examples"); 
-          proc_option_t * opt = (proc_option_t*)dlsym(sh_file_handle,"proc_opts"); 
-          char * ns_opt = (char*)dlsym(sh_file_handle,"proc_nonswitch_opts"); 
-
-          // Search the name, aliases, purpose, description, example fields
-          // for a keyword.
-          int retval = 0;
-
-          if (!retval && proc_name && _strcasestr(proc_name, keyword)) retval = 1;
-
-          if (!retval && proc_purpose && _strcasestr(proc_purpose, keyword)) retval = 1;
-          if (!retval && proc_alias) {
-               int i;
-               for (i = 0; proc_alias[i]; i++) {
-                    if (_strcasestr(proc_alias[i], keyword)) retval = 1;
-               }
-          }
-          if (!retval && proc_description && _strcasestr(proc_description, keyword)) retval = 1;
-          if (!retval && proc_example) {
-               int i;
-               for (i = 0; proc_example[i].text; i++) {
-                    if (_strcasestr((char *) proc_example[i].text, keyword)) retval = 1;
-                    if (_strcasestr((char *) proc_example[i].description, keyword)) retval = 1;
-               }
-          }
-          // TODO: this is ugly, needs cleaning 
-          // for every option we need to compile the whole string together,
-          // then search it 
-          if (!retval && (opt || ns_opt)) {
-               if (ns_opt && strlen(ns_opt) > 0) {
-                    int len = strlen(ns_opt) + 2; 
-                    char * ns = (char *) malloc(len+1);
-                    if (!ns) {
-                         error_print("failed search_for_keyword calloc of ns");
-                         return 0;
-                    }
-                    snprintf(ns, len+1, "<%s>", ns_opt); 
-                    if (_strcasestr(ns, keyword)) retval = 1;
-               }
-               if (opt) {
-                    int i = 0;
-                    while (opt[i].option != ' ') {
-                         int sz = 1024;
-                         char * buf = (char *) calloc(1,sz);
-                         char * p = buf;
-                         int read = 0;
-
-                         if (opt[i].option != '\0') {
-                              read = snprintf(p, 4, "[-%c", opt[i].option);  
-                         }
-		         else {
-                              while ((read+3+strlen(opt[i].long_option)+1) > sz) {
-                                   sz += 1024;
-                                   buf = (char *) realloc(buf, sz);
-                                   if (!buf) {
-                                        error_print("failed opt.long_option realloc"); 
-                                   }
-                                   p = buf+read;
-                              }
-                              read = snprintf(p,3+strlen(opt[i].long_option)+1,
-                                        "[--%s", opt[i].long_option);
-                         }
-                         p = p + read;
-                         if (opt[i].argument && strlen(opt[i].argument)) {
-                              while ((read+3+strlen(opt[i].argument)+1) > sz) {
-                                   sz += 1024;
-                                   buf = (char *) realloc(buf, sz);
-                                   if (!buf) {
-                                        error_print("failed opt.argument realloc"); 
-                                   }
-                                   p = buf+read;
-                              }
-
-                              read = snprintf(p,3+strlen(opt[i].argument)+1,
-                                        " <%s>", opt[i].argument);
-                              p = p + read;
-                         }
-                         while ((read+2+strlen(opt[i].description)+1) > sz) {
-                             sz += 1024;
-                             buf = (char *) realloc(buf, sz);
-                             if (!buf) {
-                                  error_print("failed opt.description realloc"); 
-                             }
-                             p = buf+read;
-                         }
-
-                         snprintf(p,2+strlen(opt[i].description)+1,
-                              "] %s", opt[i].description);
-                         if (_strcasestr(p, keyword)) retval = 1;
-                         i++;
-                    }
-               }
-          }
-
-          dlclose(sh_file_handle);
-          return retval;
-     } else {
-          fprintf(stderr,"%s\n", dlerror());
+     modh = DLOPEN(spath);
+     if ( !modh ) {
+          DLERROR(errbuf,2047);
+          fprintf(stderr,"%s\n", errbuf);
           fprintf(stderr,"unable to open module %s\n", spath);
           return 0;
      }
+
+     char ** alias;
+     char *  name;
+     char * purpose;
+     char * description;
+     proc_example_t * examples;
+     proc_option_t * options;
+     char * ns_opts;
+
+     alias = (char**)DLSYM(modh,"proc_alias");
+     name = (char *)DLSYM(modh,"proc_name");
+     purpose = (char *)DLSYM(modh,"proc_purpose");
+     description = (char *)DLSYM(modh,"proc_description");
+     examples = (proc_example_t*)DLSYM(modh,"proc_examples"); 
+     options = (proc_option_t*)DLSYM(modh,"proc_opts"); 
+     ns_opts = (char*)DLSYM(modh,"proc_nonswitch_opts"); 
+
+     // Search the name, aliases, purpose,
+     // description, example fields for a keyword.
+     int retval = 0;
+
+     if (name && _strcasestr(name, keyword)) {
+          DLCLOSE(modh);
+          return 1;
+     }
+
+     if (purpose && _strcasestr(purpose, keyword)) {
+          DLCLOSE(modh);
+          return 1;
+     }
+
+     if (alias) {
+          for (int i = 0; alias[i]; i++) {
+               if (_strcasestr(alias[i], keyword)) {
+                    DLCLOSE(modh);
+                    return 1;
+               }
+          }
+     }
+
+     if (description && _strcasestr(description, keyword))
+          DLCLOSE(modh);
+          return 1;
+     }
+
+     if (examples) {
+          for (int i = 0; exampless[i].text; i++) {
+               if (_strcasestr((char *) examples[i].text, keyword))
+                    retval = 1;
+               if (_strcasestr((char *) examples[i].description, keyword))
+                    retval = 1;
+          }
+          if ( retval==1 ) {
+               DLCLOSE(modh);
+               return 1;
+          }
+     }
+
+     if (!options && !ns_opts) {
+          DLCLOSE(modh);
+          return 1;
+     }
+
+     // TODO: this is ugly, needs cleaning
+     // for every option we need to compile the whole string
+     // together, then search it
+     if (ns_opts && strlen(ns_opts) > 0) {
+          int len = strlen(ns_opts) + 2;
+          char * ns = (char *) malloc(len+1);
+          if (!ns) {
+               error_print("failed search_for_keyword calloc of ns");
+               DLCLOSE(modh);
+               return 0;
+          }
+          snprintf(ns, len+1, "<%s>", ns_opt); 
+          if (_strcasestr(ns, keyword)) {
+               DLCLOSE(modh);
+               return 1;
+          }
+     }
+     if (!options) {
+          DLCLOSE(modh);
+          return 0;
+     }
+
+     int i = 0;
+     while (options[i].option != ' ') {
+          int sz = 1024;
+          char * buf = (char *) calloc(1,sz);
+          char * p = buf;
+          int read = 0;
+
+          if (options[i].option != '\0') {
+               read = snprintf(p, 4, "[-%c", options[i].option);
+          }
+          else {
+               while ((read+3+strlen(options[i].long_option)+1) > sz) {
+                    sz += 1024;
+                    buf = (char *) realloc(buf, sz);
+                    if (!buf) {
+                         error_print("failed opt.long_option realloc"); 
+                    }
+                    p = buf+read;
+               }
+               read = snprintf(p,3+strlen(options[i].long_option)+1,
+                          "[--%s", opt[i].long_option);
+          }
+          p = p + read;
+          if (options[i].argument && strlen(options[i].argument)) {
+               while ((read+3+strlen(options[i].argument)+1) > sz) {
+                    sz += 1024;
+                    buf = (char *) realloc(buf, sz);
+                    if (!buf) {
+                        error_print("failed opt.argument realloc"); 
+                    }
+                    p = buf+read;
+               }
+               read = snprintf(p,3+strlen(options[i].argument)+1,
+                    " <%s>", opt[i].argument);
+               p = p + read;
+          }
+          while ((read+2+strlen(options[i].description)+1) > sz) {
+              sz += 1024;
+              buf = (char *) realloc(buf, sz);
+              if (!buf) {
+                   error_print("failed opt.description realloc"); 
+              }
+              p = buf+read;
+          }
+
+          snprintf(p,2+strlen(options[i].description)+1,
+               "] %s", options[i].description);
+          if (_strcasestr(p, keyword)) {
+               DLCLOSE(modh);
+               return 1;
+          }
+          i++;
+     }
+
+     DLCLOSE(modh);
+     return 0;
 }
 
 // return 1 if this module contains has the tag
-int search_for_tag(const char *spath, char * tag)  {
-     void * sh_file_handle;
+int search_for_tag(const char * spath, char * tag)  {
+     DLHANDLE sh_file_handle;
      if (spath == NULL) {
           return 0;
      }
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
-          char ** proc_tags  = (char**)dlsym(sh_file_handle,"proc_tags");
+     if ((sh_file_handle = DLOPEN(spath))) {
+          char ** proc_tags  = (char**)DLSYM(sh_file_handle,"proc_tags");
           if (proc_tags) {
                int i;
                for (i = 0; proc_tags[i]; i++) {
@@ -242,10 +277,11 @@ int search_for_tag(const char *spath, char * tag)  {
                     }
                }
           }
-          dlclose(sh_file_handle);
+          DLCLOSE(sh_file_handle);
           return 0;
      } else {
-          fprintf(stderr,"%s\n", dlerror());
+          DLERROR(errbuf,2047);
+          fprintf(stderr,"%s\n", errbuf);
           fprintf(stderr,"unable to open module %s\n", spath);
           return 0;
      }
@@ -253,22 +289,22 @@ int search_for_tag(const char *spath, char * tag)  {
 
 // return 1 if this module contains has the input type
 int search_for_input_type(const char *spath, char * tag)  {
-     void * sh_file_handle;
+     DLHANDLE sh_file_handle;
      if (spath == NULL) {
           return 0;
      }
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
+     if ((sh_file_handle = DLOPEN(spath))) {
 
           char ** proc_input_types;
           // check for procbuffer kid
-          int * is_procbuffer = (int *)dlsym(sh_file_handle,"is_procbuffer");
+          int * is_procbuffer = (int *)DLSYM(sh_file_handle,"is_procbuffer");
           if (is_procbuffer) {
                char * proc_itypes[] = {"tuple", "monitor", NULL};
                proc_input_types = (char**)proc_itypes;
           }
           else {
-               proc_input_types = (char**)dlsym(sh_file_handle,"proc_input_types");
+               proc_input_types = (char**)DLSYM(sh_file_handle,"proc_input_types");
           }
           if (proc_input_types) {
                int i;
@@ -279,10 +315,11 @@ int search_for_input_type(const char *spath, char * tag)  {
                     }
                }
           }
-          dlclose(sh_file_handle);
+          DLCLOSE(sh_file_handle);
           return 0;
      } else {
-          fprintf(stderr,"%s\n", dlerror());
+          DLERROR(errbuf,2047);
+          fprintf(stderr,"%s\n", errbuf);
           fprintf(stderr,"unable to open module %s\n", spath);
           return 0;
      }
@@ -290,22 +327,22 @@ int search_for_input_type(const char *spath, char * tag)  {
 
 // return 1 if this module contains has the output type
 int search_for_output_type(const char *spath, char * tag)  {
-     void * sh_file_handle;
+     DLHANDLE sh_file_handle;
      if (spath == NULL) {
           return 0;
      }
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
+     if ((sh_file_handle = DLOPEN(spath))) {
 
           char ** proc_output_types;
           // check for procbuffer kid
-          int * is_procbuffer = (int *)dlsym(sh_file_handle,"is_procbuffer");
+          int * is_procbuffer = (int *)DLSYM(sh_file_handle,"is_procbuffer");
           if (is_procbuffer) {
                char * proc_otypes[] = {"tuple", NULL};
                proc_output_types = (char**)proc_otypes;
           }
           else {
-               proc_output_types = (char**)dlsym(sh_file_handle,"proc_output_types");
+               proc_output_types = (char**)DLSYM(sh_file_handle,"proc_output_types");
           }
           if (proc_output_types) {
                int i;
@@ -316,10 +353,11 @@ int search_for_output_type(const char *spath, char * tag)  {
                     }
                }
           }
-          dlclose(sh_file_handle);
+          DLCLOSE(sh_file_handle);
           return 0;
      } else {
-          fprintf(stderr,"%s\n", dlerror());
+          DLERROR(errbuf,2047);
+          fprintf(stderr,"%s\n", errbuf);
           fprintf(stderr,"unable to open module %s\n", spath);
           return 0;
      }
@@ -370,42 +408,42 @@ int check_kid_field_double_dereference(FILE *fp, char * field_name, char ** fiel
  * Show failures by default.  Use -v flag to show successes.
  */
 int check_kid_documentation(FILE * fp, const char *spath, char *kid)  {
-     void * sh_file_handle;
+     DLHANDLE sh_file_handle;
      //snprintf(spath,255,"%s/module_%s.so", g_pLibPath, modulename);
      if (spath == NULL) { return 0;}
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
+     if ((sh_file_handle = DLOPEN(spath))) {
           if (verbose) { 
                // test each kid field
                fprintf(fp, "SUCCESS: found %s\n", kid);
           }          
           
           // verify that this variable exists 
-          char ** proc_alias  = (char**)dlsym(sh_file_handle,"proc_alias");
+          char ** proc_alias  = (char**)DLSYM(sh_file_handle,"proc_alias");
           check_kid_field_double_dereference(fp, "proc_alias", proc_alias, 0);
 
           // verify that this variable exists and has a positive length 
-          char * proc_name    = (char *)dlsym(sh_file_handle,"proc_name");
+          char * proc_name    = (char *)DLSYM(sh_file_handle,"proc_name");
           check_kid_field_single_dereference(fp, "proc_name", proc_name, 1);
 
           // verify that this variable exists and has a positive length 
-          char * proc_purpose = (char *)dlsym(sh_file_handle,"proc_purpose");
+          char * proc_purpose = (char *)DLSYM(sh_file_handle,"proc_purpose");
           check_kid_field_single_dereference(fp, "proc_purpose", proc_purpose, 1);
           
           // verify that this variable exists and has at least one entry 
-          char ** proc_synopsis  = (char**)dlsym(sh_file_handle,"proc_synopsis");
+          char ** proc_synopsis  = (char**)DLSYM(sh_file_handle,"proc_synopsis");
           check_kid_field_double_dereference(fp, "proc_synopsis", proc_synopsis, 1);
 
           // verify that this variable exists and has a positive length 
-          char * proc_description = (char *)dlsym(sh_file_handle,"proc_description");
+          char * proc_description = (char *)DLSYM(sh_file_handle,"proc_description");
           check_kid_field_single_dereference(fp, "proc_description", proc_description, 1);
 
           // verify that this variable exists and has at least one entry 
-          char ** proc_tags  = (char**)dlsym(sh_file_handle,"proc_tags");
+          char ** proc_tags  = (char**)DLSYM(sh_file_handle,"proc_tags");
           check_kid_field_double_dereference(fp, "proc_tags", proc_tags, 1);
 
           // verify that this variable exists and has at least one entry 
-          proc_example_t * examples = (proc_example_t*)dlsym(sh_file_handle,"proc_examples"); 
+          proc_example_t * examples = (proc_example_t*)DLSYM(sh_file_handle,"proc_examples"); 
           if (examples) {
                if(verbose) {
                     fprintf(fp, "SUCCESS: proc_examples is defined\n");
@@ -436,15 +474,15 @@ int check_kid_documentation(FILE * fp, const char *spath, char *kid)  {
           }
 
           // verify that this variable exists 
-          char * proc_requires = (char *)dlsym(sh_file_handle,"proc_requires");
+          char * proc_requires = (char *)DLSYM(sh_file_handle,"proc_requires");
           check_kid_field_single_dereference(fp, "proc_requires", proc_requires, 0);
 
           // verify that this variable exists and has a positive length 
-          char * proc_version = (char *)dlsym(sh_file_handle,"proc_version");
+          char * proc_version = (char *)DLSYM(sh_file_handle,"proc_version");
           check_kid_field_single_dereference(fp, "proc_version", proc_version, 1);
 
           // verify that this variable exists and that each entry has the appropriate lengths 
-          proc_option_t * opt = (proc_option_t*)dlsym(sh_file_handle,"proc_opts"); 
+          proc_option_t * opt = (proc_option_t*)DLSYM(sh_file_handle,"proc_opts"); 
           if (opt) {
                if(verbose) {
                     fprintf(fp, "SUCCESS: proc_opts is defined\n");
@@ -495,15 +533,15 @@ int check_kid_documentation(FILE * fp, const char *spath, char *kid)  {
           }
           
           // verify that this variable exists 
-          char * ns_opt = (char*)dlsym(sh_file_handle,"proc_nonswitch_opts"); 
+          char * ns_opt = (char*)DLSYM(sh_file_handle,"proc_nonswitch_opts"); 
           check_kid_field_single_dereference(fp, "proc_nonswitch_opts", ns_opt, 0);
 
           // verify that this variable exists 
           // check for procbuffer kid
-          int * is_procbuffer = (int *)dlsym(sh_file_handle,"is_procbuffer");
+          int * is_procbuffer = (int *)DLSYM(sh_file_handle,"is_procbuffer");
 	  char ** itypes;
           if (!is_procbuffer) {
-               itypes = (char**)dlsym(sh_file_handle,"proc_input_types"); 
+               itypes = (char**)DLSYM(sh_file_handle,"proc_input_types"); 
                check_kid_field_double_dereference(fp, "proc_input_types", itypes, 0);
           }
 
@@ -511,12 +549,12 @@ int check_kid_documentation(FILE * fp, const char *spath, char *kid)  {
           // check for procbuffer kid
 	  char ** otypes;
           if (!is_procbuffer) {
-               otypes = (char**)dlsym(sh_file_handle,"proc_output_types");
+               otypes = (char**)DLSYM(sh_file_handle,"proc_output_types");
                check_kid_field_double_dereference(fp, "proc_output_types", otypes, 0);
           }
 
           // verify that this variable exists 
-          proc_port_t * ports = (proc_port_t*)dlsym(sh_file_handle,"proc_input_ports");
+          proc_port_t * ports = (proc_port_t*)DLSYM(sh_file_handle,"proc_input_ports");
           if (ports) {
                if(verbose) {
                     fprintf(fp, "SUCCESS: proc_input_ports is defined\n");
@@ -544,15 +582,15 @@ int check_kid_documentation(FILE * fp, const char *spath, char *kid)  {
           }
 
           // verify that this variable exists 
-          char ** tml = (char **)dlsym(sh_file_handle,"proc_tuple_member_labels");
+          char ** tml = (char **)DLSYM(sh_file_handle,"proc_tuple_member_labels");
           check_kid_field_double_dereference(fp, "proc_tuple_member_labels", tml, 0);
 
           // verify that this variable exists 
-          char ** tcl = (char **)dlsym(sh_file_handle,"proc_tuple_container_labels");
+          char ** tcl = (char **)DLSYM(sh_file_handle,"proc_tuple_container_labels");
           check_kid_field_double_dereference(fp, "proc_tuple_container_labels", tcl, 0);
 
           // verify that this variable exists 
-          char ** tccl = (char **)dlsym(sh_file_handle,"proc_tuple_conditional_container_labels");
+          char ** tccl = (char **)DLSYM(sh_file_handle,"proc_tuple_conditional_container_labels");
           check_kid_field_double_dereference(fp, "proc_tuple_conditional_container_labels", tccl, 0);
 
 
@@ -572,30 +610,30 @@ int print_module_help(FILE * fp, const char *spath) {
 }
 
 int print_module_help_rst(FILE * fp, const char *spath) {
-     void * sh_file_handle;
+     DLHANDLE sh_file_handle;
      if (spath == NULL) { return 0;}
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
+     if ((sh_file_handle = DLOPEN(spath))) {
           // check if module is deprecated
-          int * is_deprecated = (int *)dlsym(sh_file_handle,"is_deprecated");
-          char * proc_name = (char *)dlsym(sh_file_handle,"proc_name");
-          char * proc_purpose = (char *)dlsym(sh_file_handle,"proc_purpose");
-          char ** proc_synopsis = (char**)dlsym(sh_file_handle,"proc_synopsis");
-          char * proc_description = (char *)dlsym(sh_file_handle,"proc_description");
-          char ** proc_tags  = (char**)dlsym(sh_file_handle,"proc_tags");
-          char ** proc_alias  = (char**)dlsym(sh_file_handle,"proc_alias");
-          char * proc_requires = (char *)dlsym(sh_file_handle,"proc_requires");
-          char * proc_version = (char *)dlsym(sh_file_handle,"proc_version");
+          int * is_deprecated = (int *)DLSYM(sh_file_handle,"is_deprecated");
+          char * proc_name = (char *)DLSYM(sh_file_handle,"proc_name");
+          char * proc_purpose = (char *)DLSYM(sh_file_handle,"proc_purpose");
+          char ** proc_synopsis = (char**)DLSYM(sh_file_handle,"proc_synopsis");
+          char * proc_description = (char *)DLSYM(sh_file_handle,"proc_description");
+          char ** proc_tags  = (char**)DLSYM(sh_file_handle,"proc_tags");
+          char ** proc_alias  = (char**)DLSYM(sh_file_handle,"proc_alias");
+          char * proc_requires = (char *)DLSYM(sh_file_handle,"proc_requires");
+          char * proc_version = (char *)DLSYM(sh_file_handle,"proc_version");
 
-          proc_example_t * examples = (proc_example_t*)dlsym(sh_file_handle,"proc_examples"); 
+          proc_example_t * examples = (proc_example_t*)DLSYM(sh_file_handle,"proc_examples"); 
 
-          proc_option_t * opt = (proc_option_t*)dlsym(sh_file_handle,"proc_opts"); 
-          char * ns_opt = (char*)dlsym(sh_file_handle,"proc_nonswitch_opts"); 
+          proc_option_t * opt = (proc_option_t*)DLSYM(sh_file_handle,"proc_opts"); 
+          char * ns_opt = (char*)DLSYM(sh_file_handle,"proc_nonswitch_opts"); 
 
           char ** itypes;
           char ** otypes;
           // check for procbuffer kid
-          int * is_procbuffer = (int *)dlsym(sh_file_handle,"is_procbuffer");
+          int * is_procbuffer = (int *)DLSYM(sh_file_handle,"is_procbuffer");
 	  char * proc_input_types[] = {"tuple", "monitor", NULL};
 	  char * proc_output_types[] = {"tuple", NULL};
           if (is_procbuffer) {
@@ -603,15 +641,15 @@ int print_module_help_rst(FILE * fp, const char *spath) {
                otypes = (char**)proc_output_types;
           }
           else {
-               itypes = (char**)dlsym(sh_file_handle,"proc_input_types"); 
-               otypes = (char**)dlsym(sh_file_handle,"proc_output_types");
+               itypes = (char**)DLSYM(sh_file_handle,"proc_input_types"); 
+               otypes = (char**)DLSYM(sh_file_handle,"proc_output_types");
           }
           
-          proc_port_t * ports = (proc_port_t*)dlsym(sh_file_handle,"proc_input_ports");
+          proc_port_t * ports = (proc_port_t*)DLSYM(sh_file_handle,"proc_input_ports");
 
-          char ** tml = (char **)dlsym(sh_file_handle,"proc_tuple_member_labels");
-          char ** tcl = (char **)dlsym(sh_file_handle,"proc_tuple_container_labels");
-          char ** tccl = (char **)dlsym(sh_file_handle,"proc_tuple_conditional_container_labels");
+          char ** tml = (char **)DLSYM(sh_file_handle,"proc_tuple_member_labels");
+          char ** tcl = (char **)DLSYM(sh_file_handle,"proc_tuple_container_labels");
+          char ** tccl = (char **)DLSYM(sh_file_handle,"proc_tuple_conditional_container_labels");
 
           char * header_text;
           if (proc_purpose) {
@@ -682,7 +720,7 @@ int print_module_help_rst(FILE * fp, const char *spath) {
                print_rst_subheader(fp, "Examples");
                int i = 0;
                while (examples[i].text != NULL) {
-                    if (examples[i].text != '\0') {
+                    if (*examples[i].text != '\0') {
                          fprintf(fp, "\n"); 
                          fprintf(fp,".. code-block:: bash\n");
                          fprintf(fp, "\n"); 
@@ -803,7 +841,7 @@ int print_module_help_rst(FILE * fp, const char *spath) {
                }
           }
 
-          dlclose(sh_file_handle);
+          DLCLOSE(sh_file_handle);
 
           return 1;
      }
@@ -817,30 +855,30 @@ int print_module_help_rst(FILE * fp, const char *spath) {
  * unless you want to print to xml
  */
 int print_module_help_plain(FILE * fp, const char *spath) {
-     void * sh_file_handle;
+     DLHANDLE sh_file_handle;
      //snprintf(spath,255,"%s/module_%s.so", g_pLibPath, modulename);
      if (spath == NULL) { return 0;}
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
+     if ((sh_file_handle = DLOPEN(spath))) {
           // find out if the module is deprecated
-          int * is_deprecated = (int *) dlsym(sh_file_handle,"is_deprecated"); 
+          int * is_deprecated = (int *) DLSYM(sh_file_handle,"is_deprecated"); 
           // get the information from the module that we need to print help
-          char ** proc_alias  = (char**)dlsym(sh_file_handle,"proc_alias");
-          char * proc_name    = (char *)dlsym(sh_file_handle,"proc_name");
-          char * proc_purpose = (char *)dlsym(sh_file_handle,"proc_purpose");
-          char ** proc_synopsis  = (char**)dlsym(sh_file_handle,"proc_synopsis");
-          char * proc_description = (char *)dlsym(sh_file_handle,"proc_description");
-          char ** proc_tags  = (char**)dlsym(sh_file_handle,"proc_tags");
-          proc_example_t * examples = (proc_example_t*)dlsym(sh_file_handle,"proc_examples"); 
-          char * proc_requires = (char *)dlsym(sh_file_handle,"proc_requires");
-          char * proc_version = (char *)dlsym(sh_file_handle,"proc_version");
-          proc_option_t * opt = (proc_option_t*)dlsym(sh_file_handle,"proc_opts"); 
-          char * ns_opt = (char*)dlsym(sh_file_handle,"proc_nonswitch_opts"); 
+          char ** proc_alias  = (char**)DLSYM(sh_file_handle,"proc_alias");
+          char * proc_name    = (char *)DLSYM(sh_file_handle,"proc_name");
+          char * proc_purpose = (char *)DLSYM(sh_file_handle,"proc_purpose");
+          char ** proc_synopsis  = (char**)DLSYM(sh_file_handle,"proc_synopsis");
+          char * proc_description = (char *)DLSYM(sh_file_handle,"proc_description");
+          char ** proc_tags  = (char**)DLSYM(sh_file_handle,"proc_tags");
+          proc_example_t * examples = (proc_example_t*)DLSYM(sh_file_handle,"proc_examples"); 
+          char * proc_requires = (char *)DLSYM(sh_file_handle,"proc_requires");
+          char * proc_version = (char *)DLSYM(sh_file_handle,"proc_version");
+          proc_option_t * opt = (proc_option_t*)DLSYM(sh_file_handle,"proc_opts"); 
+          char * ns_opt = (char*)DLSYM(sh_file_handle,"proc_nonswitch_opts"); 
           
           char ** itypes;
           char ** otypes;     
           // check for procbuffer kid
-          int * is_procbuffer = (int *) dlsym(sh_file_handle,"is_procbuffer");
+          int * is_procbuffer = (int *) DLSYM(sh_file_handle,"is_procbuffer");
 	  char * proc_input_types[] = {"tuple", "monitor", NULL};
 	  char * proc_output_types[] = {"tuple", NULL};
           if (is_procbuffer) {
@@ -849,15 +887,15 @@ int print_module_help_plain(FILE * fp, const char *spath) {
                otypes = (char**)proc_output_types;
           } 
           else {
-               itypes = (char**)dlsym(sh_file_handle,"proc_input_types");
-               otypes = (char**)dlsym(sh_file_handle,"proc_output_types");
+               itypes = (char**)DLSYM(sh_file_handle,"proc_input_types");
+               otypes = (char**)DLSYM(sh_file_handle,"proc_output_types");
           }
 
-          proc_port_t * ports = (proc_port_t*)dlsym(sh_file_handle,"proc_input_ports");
+          proc_port_t * ports = (proc_port_t*)DLSYM(sh_file_handle,"proc_input_ports");
 
-          char ** tml = (char **)dlsym(sh_file_handle,"proc_tuple_member_labels");
-          char ** tcl = (char **)dlsym(sh_file_handle,"proc_tuple_container_labels");
-          char ** tccl = (char **)dlsym(sh_file_handle,"proc_tuple_conditional_container_labels");
+          char ** tml = (char **)DLSYM(sh_file_handle,"proc_tuple_member_labels");
+          char ** tcl = (char **)DLSYM(sh_file_handle,"proc_tuple_container_labels");
+          char ** tccl = (char **)DLSYM(sh_file_handle,"proc_tuple_conditional_container_labels");
 
           title(fp, "PROCESSOR NAME");
           if (proc_purpose) {
@@ -915,7 +953,7 @@ int print_module_help_plain(FILE * fp, const char *spath) {
                title(fp, "EXAMPLES");
                int i = 0;
                while (examples[i].text != NULL) {
-                    if (examples[i].text != '\0') {
+                    if (*examples[i].text != '\0') {
                          print_wrap(fp, examples[i].text, WRAP_WIDTH, 4);
                          print_wrap(fp, examples[i].description, WRAP_WIDTH, 8);
                     }
@@ -1037,7 +1075,7 @@ int print_module_help_plain(FILE * fp, const char *spath) {
                }
           }
           // close this shared-module handle
-          dlclose(sh_file_handle);
+          DLCLOSE(sh_file_handle);
           return 1;
      }
      else {
@@ -1046,34 +1084,34 @@ int print_module_help_plain(FILE * fp, const char *spath) {
 }
 
 int print_module_help_search(FILE * fp, const char *spath, char * keyword)  {
-     void * sh_file_handle;
+     DLHANDLE sh_file_handle;
      //snprintf(spath,255,"%s/module_%s.so", g_pLibPath, modulename);
      if (spath == NULL) { return 0;}
 
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
+     if ((sh_file_handle = DLOPEN(spath))) {
           // find out if the module is deprecated
-          int * is_deprecated = (int *)dlsym(sh_file_handle,"is_deprecated");
+          int * is_deprecated = (int *)DLSYM(sh_file_handle,"is_deprecated");
           // get the information from the module that we need to print help
-          char ** proc_alias  = (char**)dlsym(sh_file_handle,"proc_alias");
-          char * proc_name    = (char *)dlsym(sh_file_handle,"proc_name");
-          char * proc_purpose = (char *)dlsym(sh_file_handle,"proc_purpose");
-          char ** proc_synopsis  = (char**)dlsym(sh_file_handle,"proc_synopsis");
-          char * proc_description = (char *)dlsym(sh_file_handle,"proc_description");
-          char ** proc_tags  = (char**)dlsym(sh_file_handle,"proc_tags");
-          proc_example_t * examples = (proc_example_t*)dlsym(sh_file_handle,"proc_examples"); 
-          char * proc_requires = (char *)dlsym(sh_file_handle,"proc_requires");
-          char * proc_version = (char *)dlsym(sh_file_handle,"proc_version");
-          proc_option_t * opt = (proc_option_t*)dlsym(sh_file_handle,"proc_opts"); 
-          char * ns_opt = (char*)dlsym(sh_file_handle,"proc_nonswitch_opts"); 
-          char ** itypes = (char**)dlsym(sh_file_handle,"proc_input_types"); 
-          char ** otypes = (char**)dlsym(sh_file_handle,"proc_output_types");
+          char ** proc_alias  = (char**)DLSYM(sh_file_handle,"proc_alias");
+          char * proc_name    = (char *)DLSYM(sh_file_handle,"proc_name");
+          char * proc_purpose = (char *)DLSYM(sh_file_handle,"proc_purpose");
+          char ** proc_synopsis  = (char**)DLSYM(sh_file_handle,"proc_synopsis");
+          char * proc_description = (char *)DLSYM(sh_file_handle,"proc_description");
+          char ** proc_tags  = (char**)DLSYM(sh_file_handle,"proc_tags");
+          proc_example_t * examples = (proc_example_t*)DLSYM(sh_file_handle,"proc_examples"); 
+          char * proc_requires = (char *)DLSYM(sh_file_handle,"proc_requires");
+          char * proc_version = (char *)DLSYM(sh_file_handle,"proc_version");
+          proc_option_t * opt = (proc_option_t*)DLSYM(sh_file_handle,"proc_opts"); 
+          char * ns_opt = (char*)DLSYM(sh_file_handle,"proc_nonswitch_opts"); 
+          char ** itypes = (char**)DLSYM(sh_file_handle,"proc_input_types"); 
+          char ** otypes = (char**)DLSYM(sh_file_handle,"proc_output_types");
 
-          proc_port_t * ports = (proc_port_t*)dlsym(sh_file_handle,"proc_input_ports");
+          proc_port_t * ports = (proc_port_t*)DLSYM(sh_file_handle,"proc_input_ports");
 
-          char ** tml = (char **)dlsym(sh_file_handle,"proc_tuple_member_labels");
-          char ** tcl = (char **)dlsym(sh_file_handle,"proc_tuple_container_labels");
-          char ** tccl = (char **)dlsym(sh_file_handle,"proc_tuple_conditional_container_labels");
+          char ** tml = (char **)DLSYM(sh_file_handle,"proc_tuple_member_labels");
+          char ** tcl = (char **)DLSYM(sh_file_handle,"proc_tuple_container_labels");
+          char ** tccl = (char **)DLSYM(sh_file_handle,"proc_tuple_conditional_container_labels");
 
           title(fp, "PROCESSOR NAME");
           if (proc_purpose) {
@@ -1126,7 +1164,7 @@ int print_module_help_search(FILE * fp, const char *spath, char * keyword)  {
                title(fp, "EXAMPLES");
                int i = 0;
                while (examples[i].text != NULL) {
-                    if (examples[i].text != '\0') {
+                    if (*examples[i].text != '\0') {
                          char * p;
                          char * q;
                          highlight(p, (char *) examples[i].text, keyword, fp, WRAP_WIDTH, 4);
@@ -1253,27 +1291,28 @@ int print_module_help_search(FILE * fp, const char *spath, char * keyword)  {
           }
 
           // close this shared-module handle
-          dlclose(sh_file_handle);
+          DLCLOSE(sh_file_handle);
           return 1;
      }
      else {
-          fprintf(stderr,"%s\n", dlerror());
+          DLERROR(errbuf,2047);
+          fprintf(stderr,"%s\n", errbuf);
           fprintf(stderr,"unable to open module %s\n", spath);
           return 0;
      }
 }
 
 int print_module_help_short(FILE * fp, const char *spath) {
-     void * sh_file_handle;
+     DLHANDLE sh_file_handle;
      if (spath == NULL) {
           return 0;
      }
      // try to locate the passed module name
-     if ((sh_file_handle = dlopen(spath, RTLD_LAZY|RTLD_LOCAL))) {
+     if ((sh_file_handle = DLOPEN(spath))) {
           // find out if module is deprecated
-          int * is_deprecated = (int *)dlsym(sh_file_handle,"is_deprecated");
-          char * proc_name    = (char *) dlsym(sh_file_handle,"proc_name");
-          char * proc_purpose = (char *) dlsym(sh_file_handle,"proc_purpose");
+          int * is_deprecated = (int *)DLSYM(sh_file_handle,"is_deprecated");
+          char * proc_name    = (char *) DLSYM(sh_file_handle,"proc_name");
+          char * proc_purpose = (char *) DLSYM(sh_file_handle,"proc_purpose");
           if (proc_purpose) {
                if (is_deprecated) {
                     fprintf(fp, "%-20s\t- DEPRECATED: %s", proc_name, proc_purpose);
@@ -1292,11 +1331,12 @@ int print_module_help_short(FILE * fp, const char *spath) {
                fprintf(fp, "\n");
           }
 
-          dlclose(sh_file_handle);
+          DLCLOSE(sh_file_handle);
           return 1;
      }
      else {
-          fprintf(stderr,"%s\n", dlerror());
+          DLERROR(errbuf,2047);
+          fprintf(stderr,"%s\n", errbuf);
           fprintf(stderr,"unable to open module %s\n", spath);
           return 0;
      }
@@ -1574,7 +1614,8 @@ void find_specific_module(char * kid, char * libpath) {
                }
 
                // we've done our best, but we can't find this kid.
-               fprintf(stderr,"%s\n", dlerror());
+               DLERROR(errbuf,2047);
+               fprintf(stderr,"%s\n", errbuf);
                fprintf(stderr,"unable to open module %s\n", kid);
           }
          

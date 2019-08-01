@@ -9,6 +9,7 @@ SRC_ROOT=.
 
 include common.mk
 
+#location of dependency archives
 EXT_DIR=./ext/
 
 
@@ -50,10 +51,10 @@ $(HWLOC_LINK):
 
 # Hold off on building components until protobuf is done
 rule: $(PBDIR) $(RE2DIR) $(HWLOC_LINK)
+	@echo "Building core sources"
+	$(QUIET)$(MAKE) --no-print-directory -C lib
 	@echo "Building datatypes"
 	$(QUIET)$(MAKE) --no-print-directory -C datatypes 
-	@echo "Building core sources"
-	$(QUIET)$(MAKE) --no-print-directory -C lib 
 	@echo "Building utilities"
 	$(QUIET)$(MAKE) --no-print-directory -C util 
 

@@ -8,9 +8,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "time_macros.h"
 #include "sysutil.h"
 #include "waterslide.h"
-#include "time_macros.h"
 #include <limits.h>
 
 #define SCRATCHPAD_LEN 1500
@@ -317,7 +317,7 @@ int sysutil_name_timedfile(
      while (!stat(workingfile, &statbuffer)) {
           snprintf(workingfile + extension_offset,
                    len - extension_offset,
-                   ".%03zu%s", suffix_cnt, extension);
+                   ".%03" PRIu64 "%s", suffix_cnt, extension);
           suffix_cnt++;
           if (suffix_cnt >= 10000) {
                error_print("max files reached");
@@ -480,20 +480,20 @@ void sysutil_print_time_interval(FILE * fp, time_t t) {
           if ((int)i == 1)
                fprintf(fp,"1 hour");
           else
-               fprintf(fp,"%zu hours", i);
+               fprintf(fp,"%" PRIu64 " hours", i);
      }
      else if ((t % 60) == 0) {
           i = t / 60;
           if (i == 1)
                fprintf(fp,"1 minute");
           else
-               fprintf(fp,"%zu minutes", i);
+               fprintf(fp,"%" PRIu64 " minutes", i);
      }
      else {
           if (t == 1)
                fprintf(fp,"1 second");
           else
-               fprintf(fp,"%zu seconds", t);
+               fprintf(fp,"%" PRIu64 " seconds", t);
      }
 }
 
@@ -603,11 +603,15 @@ int set_sysutil_pConfigPath(const char *pConfPath) {
 
      /* Process to build the Paths array */
      size_t p = 0;
-     char *buf = sysutil_pConfigPath;
-     while ( p <= MAX_PATH_COUNT && buf ) {
-          sysutil_pConfigPaths[p++] = strsep(&buf, ":");
+     char * state;
+     char * buf = sysutil_pConfigPath;
+     char * tok = strtok_r(buf, ":", &state);
+     while ( p <= MAX_PATH_COUNT && tok ) {
+          sysutil_pConfigPaths[p++] = tok;
+          tok = strtok_r(NULL, ":", &state);
      }
 
+// TODO: looks like this source string could be leaked
      return 1;
 }
 
@@ -694,7 +698,7 @@ int sysutil_decode_hex_escapes(char* str, size_t* len) {
 
      // error check
      if (*len > SCRATCHPAD_LEN) {
-          error_print("incoming string too long (%zu) for scratchpad (%u).", 
+          error_print("incoming string too long (%" PRIu64 ") for scratchpad (%u).", 
                       *len, SCRATCHPAD_LEN);
           return 0;
      }

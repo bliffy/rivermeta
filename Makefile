@@ -34,6 +34,7 @@ ifndef ISWINDOWS
 	$(RM) $(WS_LIB_DIR)/libwaterslid*.so $(QUIETOUT)
 	$(RM) $(WS_PROCS_DIR)/proc_*
 else
+	@if EXIST libwaterslide.dll $(RM) libwaterslide.dll
 	@if EXIST lib $(RM) lib\wsdt_*
 	@if EXIST lib $(RM) lib\libwaterslide*.so
 	@if EXIST procs $(RM) procs\proc_*

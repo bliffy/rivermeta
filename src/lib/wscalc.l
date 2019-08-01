@@ -100,8 +100,8 @@ stringlit      \"(\\.|[^"])*\"
 "else"    {return ELSE;}
 "ENDIF"   {return ENDIF;}
 "endif"   {return ENDIF;}
-"FALSE"   {return FALSE;}
-"TRUE"    {return TRUE;}
+"FALSE"   {return FALSE_;}
+"TRUE"    {return TRUE_;}
 "label"   {return WSCLABEL;}
 "LABEL"   {return WSCLABEL;}
 "flush"   {return WSFLUSH;}

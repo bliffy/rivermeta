@@ -4,24 +4,24 @@
 %error-verbose
 
 %{
-/*-----------------------------------------------------------------------------
+/*--------------------------------------------------------
  * wscalc.y
  *
  * History:
  * 20111108 RDS Added grammar rules and code for conditional logic evaluation
  *              (e.g., expr && expr, expr || expr, !expr, etc)
- *---------------------------------------------------------------------------*/
+ *------------------------------------------------------*/
 
-#include <time.h>
-#include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
+#include "time_macros.h"
+#include "memmem_macro.h"
 #include "wscalc.h"
 #include "wstypes.h"
 #include "waterslide.h"
 #include "datatypes/wsdt_string.h"
-#include <stdio.h>
 
 #ifndef __cplusplus
 #ifndef true
@@ -172,7 +172,8 @@ static fEntry_t functionTable[] = {
 %token SEMICOLON LPAREN RPAREN LBRACKET RBRACKET COMMA IF THEN ELSE ENDIF
 %token <aWSCalcPart> PLUS MINUS SLASH ASTERISK EQUALS POWER INCREMENT DECREMENT INCREMENTC DECREMENTC SLASHC ASTERISKC
 %token <aWSCalcPart> GREATER GREATEREQUAL LESS LESSEQUAL DOUBLEEQUAL NOTEQUAL AND OR NOT
-%token <aWSCalcPart> FALSE TRUE WSCLABEL WSFLUSH
+%token <aWSCalcPart> FALSE_ TRUE_
+%token <aWSCalcPart> WSCLABEL WSFLUSH
 %token <aWSCalcPart> MOD MODC BITAND BITANDC BITIOR BITORC BITXOR BITXORC COMPLMNT LEFTSHIFT LEFTSHIFTC RIGHTSHIFT RIGHTSHIFTC
 %type <aWSCalcPart> statement_list statement expr
 %type <varRef> varRef
@@ -284,8 +285,8 @@ expr: expr PLUS expr		{ $$ = GetPlusProducer($1, $3); }
         | WSFLUSH
              { $$ = GetFlushProducer(callerState); }
         | LPAREN expr RPAREN	{ $$ = $2; }
-        | FALSE {$$ = GetConstantProducerInteger(0); }
-        | TRUE {$$ = GetConstantProducerInteger(1); }
+        | FALSE_ {$$ = GetConstantProducerInteger(0); }
+        | TRUE_ {$$ = GetConstantProducerInteger(1); }
         | NUMBER                { $$ = GetConstantProducer($1); }
         | varRef { $$ = GetVarValue($1, callerState); }
 	;
@@ -783,7 +784,7 @@ static wscalcPart *GetFunctionCallProducer(const fEntry_t *entry, paramList_t *p
      }
 
      if ( numParams != entry->numParams ) {
-          error_print("Error:  Incorrect number of parameters for function %s().  (Want %zu, have %zu)",
+          error_print("Error:  Incorrect number of parameters for function %s().  (Want %" PRIu64 ", have %" PRIu64 ")",
                entry->name, entry->numParams, numParams);
           return NULL;
      }
@@ -1618,17 +1619,20 @@ static wsdt_string_t* getStringArg(paramList_t *params, size_t N)
 {
      wscalcValue arg = getParam(N, params)->value;
      if ( arg.type != WSCVT_STRING ) {
-          error_print("Argument %zu to string function is not a string (type: %d)!", N, arg.type);
+          error_print("Argument %" PRIu64 " to string function is not a string (type: %u)!", N, arg.type);
           return NULL;
      }
      return (wsdt_string_t*)(arg.v.s)->data;
 }
 
 
-static wscalcValue doStringFunc(void* function, paramList_t *params, void *runtimeToken)
+static wscalcValue doStringFunc(
+          void * function,
+          paramList_t * params,
+          void * runtimeToken)
 {
      wscalcValue res = wscalcZERO;
-     wsdt_string_t *baseArgStr = getStringArg(params, 0);
+     wsdt_string_t * baseArgStr = getStringArg(params, 0);
      if ( NULL == baseArgStr ) return res;
 
      enum strFuncKey func = (enum strFuncKey)(intptr_t)function;
@@ -1638,10 +1642,15 @@ static wscalcValue doStringFunc(void* function, paramList_t *params, void *runti
                res.v.u = (uint64_t)baseArgStr->len;
                break;
           case STRF_FIND: {
-               wsdt_string_t *needle = getStringArg(params, 1);
+               wsdt_string_t * needle = getStringArg(
+                    params, 1);
                if ( NULL == needle ) break;
                res.type = WSCVT_INTEGER;
-               char *x = memmem(baseArgStr->buf, baseArgStr->len, needle->buf, needle->len);
+               char * x = MEMMEM(
+                    baseArgStr->buf,
+                    baseArgStr->len,
+                    needle->buf,
+                    needle->len);
                if ( x == NULL ) res.v.i = -1;
                else res.v.i = (int64_t)(x - baseArgStr->buf);
                break;
@@ -1689,7 +1698,7 @@ static wscalcValue doStringFunc(void* function, paramList_t *params, void *runti
 
                char *x = NULL;
                uint32_t replCount = 0;
-               while ( (x = memmem(orig_str.buf, orig_str.len, target->buf, target->len)) != NULL ) {
+               while ( (x = MEMMEM(orig_str.buf, orig_str.len, target->buf, target->len)) != NULL ) {
                dprint("Replacing [%s] with [%s] in [%s] at [%s]", target->buf, repl->buf, orig_str.buf, x);
                     replCount++;
 
@@ -1966,6 +1975,8 @@ uint8_t getWSCVBool(wscalcValue v) {
 
 wsdata_t* getWSCVString(wscalcValue v) {
      char buf[64] = {0};
+     struct tm tres;
+     time_t t;
      switch ( v.type ) {
      case WSCVT_DOUBLE:
           snprintf(buf, 64, "%lf", v.v.d);
@@ -1984,7 +1995,13 @@ wsdata_t* getWSCVString(wscalcValue v) {
           return v.v.s;
           break;
      case WSCVT_TIME:
-          asctime_r(gmtime(&v.v.t.tv_sec), buf);
+          // NOTE: pulling val from tv_sec out because
+          // timeval from winsock uses type long which 
+          // differs in size on some systems, while
+          // posix's tv_sec is time_t.
+          t = v.v.t.tv_sec;
+          GMTIME_R(&t, &tres);
+          ASCTIME_R(&tres, buf, 64);
           buf[24] = '\0'; // Trim off the \n\0
           break;
      default:

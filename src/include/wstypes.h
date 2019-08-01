@@ -37,7 +37,7 @@
 #define PAGE_SIZE() WinPageSize()
 #define ALIGNED_ALLOC WinAlignedAlloc
 #else
-#define PAGE_SIZE() sysconf(_SC_PAGESIZE)
+#define PAGE_SIZE() ((size_t)sysconf(_SC_PAGESIZE))
 #define ALIGNED_ALLOC posix_memalign
 #endif
 
@@ -254,9 +254,11 @@ static inline wsdata_t * wsdata_create_hugebuffer(
           fprintf(stderr, "wsdata_create_hugebuffer: ERROR! posix_memalign failed...");
           if (EINVAL == verify)
           {
-               fprintf(stderr,
-                    "alignment field = %ld is not a power of"
-                    " two or not a multiple of sizeof(void*)",
+               fprintf(
+                    stderr,
+                    "alignment field = %" PRIu64 " is not a"
+                    " power of two or not a multiple of "
+                    "sizeof(void*)",
                     PAGE_SIZE() );
           }
           else if (ENOMEM == verify)

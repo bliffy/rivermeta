@@ -7,6 +7,8 @@ NOPB=1
 
 # catch for windows (Mingw32/64)
 ifeq ($(OS),Windows_NT)
+  NODL=1
+  NORT=1
   OSNAME=WINDOWS
   ISWINDOWS=1
 else # expect some form of posix
@@ -39,6 +41,17 @@ else
   WS_LIB_DIR = $(BASE_DIR)\lib
   WS_PROCS_DIR = $(BASE_DIR)\procs
   WS_INC_DIR = $(SRC_ROOT)\include
+endif
+
+ifdef ISWINDOWS
+  LIBEND:=.dll
+else
+  LIBEND:=.a
+endif
+ifdef WS_PARALLEL
+  WS_CORE_LIB = libwaterslide-parallel$(LIBEND)
+else
+  WS_CORE_LIB = libwaterslide$(LIBEND)
 endif
 
 ifndef NOPB
@@ -81,16 +94,16 @@ endif
 CFLAGS += -D_GNU_SOURCE
 
 WS_INCLUDES = -I$(WS_INC_DIR) -I$(SRC_ROOT) -I.
-LDFLAGS += -L$(WS_LIB_DIR) 
 
-LDFLAGS += -lm -lrt -lz -lpthread  
+#TODO the sections thing might break linux
+LDFLAGS += -L$(WS_LIB_DIR) -Wl,--no-gc-sections
 
-ifndef WSLIB
-  WSLIB=$(INSTALL_TARGET)/lib
-endif
-
+LDFLAGS += -lm -lz -lpthread -m64
 ifndef NODL
   LDFLAGS += -ldl
+endif
+ifndef NORT
+  LDFLAGS += -lrt
 endif
 
 ifeq "$(OSNAME)" "Darwin"
