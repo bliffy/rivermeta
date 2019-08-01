@@ -156,13 +156,13 @@ int search_for_keyword(
           }
      }
 
-     if (description && _strcasestr(description, keyword))
+     if (description && _strcasestr(description, keyword)) {
           DLCLOSE(modh);
           return 1;
      }
 
      if (examples) {
-          for (int i = 0; exampless[i].text; i++) {
+          for (int i = 0; examples[i].text; i++) {
                if (_strcasestr((char *) examples[i].text, keyword))
                     retval = 1;
                if (_strcasestr((char *) examples[i].description, keyword))
@@ -190,7 +190,7 @@ int search_for_keyword(
                DLCLOSE(modh);
                return 0;
           }
-          snprintf(ns, len+1, "<%s>", ns_opt); 
+          snprintf(ns, len+1, "<%s>", ns_opts); 
           if (_strcasestr(ns, keyword)) {
                DLCLOSE(modh);
                return 1;
@@ -220,8 +220,11 @@ int search_for_keyword(
                     }
                     p = buf+read;
                }
-               read = snprintf(p,3+strlen(options[i].long_option)+1,
-                          "[--%s", opt[i].long_option);
+               read = snprintf(
+                    p,
+                    3+strlen(options[i].long_option)+1,
+                    "[--%s",
+                    options[i].long_option);
           }
           p = p + read;
           if (options[i].argument && strlen(options[i].argument)) {
@@ -234,7 +237,7 @@ int search_for_keyword(
                     p = buf+read;
                }
                read = snprintf(p,3+strlen(options[i].argument)+1,
-                    " <%s>", opt[i].argument);
+                    " <%s>", options[i].argument);
                p = p + read;
           }
           while ((read+2+strlen(options[i].description)+1) > sz) {
@@ -1547,8 +1550,8 @@ void find_specific_module(char * kid, char * libpath) {
                     return;
                }
 
-               // our previous lookups failed: let's see if this is an alias
-               // for another kid
+               // our previous lookups failed: let's see if
+               // this is an alias for another kid
                char * aliased_kid = map_find(map, kid);
 
                if (aliased_kid) {
@@ -1587,7 +1590,8 @@ void find_specific_module(char * kid, char * libpath) {
                     return;
                }
 
-               // couldn't find kid so far - is this an alias?
+               // couldn't find kid so far - is this an
+               // alias?
                char * aliased_kid = map_find(map, kid);
 
                if (aliased_kid) {
