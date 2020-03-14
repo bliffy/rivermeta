@@ -31,15 +31,7 @@
 //#include "datatypes/wsdt_vector_double.h"
 //#include "datatypes/wsdt_vector_uint32.h"
 
-// MingW32/64 doesn't have _SC_PAGESIZE
-#if !defined _SC_PAGESIZE && (defined _WIN32 || defined _WIN64 || defined WINDOWS)
 #include "win_pages.h"
-#define PAGE_SIZE() WinPageSize()
-#define ALIGNED_ALLOC WinAlignedAlloc
-#else
-#define PAGE_SIZE() ((size_t)sysconf(_SC_PAGESIZE))
-#define ALIGNED_ALLOC posix_memalign
-#endif
 
 #ifndef _WSUTIL
 #define EXT extern

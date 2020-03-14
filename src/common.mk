@@ -42,6 +42,7 @@ else
   WS_LIB_DIR = $(WS_BIN_DIR)
   WS_PROCS_DIR = $(BASE_DIR)\procs
   WS_INC_DIR = $(SRC_ROOT)\include
+  EXT_EXEC = .exe
 endif
 
 ifdef ISWINDOWS

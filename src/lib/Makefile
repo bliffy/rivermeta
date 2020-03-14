@@ -1,7 +1,7 @@
 
 include ../oscheck.mk
 
-ifndef WINDOWS
+ifndef ISWINDOWS
   BASE_DIR=../..
 else
   BASE_DIR=..\..
@@ -43,7 +43,7 @@ wsperf.c:
 ifndef ISWINDOWS
 $(WS_CORE_LIB): $(MODULES)
 	$(SHOWFILE)
-	$(RM) $(WS_CORE_LIB)  # (ar appends)
+	$(RM) $(WS_CORE_LIB)   # AR appends
 	$(AR) rcs $@ $(MODULES)
 	$(CP) $@ $(WS_LIB_DIR)
 else
@@ -84,9 +84,9 @@ ifndef ISWINDOWS
 else
 	@if EXIST shared $(RM) shared\*.o $(QUIETOUT)
 endif
-	$(RM) parse_graph.* graph.lex* graph.tab* $(QUIETOUT)
-	$(RM) wscalc.c wscalc.tab* wscalc_int.c $(QUIETOUT)
-	$(RM) wscalc_int.tab.c wscalc_int.tab.h $(QUIETOUT)
+#	$(RM) parse_graph.* graph.lex* graph.tab* $(QUIETOUT)
+#	$(RM) wscalc.c wscalc.tab* wscalc_int.c $(QUIETOUT)
+#	$(RM) wscalc_int.tab.c wscalc_int.tab.h $(QUIETOUT)
 	$(RM) libwaterslide$(LIBEND) $(QUIETOUT)
 	$(RM) libwaterslide-parallel$(LIBEND) $(QUIETOUT)
 

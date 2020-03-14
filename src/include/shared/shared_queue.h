@@ -12,6 +12,8 @@
 #include "shared/getrank.h"
 #include "error_print.h"
 
+#include "win_pages.h"
+
 //  these number of metadata pointers should be enough
 // for occasional spikes by proc kids writing to ext. queue
 #define MAX_SQUEUE_LEN (16)
@@ -189,7 +191,7 @@ static inline shared_queue_t* sized_shared_queue_init(
      void* buf = NULL;
 
      int pm_retval = 0;
-     pm_retval = posix_memalign(
+     pm_retval = ALIGNED_ALLOC(
           (void**)&buf, 64, sizeof(shared_queue_t));
      VERIFY_POSIX_MEMALIGN_SUCCESS(pm_retval);
 

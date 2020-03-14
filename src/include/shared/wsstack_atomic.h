@@ -8,6 +8,8 @@
 #include <assert.h>
 #include "error_print.h"
 
+#include "win_pages.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -90,7 +92,7 @@ static inline int wsstack_atomic_add(
     }
     if (NULL == new_node) {
         /* allocate memory and initialize */
-        int mem_rtn = posix_memalign(
+        int mem_rtn = ALIGNED_ALLOC(
             (void**)&new_node,
             sizeof(wsstack_atomic_node_t),
             16);

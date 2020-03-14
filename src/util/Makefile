@@ -10,7 +10,7 @@ SRC_ROOT=..
 
 include ../common.mk
 
-UTILS = wsman wsalias
+UTILS = wsman$(EXT_EXEC) #wsalias
 
 ifndef ISWINDOWS
   LDFLAGS += -rdynamic -lstdc++
@@ -20,15 +20,15 @@ else
 endif
 
 ifdef WS_PARALLEL
-  UTILS += waterslide-parallel
+  UTILS += waterslide-parallel$(EXT_EXEC)
 else
-  UTILS += waterslide
+  UTILS += waterslide$(EXT_EXEC)
 endif
 
 
 all: $(UTILS)
 
-waterslide: waterslide.c $(WS_LIB_DIR)/$(WS_CORE_LIB)
+waterslide$(EXT_EXEC): waterslide.c $(WS_LIB_DIR)/$(WS_CORE_LIB)
 	$(SHOWFILE)
 ifdef ISWINDOWS
 	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) -lwaterslide
@@ -38,7 +38,7 @@ endif
 	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
-waterslide-parallel: waterslide-parallel.c $(WS_LIB_DIR)/$(WS_CORE_LIB) $(HWLOC_LINK)
+waterslide-parallel$(EXT_EXEC): waterslide-parallel.c $(WS_LIB_DIR)/$(WS_CORE_LIB) $(HWLOC_LINK)
 	$(SHOWFILE)
 ifdef ISWINDOWS
 	$(CC) $(CFLAGS) $(PERF_FLAG) $< -o $@ $(LDFLAGS) $(HWLOC_LINK) -lwaterslide-parallel
@@ -48,10 +48,11 @@ endif
 	$(CP) $@ $(WS_BIN_DIR) $(QUIETOUT)
 
 
-wsman: wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h $(WS_LIB_DIR)/$(WS_CORE_LIB)
+wsman$(EXT_EXEC): wsman.c wsman_color.h wsman_map.h wsman_util.h wsman_word_wrap.h $(WS_LIB_DIR)/$(WS_CORE_LIB)
 	$(SHOWFILE)
 ifdef ISWINDOWS
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) -lwaterslide
+	echo made wsman$(EXT_EXEC)
 else
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 endif

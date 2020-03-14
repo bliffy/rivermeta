@@ -1,0 +1,9 @@
+
+this copy is more up to date than the one in
+ubuntu home dir
+
+there are changes here for more WIN stuff, but it
+appears as though you were trying to work on linker
+troubles... Compiling for linux hangs atm. Not sure
+about windows.
+

@@ -1,0 +1,48 @@
+
+
+static inline void timeradd(
+          struct timeval * a,
+          struct timeval * b,
+          struct timeval * result)
+{
+     (result)->tv_sec  = (a)->tv_sec  + (b)->tv_sec;
+     (result)->tv_usec = (a)->tv_usec + (b)->tv_usec;
+     if ((result)->tv_usec >= 1000000)
+     {
+          (result)->tv_sec++;
+          (result)->tv_usec -= 1000000;
+     }
+}
+
+static inline void timersub(
+          struct timeval * a,
+          struct timeval * b,
+          struct timeval * result)
+{
+     (result)->tv_sec  = (a)->tv_sec  - (b)->tv_sec;
+     (result)->tv_usec = (a)->tv_usec - (b)->tv_usec;
+     if ((result)->tv_usec < 0) {
+          (result)->tv_sec--;
+          (result)->tv_usec += 1000000;
+     }
+}
+
+static inline void timerclear(struct timeval * tvp) {
+     ((tvp)->tv_sec = (tvp)->tv_usec = 0)
+}
+
+static inline int timerisset(struct timeval * tvp) {
+     return (0!=tvp->tv_sec || 0!=tvp->tv_usec);
+}
+
+#else // posix
+
+#define GMTIME_R(s,d) gmtime_r(s,d)
+
+#endif // end OS check
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

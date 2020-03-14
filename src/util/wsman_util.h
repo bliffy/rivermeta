@@ -55,10 +55,12 @@ static inline void print_list(FILE *fp, char **list);
 static inline void print_list_search(FILE *fp, char **list, char * keyword);
 static inline void print_portlist(FILE * fp, proc_port_t * portlist);
 static inline void print_portlist_search(FILE * fp, proc_port_t * portlist, char * keyword);
+/*
 static inline void print_rst_header(FILE * fp, char * text);
 static inline void print_rst_list(FILE *fp, char **list);
 static inline void print_rst_portlist(FILE * fp, proc_port_t * portlist);
 static inline void print_rst_subheader(FILE * fp, char * text);
+*/
 static inline void print_usage(FILE *fp);
 int _asprintf(char **strp, const char *fmt, ...);
 int _vasprintf(char **strp, const char *fmt, va_list args);
@@ -337,6 +339,7 @@ char * trim(char *c) {
      return c;
 }
 
+/*
 static inline void print_rst_header(FILE * fp, char * text) {
      fprintf(fp, "\n");
      fprintf(fp, "%s\n", text);
@@ -375,5 +378,6 @@ static inline void print_rst_portlist(FILE * fp, proc_port_t * portlist)
           fprintf(fp, "    %s\n", portlist[i].description);
      }
 }
+*/
 
 #endif // _WSMAN_UTIL_H

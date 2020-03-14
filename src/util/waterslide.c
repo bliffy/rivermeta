@@ -1,25 +1,3 @@
-/*
-No copyright is claimed in the United States under Title 17, U.S. Code.
-All Other Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -34,6 +12,7 @@ uint32_t nrank = 0, loop_limit = 0;
 extern uint32_t do_exit;
 char * pidfile = NULL;
 
+FILE * errfp;
 
 void print_cmd_help(FILE * fp) {
      status_print("waterslide - version %d.%d.%d", WS_MAJOR_VERSION, WS_MINOR_VERSION, WS_SUBMINOR_VERSION);
@@ -69,7 +48,7 @@ static void pidwrite(const char * path) {
 }
 
 static int read_cmd_options(int argc, char ** argv, mimo_t * mimo, 
-                            FILE * logfp) {
+                            FILE ** logfp) {
      int op;
      char * laststr = NULL;
      FILE * gfp;
@@ -140,11 +119,10 @@ static int read_cmd_options(int argc, char ** argv, mimo_t * mimo,
                status_print("loop limit %u", loop_limit);
                break;
           case 'L':
-               if (!(logfp = fopen(optarg, "w+"))) {
+               if (!(*logfp = fopen(optarg, "w+"))) {
                     error_print("failed to open file '%s'", optarg);
                     return 0;
                }
-               stderr = logfp;
                break;
           case 'F':
                pg_add_file(optarg);
@@ -174,7 +152,7 @@ static int read_cmd_options(int argc, char ** argv, mimo_t * mimo,
 
 int main(int argc, char ** argv) {
 
-     FILE * logfp = NULL;
+     FILE * logfp = stderr;
      int i;
 
      //status_print("Number of available CPUs is %d", (int)sysconf(_SC_NPROCESSORS_ONLN));
@@ -187,7 +165,7 @@ int main(int argc, char ** argv) {
 
      mimo_add_aliases(mimo, NULL);
 
-     if (!read_cmd_options(argc, argv, mimo, logfp)) {
+     if (!read_cmd_options(argc, argv, mimo, &logfp)) {
           print_cmd_help(stderr);
           return 0;
      }
@@ -248,7 +226,7 @@ int main(int argc, char ** argv) {
      }
 
      // Close redirected output file
-     if (logfp) {
+     if (logfp!=stderr) {
          fclose(logfp);
      }
 
