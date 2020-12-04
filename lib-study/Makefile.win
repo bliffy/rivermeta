@@ -1,0 +1,15 @@
+
+WINSTATIC:=-static-libgcc -static-libstdc++
+
+all: main.cpp mylib.cc mylib.h
+	g++ -c main.cpp -o main.o
+	g++ -fPIC -c mylib.cc -o mylib.o
+	g++ mylib.o -o libmylib.dll -shared $(WINSTATIC)
+	g++ main.o -o myapp.exe -L./ -lmylib $(WINSTATIC)
+# -pie -shared
+
+clean:
+	del /F /Q main.o  2> nul
+	del /F /Q myapp.exe  2> nul
+	del /F /Q mylib.o  2> nul
+	del /F /Q libmylib.dll  2> nul

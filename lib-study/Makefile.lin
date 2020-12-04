@@ -1,0 +1,24 @@
+
+#This tells the rpath to search including the location of
+#the binary itself. You can tag /more/things/ onto the end
+#to have it look in other relative locations.
+RELATIVE_ORIGIN:=-Wl,-z,origin -Wl,-rpath='$$ORIGIN'
+
+# DEBUGGING:
+# readelf -d myapp | grep ORIGIN
+# should show:
+#  0x000000000000000f (RPATH)    Library rpath: [$ORIGIN]
+#  0x000000006ffffffb (FLAGS_1)  Flags: ORIGIN
+
+all: main.cpp mylib.cc mylib.h
+	g++ -c main.cpp -o main.o
+	g++ -fPIC -c mylib.cc -o mylib.o
+	gcc -shared mylib.o -o libmylib.so
+        # -lz
+	g++ main.o -o myapp -L./ -lmylib $(RELATIVE_ORIGIN)
+# -pie -shared
+clean:
+	rm -f myapp
+	rm -f main.o
+	rm -f libmylib.so mylib.o
+
