@@ -1,21 +1,17 @@
 
 include ../oscheck.mk
 
-ifndef ISWINDOWS
-  BASE_DIR=../..
-else
+ifdef ISWINDOWS
   BASE_DIR=..\..
+else
+  BASE_DIR=../..
 endif
 SRC_ROOT=..
 
 include ../common.mk
 
-CFLAGS += $(PERF_FLAG)
-
-ifdef ISWINDOWS
-  CFLAGS += -fPIC
-  CPPFLAGS += -fPIC
-endif
+CFLAGS += $(PERF_FLAG) -fPIC
+CXXFLAGS += $(PERF_FLAG) -fPIC
 
 FILELIST =  $(patsubst %.c, %.o, $(wildcard *.c))
 FILELIST += $(patsubst %.cc, %.o, $(wildcard *.cc))
@@ -38,19 +34,19 @@ all: $(MODULES) $(WS_CORE_LIB)
 wsperf.c: 
 	$(SHOWFILE)
 
-# For linux, we make an archive. But for windows, we make
-# a shared library.
-ifndef ISWINDOWS
+# Created shared core library.
+ifdef ISWINDOWS
+# for windows
 $(WS_CORE_LIB): $(MODULES)
 	$(SHOWFILE)
-	$(RM) $(WS_CORE_LIB)   # AR appends
-	$(AR) rcs $@ $(MODULES)
+	$(CXX) $(MODULES) -o $@ -shared $(LDFLAGS) $(WINSTATIC_CXX)
 	$(CP) $@ $(WS_LIB_DIR)
 else
+# for linux
 $(WS_CORE_LIB): $(MODULES)
 	$(SHOWFILE)
-	$(CC) -shared $(MODULES) -o $@ $(LDFLAGS) -lstdc++
-	$(CP) $@ $(WS_BIN_DIR) 
+	$(CXX) -shared $(MODULES) -o $@ $(LDFLAGS) $(RELATIVE_ORIGIN)
+	$(CP) $@ $(WS_LIB_DIR) 
 endif
 
 graph.lex.cc: graph.l graph.tab.hh
@@ -75,7 +71,7 @@ wscalc.tab.c wscalc.tab.h: wscalc.y $(WS_INC_DIR)/wscalc.h
 
 %$(SUFFIX).o: %.cc
 	$(SHOWFILE)
-	$(CPP) $(CPPFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	$(RM) *.so .*.swp *.dSYM ._* *.o $(QUIETOUT)

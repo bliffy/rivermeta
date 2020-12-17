@@ -51,10 +51,10 @@ SOFTWARE.
 //prototypes
 static inline void print_divider(FILE *fp);
 static inline void print_helpful_message(FILE *fp);
-static inline void print_list(FILE *fp, char **list);
-static inline void print_list_search(FILE *fp, char **list, char * keyword);
-static inline void print_portlist(FILE * fp, proc_port_t * portlist);
-static inline void print_portlist_search(FILE * fp, proc_port_t * portlist, char * keyword);
+static inline void print_list(FILE *fp, const char **list);
+static inline void print_list_search(FILE *fp, const char **list, const char * keyword);
+static inline void print_portlist(FILE * fp, const proc_port_t * portlist);
+static inline void print_portlist_search(FILE * fp, const proc_port_t * portlist, const char * keyword);
 /*
 static inline void print_rst_header(FILE * fp, char * text);
 static inline void print_rst_list(FILE *fp, char **list);
@@ -64,15 +64,15 @@ static inline void print_rst_subheader(FILE * fp, char * text);
 static inline void print_usage(FILE *fp);
 int _asprintf(char **strp, const char *fmt, ...);
 int _vasprintf(char **strp, const char *fmt, va_list args);
-char * _strcasestr(char *a, char *b);
-char * search_and_highlight(FILE * outfp, char * text, char * keyword);
-char * str_index_of(char * s1, char * s2, int * index);
+const char * _strcasestr(const char *a, const char *b);
+char * search_and_highlight(FILE * outfp, const char * text, const char * keyword);
+const char * str_index_of(const char * s1, const char * s2, int * index);
 char * trim(char *c);
 
 
 static inline void print_divider(FILE * fp)
 {
-     char * divider = \
+     const char divider[] = \
           "----------------------------------------" \
           "----------------------------------------";
      fprintf(fp, "\n%s\n", divider);
@@ -84,7 +84,9 @@ static inline void print_helpful_message(FILE * fp)
      fprintf(fp,  " - For detailed kid information, use the -v flag.\n\n");
 }
 
-static inline void print_list(FILE * fp, char ** list)
+static inline void print_list(
+        FILE * fp,
+        const char ** list)
 {
      static const size_t BUF_SZ = ((80-4)*10); /* 10 lines */
      char buf[BUF_SZ];
@@ -111,7 +113,10 @@ static inline void print_list(FILE * fp, char ** list)
      }
 }
 
-static inline void print_list_search(FILE * fp, char ** list, char * keyword)
+static inline void print_list_search(
+        FILE * fp,
+        const char ** list,
+        const char * keyword)
 {
      char buf[1000];
      memset(buf,0,sizeof(buf));
@@ -119,7 +124,7 @@ static inline void print_list_search(FILE * fp, char ** list, char * keyword)
      int len = 0;
      for (i = 0; list[i]; i++) {
           if (i >0) {
-               char * commaspace = ", ";
+               const char commaspace[] = ", ";
                strncat(buf, commaspace, strlen(commaspace));
                len += 1;
           }
@@ -130,7 +135,9 @@ static inline void print_list_search(FILE * fp, char ** list, char * keyword)
      highlight(p, buf, keyword, fp, WRAP_WIDTH, 4);
 }
 
-static inline void print_portlist(FILE * fp, proc_port_t * portlist) 
+static inline void print_portlist(
+        FILE * fp,
+        const proc_port_t * portlist) 
 {
      int i;
      for (i = 0; portlist[i].label != NULL; i++) {
@@ -148,12 +155,14 @@ static inline void print_portlist(FILE * fp, proc_port_t * portlist)
      }
 }
 
-static inline void print_portlist_search(FILE * fp, proc_port_t * portlist,
-     char * keyword) 
+static inline void print_portlist_search(
+        FILE * fp,
+        const proc_port_t * portlist,
+        const char * keyword) 
 {
      int i;
      for (i = 0; portlist[i].label != NULL; i++) {
-          int len = 5 + strlen(portlist[i].label) + \
+          size_t len = 5 + strlen(portlist[i].label) + \
                     strlen(portlist[i].description);
           char * port = (char *) malloc(len+1);
           if (!port) {
@@ -191,9 +200,12 @@ static inline void print_usage(FILE * fp)
 
 /* Behaves the exact same way as strstr, but additionally takes an integer pointer 
  * as an argument to return the index into s1 where the substrng was found. */ 
-char * str_index_of(char * s1, char * s2, int * index) 
+const char * str_index_of(
+        const char * s1,
+        const char * s2,
+        int * index) 
 {
-     char * found = _strcasestr(s1, s2);
+     const char * found = _strcasestr(s1, s2);
      if (found) {
           *index = (int) (found - s1);
      } else {
@@ -216,7 +228,7 @@ int _vasprintf(char **strp, const char *fmt, va_list args)
         *strp = NULL;
         return needed;
     }
-    *strp = malloc(needed + 1);
+    *strp = (char*) malloc(needed + 1);
     if (!*strp) {
         error_print("failed _vasprintf malloc of *strp");
         return -1;
@@ -232,7 +244,7 @@ int _vasprintf(char **strp, const char *fmt, va_list args)
 }
 
 // implemented because strcasestr(3) is a GNU extension and not portable
-char * _strcasestr(char *a, char *b)
+const char * _strcasestr(const char *a, const char *b)
 {
      size_t l;
      char f[3];
@@ -256,24 +268,29 @@ int _asprintf(char **strp, const char *fmt, ...)
 }
 
 
-char * search_and_highlight(FILE * outfp, char * text, char * keyword)
+char * search_and_highlight(
+        FILE * outfp,
+        const char * text,
+        const char * keyword)
 {
-    if (!text || !keyword || !isatty(fileno(outfp))) return NULL;
+    if (!text || !keyword || !isatty(fileno(outfp)))
+        return NULL;
 
     char * highlighted;
-
     char * colored_keyword;
+
     _asprintf(&colored_keyword, "%s%s%s", COLOR_START, keyword, COLOR_END); 
-    if (!colored_keyword) return NULL;
+    if (!colored_keyword)
+        return NULL;
 
     int first_time = 1;
     int offset;
-    char * found = text;
+    const char * found = text;
     while (found) {
-        char * beg = found;
+        const char * beg = found;
         found = str_index_of(found, keyword, &offset);
-        // if keyword not found, append rest of string to highlighted and
-        // break from loop 
+        // if keyword not found, append rest of string
+        // to highlighted and break from loop 
         if (!found) {
             if (!first_time) {
                 char * p = highlighted;
@@ -301,12 +318,12 @@ char * search_and_highlight(FILE * outfp, char * text, char * keyword)
     return highlighted;
 }
 
-char * strreplace(const char *str, const char *old, const char *new)
+char * strreplace(const char *str, const char *old, const char *newstr)
 {
      char *ret, *r;
      const char *p, *q;
      size_t oldlen = strlen(old);
-     size_t count, retlen, newlen = strlen(new);
+     size_t count, retlen, newlen = strlen(newstr);
 
      if (oldlen != newlen) {
           for (count = 0, p = str; (q = strstr(p, old)) != NULL; p = q + oldlen)
@@ -316,7 +333,7 @@ char * strreplace(const char *str, const char *old, const char *new)
     } else
           retlen = strlen(str);
 
-    if ((ret = malloc(retlen + 1)) == NULL)
+    if ((ret = (char*)malloc(retlen + 1)) == NULL)
           return NULL;
 
     for (r = ret, p = str; (q = strstr(p, old)) != NULL; p = q + oldlen) {
@@ -324,7 +341,7 @@ char * strreplace(const char *str, const char *old, const char *new)
           ptrdiff_t l = q - p;
           memcpy(r, p, l);
           r += l;
-          memcpy(r, new, newlen);
+          memcpy(r, newstr, newlen);
           r += newlen;
      }
      strcpy(r, p);

@@ -47,8 +47,10 @@ endif
 
 ifdef ISWINDOWS
   LIBEND:=.dll
+  WIN_STATIC_CXX:=-static-libgcc -static-libstdc++
 else
-  LIBEND:=.a
+  LIBEND:=.so
+  RELATIVE_ORIGIN:=-Wl,-z,origin -Wl,-rpath='$$ORIGIN/lib'
 endif
 ifdef WS_PARALLEL
   WS_CORE_LIB = libwaterslide-parallel$(LIBEND)
@@ -115,6 +117,7 @@ endif
 # Tools
 CC = $(QUIET)gcc
 CPP = $(QUIET)g++
+CXX = $(QUIET)g++
 FLEX = $(QUIET)flex
 BISON = $(QUIET)bison
 CD = $(QUIET)cd
@@ -176,4 +179,6 @@ ifdef WS_PARALLEL
 endif
 
 CPPFLAGS = $(filter-out -std=gnu99, $(CFLAGS))
+CXXFLAGS = $(CPPFLAGS)
+
 

@@ -18,7 +18,7 @@ typedef struct _map_t {
 
 map_t * map_create();
 void    map_destroy(map_t *map);
-char *  map_find(map_t * map, char *key);
+const char *  map_find(const map_t * map, const char *key);
 int     map_insert(map_t * map, char * key, char * val);
 void    map_print(map_t *map);
 
@@ -50,8 +50,8 @@ void map_destroy(map_t *map) {
      }
 }
 
-char * map_find(map_t * map, char *key) {
-     map_t * tmp = map;
+const char * map_find(const map_t * map, const char * key) {
+     const map_t * tmp = map;
      while(tmp != NULL && tmp->key) {
           if (strcmp(tmp->key, key) == 0) {
                return tmp->val;
