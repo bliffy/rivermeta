@@ -14,18 +14,19 @@ UTILS = wsman$(EXT_EXEC) #wsalias
 
 LDFLAGS += -L$(WS_LIB_DIR)
 ifdef ISWINDOWS
-  LDFLAGS += -lwaterslide $(WINSTATIC_CXX)
+  LDFLAGS += $(WINSTATIC_CXX)
 else
  # -rdynamic
-  LDFLAGS += -lwaterslide -lstdc++ $(RELATIVE_ORIGIN)
+  LDFLAGS += -lstdc++ $(RELATIVE_ORIGIN)
 endif
 
 ifdef WS_PARALLEL
   UTILS += waterslide-parallel$(EXT_EXEC)
+  LDFLAGS += -lwaterslide-parallel
 else
   UTILS += waterslide$(EXT_EXEC)
+  LDFLAGS += -lwaterslide
 endif
-
 
 all: $(UTILS)
 

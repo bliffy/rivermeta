@@ -203,25 +203,28 @@ extern void wscalc_destroyTable(void * table);
    retrieve variable values
 */
 #ifndef _WSUTIL
-wscalcValue (*getVarValue)(void *, void *, int operation);
-int (*setVarValue)(wscalcValue, int, void *, void *); 
-void (*destroyVar)(void *);
-void (*flushVar)(void *);
-uint8_t (*nameExists)(void *, void *);
-void *(*initializeVarReference)(char *, char *, void *);
-void *(*initializeLabelAssignment)(char *, char *, void *);
-int (*assignLabel)(void *, void *);
-void (*wsflush)(void *);
+// TODO fix this for utils and calc proc
+// had to comment these out to compile the main lib w/ wscalc :(
+/*extern wscalcValue (*getVarValue)(void *, void *, int operation);
+extern int (*setVarValue)(wscalcValue, int, void *, void *); 
+extern void (*destroyVar)(void *);
+extern void (*flushVar)(void *);
+extern uint8_t (*nameExists)(void *, void *);
+extern void *(*initializeVarReference)(char *, char *, void *);
+extern void *(*initializeLabelAssignment)(char *, char *, void *);
+extern int (*assignLabel)(void *, void *);
+extern void (*wsflush)(void *);
 #else
 void * getVarValue;
 void * setVarValue;
 void * destroyVarValue;
 void * flushVar;
+void * nameExists;
 void * destroyVar;
 void * initializeVarReference;
 void * initializeLabelAssignment;
 void * wsflush;
-void * assignLabel;
+void * assignLabel;*/
 #endif
 
 #ifdef __cplusplus

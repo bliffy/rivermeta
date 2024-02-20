@@ -7,8 +7,8 @@
 #include "shared/barrier_init.h"
 #include "shared/mimo_shared.h"
 
-#ifdef USE_HWLOC
-#include "shared/ws_select_cpus.h"
+#ifdef WS_PTHREADS
+#include "shared/logicalCpuSelect.h"
 #endif
 
 #ifdef __cplusplus
@@ -490,37 +490,31 @@ static inline void offset_cpus_and_uid_assignments(
         int offset)
 {
     uint32_t i = 0;
-#ifdef USE_HWLOC
     if ( offset != -1 ) {
         status_print("User selected to enforce configuration thread mappings, overriding hwloc choices.\n");
     } else {
-        HWInfo_t info;
-        int ok = getHardwareInfo(&info);
-        if ( ok ) {
-            uint32_t *map = (uint32_t*)malloc(
-                sizeof(uint32_t)*nThreads);
-            uint32_t *mapp = map;
-            ok = getFreeCores(&info, 95.0f, nThreads, map);
-            for (i=0; i<cpu_thread_mapper.array_length; i++)
-            {
-                if (-1!=cpu_thread_mapper.utid_for_thread[i])
-                    continue;
-                cpu_thread_mapper.cpu_for_thread[i] = *mapp++;
+        uint32_t *map = (uint32_t*)malloc(sizeof(uint32_t)*nThreads);
+        uint32_t *mapp = map;
+        int ok = getFreeLogicalProcessors(nThreads, map);
+        for (i=0; i<cpu_thread_mapper.array_length; i++)
+        {
+            if (-1!=cpu_thread_mapper.utid_for_thread[i])
+                continue;
+            cpu_thread_mapper.cpu_for_thread[i] = *mapp++;
   dprint("Mapped OS Thread %d to user thread %d and "
   "core %d\n", i, cpu_thread_mapper.utid_for_thread[i],
   cpu_thread_mapper.cpu_for_thread[i]);
-            }
-            free(map);
-            freeHardwareInfo(&info);
-            if ( ok )
-                return;
         }
+        free(map);
+        if ( ok )
+            return;
+        
         offset = 0;
 
         fprintf(stderr, "WARNING:  Failed to intelligently map threads to cores.  Falling back to legacy strategy!\n");
     }
-#endif
-    const int max_cpus = (int)sysconf(_SC_NPROCESSORS_ONLN);
+    //
+    long max_cpus = getLogicalProcessorCount();
     for (i=0; i < cpu_thread_mapper.array_length; i++) {
         if (cpu_thread_mapper.utid_for_thread[i] != -1) {
             cpu_thread_mapper.cpu_for_thread[i] = (cpu_thread_mapper.utid_for_thread[i] + offset) % max_cpus;
@@ -634,12 +628,12 @@ static inline void rebase_threads_to_cpu(mimo_t* mimo)
     // cpu_thread_mapper.utid_for_thread[] values
     BARRIER_WAIT(barrier1);
 
-    int max_cpus = (int)sysconf(_SC_NPROCESSORS_ONLN);
+    int max_cpus = getLogicalProcessorCount();
     int my_id = cpu_thread_mapper.cpu_for_thread[nrank];
-           // ^id of thread
+// if non-windows
+#if !(defined _WIN32 || defined _WIN64 || defined WINDOWS )
     cpu_set_t thread_cpu;
     CPU_ZERO(&thread_cpu);
-
     CPU_SET(my_id, &thread_cpu);
     if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &thread_cpu))
     {
@@ -647,6 +641,19 @@ static inline void rebase_threads_to_cpu(mimo_t* mimo)
         error_print("my_id = %d, NUM_CPUS = %d", my_id, max_cpus);
         exit(-111);
     }
+#else
+// run on windows
+    // Convert pthread thread id to Windows thread HANDLE
+   // int utid = cpu_thread_mapper.utid_for_thread[nrank]; // hopefully the pthread id
+    HANDLE tidHandle = pthread_gethandle(nrank);//utid); // (same pthread id as std::thread::native_thread_id)
+    DWORD_PTR dw = SetThreadAffinityMask(tidHandle, ((DWORD_PTR)1) << my_id);
+    if (dw == 0) { // <- failed
+        error_print("Unable to set thread affinity for pthread id: %d to cpu: %d",nrank,my_id);
+        error_print("my_id = %d, NUM_CPUS = %d", my_id, max_cpus);
+        exit(-111);
+    }
+// end
+#endif
 
     status_print("Thread %d (User thread %d) set to run "
                  "on CPU: %d",

@@ -23,6 +23,7 @@ extern "C" {
 
 static inline int setup_startup(void)
 {
+/* this does nothing
      cpu_set_t cpu_set;
 
      // Obtain list of available cpus on the processing
@@ -38,6 +39,7 @@ static inline int setup_startup(void)
           error_print("pthread_getaffinity_np failed");
           return 0;
      }
+*/
 
      // init locks
      if (!lock_init())

@@ -3,3 +3,10 @@
 note on win thread affinity
 https://docs.microsoft.com/en-us/windows/win32/procthread/processor-groups
 
+https://learn.microsoft.com/en-us/windows/win32/procthread/processor-groups
+https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getcurrentthreadid
+https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlogicalprocessorinformation
+
+
+https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsysteminfo
+https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getsystemtimes

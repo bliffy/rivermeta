@@ -33,24 +33,8 @@ $(RE2DIR):
 	$(RM) $(RE2BUILD)
 
 
-$(HWLOC_LINK):
-	@echo "Building hwloc library"
-	$(MKDIR) $(HWLOC_BUILDDIR)
-	$(TAR) xfj $(EXT_DIR)/$(HWLOC_PKG)" -C $(HWLOC_BUILDROOT) $(QUIETOUT)
-#	$(CD) $(HWLOC_BUILDDIR) && ./configure --enable-embedded-mode --disable-libxml2 --disable-pci --disable-libnuma --disable-opencl --disable-cuda --disable-nvml --disable-gl $(QUIETOUT) && $(MAKE) $(QUIETOUT)
-#	$(INSTALL) -d -m 755 "$(HWLOC_INCLUDE)"
-#	$(INSTALL) -d -m 755 "$(HWLOC_INCLUDE)/hwloc"
-#	$(INSTALL) -d -m 755 "$(HWLOC_INCLUDE)/hwloc/autogen"
-#	$(INSTALL) -m 644 "$(HWLOC_BUILDDIR)/include/*.h" "$(HWLOC_INCLUDE)/"
-#	$(INSTALL) -m 644 "$(HWLOC_BUILDDIR)/include/hwloc/*.h" "$(HWLOC_INCLUDE)/hwloc/"
-#	$(INSTALL) -m 644 "$(HWLOC_BUILDDIR)/include/hwloc/autogen/*.h" "$(HWLOC_INCLUDE)/hwloc/autogen/"
-#	$(INSTALL) -d -m 755 "$(HWLOC_LIB)"
-#	$(INSTALL) -m 644 "$(HWLOC_BUILDDIR)/src/.libs/libhwloc_embedded.a" "$(HWLOC_LIB)/"
-	$(RM) $(HWLOC_BUILDROOT)
-
-
 # Hold off on building components until protobuf is done
-rule: $(PBDIR) $(RE2DIR) $(HWLOC_LINK)
+rule: $(PBDIR) $(RE2DIR)
 	@echo "Building core sources"
 	$(QUIET)$(MAKE) --no-print-directory -C lib
 	@echo "Building datatypes"
@@ -59,7 +43,7 @@ rule: $(PBDIR) $(RE2DIR) $(HWLOC_LINK)
 	$(QUIET)$(MAKE) --no-print-directory -C util 
 
 # Note: -<action> : ignore return status
-rule2: rule $(PBDIR) $(RE2DIR) $(HWLOC_LINK)
+rule2: rule $(PBDIR) $(RE2DIR)
 	@echo "Building procs"
 ifndef NOPB
 	$(QUIET)$(MAKE) --no-print-directory -C procs/protobuf 
@@ -130,6 +114,6 @@ clean:
 	$(QUIET)$(MAKE) --no-print-directory -C lib clean
 	@echo "Cleaning utilities"
 	$(QUIET)$(MAKE) --no-print-directory -C util clean
-	@echo "Cleaning kids"
+	@echo "Cleaning procs"
 	$(QUIET)$(MAKE) --no-print-directory -C procs clean
 

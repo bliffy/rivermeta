@@ -1,7 +1,7 @@
 %parse-param { void *callerState }
 %parse-param {wscalcPart **wscalc_output}
 %parse-param {int *wscalc_error}
-%error-verbose
+%define parse.error verbose
 
 %{
 /*--------------------------------------------------------
@@ -54,16 +54,25 @@ typedef struct fEntry {
 //back to WS.  first two called during initialization to get labels
 //second two called at runtime to assign and retrieve
 //variable values
-extern wscalcValue (*getVarValue)(void *, void *, int);
+/*extern wscalcValue (*getVarValue)(void *, void *, int);
 extern int (*setVarValue)(wscalcValue, int, void *, void *);
 extern void (*destroyVar)(void *);
 extern void (*flushVar)(void *);
 extern uint8_t (*nameExists)(void *, void *);
-
 extern void *(*initializeVarReference)(char *, char*, void *);
 extern void *(*initializeLabelAssignment)(char *, char *, void *);
 extern int (*assignLabel)(void *, void *);
-extern void (*wsflush)(void *);
+extern void (*wsflush)(void *);*/
+wscalcValue (*getVarValue)(void *, void *, int operation);
+int (*setVarValue)(wscalcValue, int, void *, void *); 
+void (*destroyVar)(void *);
+void (*flushVar)(void *);
+uint8_t (*nameExists)(void *, void *);
+void *(*initializeVarReference)(char *, char *, void *);
+void *(*initializeLabelAssignment)(char *, char *, void *);
+int (*assignLabel)(void *, void *);
+void (*wsflush)(void *);
+
 
 /* a few handy constants */
 static const wscalcValue wscalcZERO = {0};

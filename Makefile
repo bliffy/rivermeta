@@ -27,19 +27,22 @@ uninstall:
 
 clean:
 	$(MAKE) --no-print-directory -C src clean
-	$(RM) waterslide waterslide-parallel $(QUIETOUT)
-	$(RM) wsalias wsman $(QUIETOUT)
 ifndef ISWINDOWS
 	$(RM) $(WS_LIB_DIR)/wsdt_* $(QUIETOUT)
 	$(RM) $(WS_LIB_DIR)/libwaterslid*.so $(QUIETOUT)
-	$(RM) $(WS_PROCS_DIR)/proc_*
+	$(RM) $(WS_PROCS_DIR)/proc_* $(QUIETOUT)
+	$(RM) $(WS_BIN_DIR)/waterslide $(WS_BIN_DIR)/waterslide-parallel $(QUIETOUT)
+	$(RM) $(WS_BIN_DIR)/wsalias $(WS_BIN_DIR)/wsman $(QUIETOUT)
 else
-	@if EXIST libwaterslide.dll $(RM) libwaterslide.dll
-	@if EXIST lib $(RM) lib\wsdt_*
-	@if EXIST lib $(RM) lib\libwaterslide*.so
-	@if EXIST procs $(RM) procs\proc_*
+	@if EXIST lib $(RM) $(WS_LIB_DIR)\wsdt_*
+	@if EXIST lib $(RM) $(WS_LIB_DIR)\libwaterslide.*
+	@if EXIST procs $(RM) $(WS_PROCS_DIR)\proc_*
+	@if EXIST $(WS_BIN_DIR)\waterslide.exe $(RM) $(WS_BIN_DIR)\waterslide.exe
+	@if EXIST $(WS_BIN_DIR)\waterslide-parallel.exe $(RM) $(WS_BIN_DIR)\waterslide-parallel.exe
+	@if EXIST $(WS_BIN_DIR)\wsman.exe $(RM) $(WS_BIN_DIR)\wsman.exe
+	@if EXIST $(WS_BIN_DIR)\wsalias.exe $(RM) $(WS_BIN_DIR)\wsalias.exe
 endif
 
-scour: clean
-	$(RM) $(WS_LIB_DIR) $(WS_PROCS_DIR) $(QUIETOUT)
+#scour: clean
+#	$(RM) $(WS_LIB_DIR) $(WS_PROCS_DIR) $(QUIETOUT)
 

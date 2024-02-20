@@ -2,7 +2,6 @@
 # General project Makefile contents
 
 NORE2=1
-NOHWLOC=1
 NOPB=1
 
 # catch for windows (Mingw32/64)
@@ -38,8 +37,7 @@ ifndef ISWINDOWS
   WS_INC_DIR = $(SRC_ROOT)/include
 else
   WS_BIN_DIR = $(BASE_DIR)
-#  WS_LIB_DIR = $(BASE_DIR)\lib
-  WS_LIB_DIR = $(WS_BIN_DIR)
+  WS_LIB_DIR = $(BASE_DIR)\lib
   WS_PROCS_DIR = $(BASE_DIR)\procs
   WS_INC_DIR = $(SRC_ROOT)\include
   EXT_EXEC = .exe
@@ -73,18 +71,6 @@ ifndef NORE2
   RE2LIB = $(RE2DIR)/lib
 endif
 
-ifndef NOHWLOC
-  HWLOC_VER = 1.9
-  HWLOC_DIR = $(WS_LIB_DIR)/hwloc-$(HWLOC_VER)
-  HWLOC_BUILDROOT = $(EXT_DIR)/hwlocBuildDir
-  HWLOC_BUILDDIR = $(HWLOC_BUILDROOT)/hwloc-$(HWLOC_VER)
-  HWLOC_PKG = hwloc-$(HWLOC_VER).tar.bz2
-  HWLOC_INCLUDE = $(HWLOC_DIR)/include
-  HWLOC_LIB = $(HWLOC_DIR)/lib
-  HWLOC_LINK = $(HWLOC_LIB)/libhwloc_embedded.a
-  HWLOC_CFLAGS = -I$(HWLOC_INCLUDE) -DUSE_HWLOC
-endif
-
 # Compiler settings
 
 ifndef OPT_LEVEL
@@ -100,7 +86,14 @@ CFLAGS += -D_GNU_SOURCE
 WS_INCLUDES = -I$(WS_INC_DIR) -I$(SRC_ROOT) -I.
 
 #TODO the sections thing might break linux
-LDFLAGS += -L$(WS_LIB_DIR) -Wl,--no-gc-sections
+#LDFLAGS += -L$(WS_LIB_DIR) -Wl,--no-gc-sections
+LDFLAGS += -L$(WS_LIB_DIR)
+
+ifdef ISWINDOWS
+  ifdef WS_PARALLEL
+    LDFLAGS += -lNtdll
+  endif
+endif
 
 LDFLAGS += -lm -lz -lpthread -m64
 ifndef NODL

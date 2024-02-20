@@ -38,7 +38,6 @@ SOFTWARE.
 
 char * sysutil_pConfigPath = NULL;
 
-double (*nameExists)(void *, void *);
 
 stringhash9a_t * exist = NULL; 
 //char * sysutil_pConfigPath = "";

@@ -23,12 +23,17 @@ SOFTWARE.
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#define _WSUTIL
 #include "waterslide.h"
+#include "wscalc.h"
 #include "mimo.h"
 #include "graphBuilder.h"
 #include "shared/create_shared_vars.h"
 #include "shared/mimo_shared.h"
 #include "setup_exit.h"
+
+#include <stdio.h>
 
 // Globals
 mimo_t * mimo;
@@ -140,7 +145,8 @@ static int read_cmd_options(int argc, char ** argv, mimo_t * mimo,
                     error_print("failed to open file '%s'", optarg);
                     return 0;
                }
-               stderr = logfp;
+// TODO fix this
+//               stderr = logfp;
                break;
           case 'F':
                pg_add_file(optarg);
@@ -174,12 +180,22 @@ static int read_cmd_options(int argc, char ** argv, mimo_t * mimo,
      return rtn;
 }
 
+#include "shared/logicalCpuSelect.h"
+
 int main(int argc, char ** argv) {
 
      FILE * logfp = NULL;
      int i;
 
-     status_print("Number of available CPUs is %d\n", (int)sysconf(_SC_NPROCESSORS_ONLN));
+
+uint32_t rtest[8];
+     int ok = getFreeLogicalProcessors(8, rtest);
+     printf("ok res: %d\n",ok);
+     for(int i=0;i<8;i++){
+	     printf("mapped %d to %u\n",i,rtest[i]);
+     }
+     fflush(stdout);
+return 0;
 
      mimo = mimo_init();
      if (!mimo) {

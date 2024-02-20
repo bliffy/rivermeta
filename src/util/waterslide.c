@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#define _WSUTIL
 #include "waterslide.h"
+#include "wscalc.h"
 #include "mimo.h"
 #include "graphBuilder.h"
 #include "setup_exit.h"
