@@ -180,22 +180,11 @@ static int read_cmd_options(int argc, char ** argv, mimo_t * mimo,
      return rtn;
 }
 
-#include "shared/logicalCpuSelect.h"
 
 int main(int argc, char ** argv) {
 
      FILE * logfp = NULL;
      int i;
-
-
-uint32_t rtest[8];
-     int ok = getFreeLogicalProcessors(8, rtest);
-     printf("ok res: %d\n",ok);
-     for(int i=0;i<8;i++){
-	     printf("mapped %d to %u\n",i,rtest[i]);
-     }
-     fflush(stdout);
-return 0;
 
      mimo = mimo_init();
      if (!mimo) {

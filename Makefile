@@ -35,7 +35,8 @@ ifndef ISWINDOWS
 	$(RM) $(WS_BIN_DIR)/wsalias $(WS_BIN_DIR)/wsman $(QUIETOUT)
 else
 	@if EXIST lib $(RM) $(WS_LIB_DIR)\wsdt_*
-	@if EXIST lib $(RM) $(WS_LIB_DIR)\libwaterslide.*
+	@if EXIST $(WS_BIN_DIR)\libwaterslide.dll $(RM) $(WS_BIN_DIR)\libwaterslide.dll
+	@if EXIST $(WS_BIN_DIR)\libwaterslide-parallel.dll $(RM) $(WS_BIN_DIR)\libwaterslide-parallel.dll
 	@if EXIST procs $(RM) $(WS_PROCS_DIR)\proc_*
 	@if EXIST $(WS_BIN_DIR)\waterslide.exe $(RM) $(WS_BIN_DIR)\waterslide.exe
 	@if EXIST $(WS_BIN_DIR)\waterslide-parallel.exe $(RM) $(WS_BIN_DIR)\waterslide-parallel.exe

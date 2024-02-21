@@ -29,7 +29,7 @@ $(DESTDIR):
 
 %$(WS_SFX): %.c
 	$(SHOWFILE)
-	$(CC) $(CFLAGS) $< -o $@ -L$(WS_LIB_DIR) -l:$(WS_CORE_LIB)
+	$(CC) $(CFLAGS) $< -o $@ -L$(WS_LIB_DIR) -L$(WS_BIN_DIR) -l:$(WS_CORE_LIB)
 	$(CP) $@ $(DESTDIR) $(QUIETOUT)
 
 clean:

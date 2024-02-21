@@ -87,15 +87,16 @@ WS_INCLUDES = -I$(WS_INC_DIR) -I$(SRC_ROOT) -I.
 
 #TODO the sections thing might break linux
 #LDFLAGS += -L$(WS_LIB_DIR) -Wl,--no-gc-sections
-LDFLAGS += -L$(WS_LIB_DIR)
+LDFLAGS += -L$(WS_LIB_DIR) -L$(WS_BIN_DIR)
 
 ifdef ISWINDOWS
   ifdef WS_PARALLEL
+    # used for NtQuerySystemInformation() to get cpu load levels
     LDFLAGS += -lNtdll
   endif
 endif
 
-LDFLAGS += -lm -lz -lpthread -m64
+LDFLAGS += -lm -lz -pthread -m64
 ifndef NODL
   LDFLAGS += -ldl
 endif
