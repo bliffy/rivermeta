@@ -22,7 +22,7 @@ void DLERROR(char * buf, size_t max) {
           NULL,
           GetLastError(),
           0,
-          (LPSTR) &buf,
+          (LPSTR) buf,
           max,
           NULL);
 }
