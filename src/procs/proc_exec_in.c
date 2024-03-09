@@ -26,8 +26,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "memmem_macro.h"
 #include <unistd.h>
-#include <poll.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
@@ -37,7 +37,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <signal.h>
-#include <poll.h>
+#include "poll_macro.h"
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <limits.h>
@@ -99,7 +99,7 @@ typedef struct _proc_instance_t {
      int isdone;
      int detect_strings;
 
-     struct pollfd fds[1];
+     struct POLLFD fds[1];
 
      char * sep;
      size_t sep_len;
@@ -389,7 +389,7 @@ static void local_detect_sep(proc_instance_t * proc,
      }
 
      while (len) {
-          char * buf_offset = (char *)memmem(
+          char * buf_offset = (char *)MEMMEM(
                buf, len, proc->sep, proc->sep_len);
           if (!buf_offset) {
                add_to_active(proc, wsd, buf, len, remainder);
@@ -427,7 +427,7 @@ static int data_source_exec(void * vinstance, wsdata_t* source_data,
      }
 
      //dprint("ready to poll");
-     int rc = poll(proc->fds, 1, 1);
+     int rc = POLL(proc->fds, 1, 1);
 
      if (rc < 0) {
           dprint("poll -1");

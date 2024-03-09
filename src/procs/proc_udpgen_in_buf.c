@@ -27,7 +27,8 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <poll.h>
+//#include <poll.h>
+//#include "poll_macro.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>

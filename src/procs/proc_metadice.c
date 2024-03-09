@@ -27,7 +27,7 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
 #include <time.h>
 #include "waterslide.h"
 #include "waterslidedata.h"

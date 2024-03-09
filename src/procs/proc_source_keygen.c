@@ -22,7 +22,11 @@ SOFTWARE.
 */
 #define PROC_NAME "source_keygen"
 
-#include <stdlib.h>
+// turns on macro workaround for rand_r() in mingw
+// TODO find better solution
+#define _POSIX_THREAD_SAFE_FUNCTIONS
+    #include <stdlib.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>

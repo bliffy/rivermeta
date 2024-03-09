@@ -30,6 +30,7 @@ SOFTWARE.
 #include <unistd.h>
 #include "procloader_buffer.h"
 #include "sysutil.h"
+#include "memmem_macro.h"
 
 int is_procbuffer = 1;
 int procbuffer_pass_not_found = 1;
@@ -230,7 +231,7 @@ int procbuffer_decode(void * vproc, wsdata_t * tdata,
      switch(proc->sedop) {
      case 's':
        { // Handling SED s(ubstitute) function....
-	 firstmatch = memmem(buf, buflen, proc->original, 
+	 firstmatch = MEMMEM(buf, buflen, proc->original, 
 			     strlen(proc->original));
 	 
 	 if (firstmatch == NULL) { // nothing to be replaced
@@ -258,8 +259,8 @@ int procbuffer_decode(void * vproc, wsdata_t * tdata,
 	   count++;
 	   offset += front - rear;
 	   rear = front + strlen(proc->original);
-	 } while ((front = memmem(rear, buflen - offset, 
-				proc->original, strlen(proc->original))));
+	 } while ((front = MEMMEM(rear, buflen - offset, 
+				  proc->original, strlen(proc->original))));
 	 
 	 
 	 
@@ -291,7 +292,7 @@ int procbuffer_decode(void * vproc, wsdata_t * tdata,
 	   dest += strlen(proc->replace);
 	   bufremaining -= strlen(proc->original);
 	   rear = front + strlen(proc->original);
-	 } while (proc->global && (front = memmem(rear, bufremaining, 
+	 } while (proc->global && (front = MEMMEM(rear, bufremaining, 
 				proc->original, strlen(proc->original))));
 	 
 	 memcpy(dest, rear, bufremaining);

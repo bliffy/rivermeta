@@ -36,6 +36,7 @@ SOFTWARE.
 #include "datatypes/wsdt_double.h"
 #include "stringhash5.h"
 #include "procloader.h"
+#include "win_extras.h"
 
 char proc_version[]     = "1.1";
 char *proc_menus[]     = { "Filters", NULL };
@@ -309,16 +310,16 @@ static int proc_string(void * vinstance, wsdata_t* input_data,
 
      char * sep;
      //skip frame header
-     sep = strsep(&buf, "\n");
+     sep = _strsep(&buf, "\n");
 
      if (!sep) {
           proc->errors++;
           return 1;
      }
-     while (((sep = strsep(&buf, "\n")) != NULL) && (sep[0] != 0)) {
+     while (((sep = _strsep(&buf, "\n")) != NULL) && (sep[0] != 0)) {
           char * pbuf = sep;
-          char * key = strsep(&pbuf, ",");
-          char * value = strsep(&pbuf, ",");
+          char * key = _strsep(&pbuf, ",");
+          char * value = _strsep(&pbuf, ",");
           char * bias = pbuf;
 
           if (!key || !value) {
@@ -482,16 +483,16 @@ static int proc_string_twolevel(void * vinstance, wsdata_t* input_data,
 
      char * sep;
      //skip frame header
-     sep = strsep(&buf, "\n");
+     sep = _strsep(&buf, "\n");
 
      if (!sep) {
           proc->errors++;
           return 1;
      }
-     while (((sep = strsep(&buf, "\n")) != NULL) && (sep[0] != 0)) {
+     while (((sep = _strsep(&buf, "\n")) != NULL) && (sep[0] != 0)) {
           char * pbuf = sep;
-          char * key = strsep(&pbuf, ",");
-          char * value = strsep(&pbuf, ",");
+          char * key = _strsep(&pbuf, ",");
+          char * value = _strsep(&pbuf, ",");
           char * pos = pbuf;
 
           if (!parse_two_level_datum(proc, key, value, pos)) {

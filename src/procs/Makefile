@@ -23,7 +23,17 @@ ifndef NOPB
 endif
 CFLAGS += -Wno-unknown-pragmas -Wno-strict-aliasing
 
-LDFLAGS += -shared 
+ifdef ISWINDOWS
+  LDFLAGS += -shared $(WINSTATIC_CXX)
+else
+  LDFLAGS += -shared $(RELATIVE_ORIGIN)
+endif
+
+ifdef WS_PARALLEL
+  LDFLAGS += -lwaterslide-parallel
+else
+  LDFLAGS += -lwaterslide
+endif
 
 MODULES = $(patsubst %.c, $(WS_PROCS_DIR)/%$(WS_SFX), $(wildcard *.c))
 MODULES += $(patsubst %.cc, $(WS_PROCS_DIR)/%$(WS_SFX), $(wildcard *.cc))

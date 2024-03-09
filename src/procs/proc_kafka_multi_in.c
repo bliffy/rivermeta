@@ -43,7 +43,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#if (defined WIN32 || defined WIN64 || defined WINDOWS) 
+#include "win_mman.h"
+#else
 #include <sys/mman.h>
+#endif
 #include <signal.h>
 #include "librdkafka/rdkafka.h"  /* for Kafka driver */
 #include "waterslide.h"

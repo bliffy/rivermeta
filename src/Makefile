@@ -48,7 +48,7 @@ rule2: rule $(PBDIR) $(RE2DIR)
 ifndef NOPB
 	$(QUIET)$(MAKE) --no-print-directory -C procs/protobuf 
 endif
-#	$(QUIET)$(MAKE) --no-print-directory -k -C procs 
+	$(QUIET)$(MAKE) --no-print-directory -k -C procs 
 ###	$(WSALIAS) > "$(WS_PROCS_DIR)/.wsalias"
 
 

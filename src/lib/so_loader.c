@@ -467,7 +467,7 @@ static mimo_directory_list_t * build_kid_dirlist(void) {
 
      dlist->len = 1;
 
-     while((ptr = (char *)strchr(ptr, (int)DIRSEP_CHR)) != NULL) {
+     while ((ptr = (char *)strchr(ptr, (int)DIRSEP_CHR)) != NULL) {
           dlist->len++;
           ptr++;
      }

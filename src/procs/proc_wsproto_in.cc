@@ -28,7 +28,8 @@ SOFTWARE.
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <poll.h>
+//#include <poll.h>
+//#include "poll_macro.h"
 #include <zlib.h>
 #include <glob.h>
 #if defined(__FreeBSD__)
