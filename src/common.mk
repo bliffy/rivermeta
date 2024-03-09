@@ -81,7 +81,7 @@ CFLAGS = $(OPT_LEVEL) -Wall -fpic -std=gnu99
 ifdef GNU_DEBUG
   CFLAGS += -g
 endif
-CFLAGS += -D_GNU_SOURCE
+CFLAGS += -D_GNU_SOURCE -D_CRT_RAND_S
 
 WS_INCLUDES = -I$(WS_INC_DIR) -I$(SRC_ROOT) -I.
 
@@ -96,7 +96,7 @@ ifdef ISWINDOWS
   endif
 endif
 
-LDFLAGS += -lm -lz -pthread -m64
+LDFLAGS += -lm -lz -pthread -m64 -Wl,--no-undefined
 ifndef NODL
   LDFLAGS += -ldl
 endif

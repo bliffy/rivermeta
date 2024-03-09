@@ -313,7 +313,7 @@ static inline FILE * get_fp(proc_instance_t * proc, time_t sec, wsdata_t * wsd) 
           lw->current_boundary = proc->splittime.current_boundary;
           if (lw->fp) {
                fclose(lw->fp);
-               if (lw->splitfile) {
+               if (lw->splitfile[0] != 0) {
                     tool_print("finished writing to %s", lw->splitfile);
 
                     if (lw->moveprefix) {
@@ -438,7 +438,7 @@ static void close_files(void * vlw, void * vdata) {
      label_write_t * lw = (label_write_t *)vlw;
      if (lw->fp) {
           fclose(lw->fp);
-          if (lw->splitfile) {
+          if (lw->splitfile[0] != 0) {
                tool_print("finished writing to %s", lw->splitfile);
                     if (lw->moveprefix) {
                          sysutil_rename_file(lw->splitfile, lw->movefile);

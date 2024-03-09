@@ -24,8 +24,13 @@ SOFTWARE.
 
 // turns on macro workaround for rand_r() in mingw
 // TODO find better solution
-#define _POSIX_THREAD_SAFE_FUNCTIONS
-    #include <stdlib.h>
+//#define _POSIX_THREAD_SAFE_FUNCTIONS
+//Turns on rand_s() for windows
+#ifndef _CRT_RAND_S
+  #define _CRT_RAND_S
+#endif
+#include <stdlib.h>
+#include "rand_macros.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -167,7 +172,7 @@ int proc_init(wskid_t * kid, int argc, char ** argv, void ** vinstance, ws_sourc
  
      // init RNG (random number generator)
      if (!proc->fast_rand) {
-          srand48(proc->seed);
+          SRAND48(proc->seed);
      }
 
      tool_print("attempting to register source");
@@ -212,14 +217,14 @@ static int proc_source(void * vinstance, wsdata_t* source_data,
      
      if (!proc->fast_rand) {
           if (!proc->u64_rand) {
-               key = ((mrand48()+POW31) & proc->mask) ;
+               key = ((MRAND48()+POW31) & proc->mask) ;
           }
           else {
-               key = (((((uint64_t)(mrand48()+POW31))<<32) + (mrand48()+POW31)) & proc->mask) ;
+               key = (((((uint64_t)(MRAND48()+POW31))<<32) + (MRAND48()+POW31)) & proc->mask) ;
           }
      }
      else {
-          key = (rand_r(&proc->seed) & proc->mask) ;
+          key = (RAND_R(&proc->seed) & proc->mask) ;
      }
      if (proc->add) {
           key += proc->base;

@@ -10,3 +10,7 @@ https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-get
 
 https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsysteminfo
 https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getsystemtimes
+
+win poll()
+https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsapoll
+

@@ -483,7 +483,9 @@ int proc_init(wskid_t * kid, int argc, char ** argv, void ** vinstance, ws_sourc
           return 0;
      }
 
-     if (!proc->label_key || !proc->label_value) {
+
+     proc->num_val++;
+     if (!proc->label_key || proc->num_val<=0) {
           error_print("need to specify a key and value");
           return 0;
      }
