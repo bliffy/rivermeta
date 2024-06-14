@@ -16,7 +16,8 @@ typedef void (*wsdir_callback_t)(
 
 #if (defined _WIN32 || defined _WIN64 || defined WINDOWS)
 // windows
-#include <windows.h>
+#include <fileapi.h>
+#include "win_err_print.h"
 
 int wsdir_scan(
           const char * path,
@@ -24,17 +25,19 @@ int wsdir_scan(
           const wsdir_callback_t callback,
           void * opaque)
 {
-     HANDLE hFind;
-     WIN32_FIND_DATA de;
-     hFind = FindFirstFile("path", &de);
-     if (hFind == INVALID_HANDLE_VALUE) return 0;
-     do {
-          if (filter(de.cFileName)) {
-               callback(path, de.cFileName, opaque);
-          }
-     }while(FindNextFile(hFind, &de));
-     FindClose(hFind);
-     return 1;
+    HANDLE hFind;
+    WIN32_FIND_DATA de;
+    hFind = FindFirstFile(path, &de);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        error_print_win_error();
+        return 0;
+    }
+    do {
+        if (filter(de.cFileName))
+            callback(path, de.cFileName, opaque);
+    } while(FindNextFile(hFind, &de));
+    FindClose(hFind);
+    return 1;
 }
 
 #else

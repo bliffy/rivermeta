@@ -27,7 +27,8 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <poll.h>
+//#include <poll.h>
+//#include "poll_macro.h"
 #include <zlib.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -47,6 +48,7 @@ SOFTWARE.
 #include "datatypes/wsdt_uint64.h"
 #include "datatypes/wsdt_double.h"
 #include "mimo.h"
+#include "win_extras.h"
 
 char proc_name[]	= PROC_NAME;
 char *proc_tags[]	= { "input", NULL };
@@ -584,7 +586,7 @@ static inline int read_csv_buffer(proc_instance_t * proc, wsdata_t * tdata,
      //char * ptok = NULL;
      //char * rtok = strtok_r(buf, proc->delim, &ptok);
      
-     char * rtok = strsep(&buf, proc->delim);
+     char * rtok = _strsep(&buf, proc->delim);
      int rec = 0;
      int tuplabels = 0;
      while (rtok) {
@@ -596,7 +598,7 @@ static inline int read_csv_buffer(proc_instance_t * proc, wsdata_t * tdata,
                    rtok_len && (rtok[0] != LABEL_BEGIN_CHAR)) {
                     add_tup_labels(proc, tdata, rtok, rtok_len);
                     tuplabels = 1;
-                    rtok = strsep(&buf, proc->delim);
+                    rtok = _strsep(&buf, proc->delim);
                     continue;
                }
                else { 
@@ -607,7 +609,7 @@ static inline int read_csv_buffer(proc_instance_t * proc, wsdata_t * tdata,
                    (rec == 0) && rtok_len) {
                     add_tup_labels(proc, tdata, rtok, rtok_len);
                     tuplabels = 1;
-                    rtok = strsep(&buf, proc->delim);
+                    rtok = _strsep(&buf, proc->delim);
                     continue;
           }
           dprint("rtok %s", rtok);
@@ -616,7 +618,7 @@ static inline int read_csv_buffer(proc_instance_t * proc, wsdata_t * tdata,
                dprint("date format 1");
                
                //char * timestr = strtok_r(NULL, proc->delim, &ptok);
-               char * timestr = strsep(&buf, proc->delim);
+               char * timestr = _strsep(&buf, proc->delim);
                
                int timestr_len = 0;
                if (timestr) {
@@ -644,14 +646,14 @@ static inline int read_csv_buffer(proc_instance_t * proc, wsdata_t * tdata,
           rec++;
           //rtok = strtok_r(NULL, proc->delim, &ptok);
 
-          rtok = strsep(&buf, proc->delim);
+          rtok = _strsep(&buf, proc->delim);
      }
      return 1;
 }
 
 static inline void add_tup_labels(proc_instance_t * proc, wsdata_t * tdata,
                                   char * buf, int len) {
-     char * rtok = strsep(&buf, LABEL_DELIM);
+     char * rtok = _strsep(&buf, LABEL_DELIM);
      while (rtok) {
           int lbl_len = strlen(rtok);
           if (lbl_len) {
@@ -661,7 +663,7 @@ static inline void add_tup_labels(proc_instance_t * proc, wsdata_t * tdata,
                }
           }
 
-          rtok = strsep(&buf, LABEL_DELIM);
+          rtok = _strsep(&buf, LABEL_DELIM);
      }
 }
 
@@ -702,7 +704,7 @@ static inline void get_inline_labels(proc_instance_t * proc, char ** vbuf,
      //char * ptok = NULL;
 
      //char * rtok = strtok_r(buf, LABEL_DELIM, &ptok);
-     char * rtok = strsep(&buf, LABEL_DELIM);
+     char * rtok = _strsep(&buf, LABEL_DELIM);
      while (rtok) {
           int lbl_len = strlen(rtok);
           if (lbl_len) {
@@ -718,7 +720,7 @@ static inline void get_inline_labels(proc_instance_t * proc, char ** vbuf,
           }
 
           //rtok = strtok_r(NULL, LABEL_DELIM, &ptok);
-          rtok = strsep(&buf, LABEL_DELIM);
+          rtok = _strsep(&buf, LABEL_DELIM);
      }
 }
 

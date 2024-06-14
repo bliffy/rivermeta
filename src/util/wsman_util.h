@@ -102,7 +102,8 @@ static inline void print_list(
                     break;
                }
                if ( len > 0 ) {
-                    strncat(buf, ", ", 2);
+                    //strncat(buf, ", ", 2);
+                    strcat(buf, ", ");
                     len += 2;
                }
                strncat(buf, list[i], strlen(list[i]));

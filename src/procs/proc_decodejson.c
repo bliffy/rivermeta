@@ -33,6 +33,7 @@ SOFTWARE.
 #include "procloader.h"
 #include "datatypes/wsdt_tuple.h"
 #include "datatypes/wsdt_string.h"
+#include "win_extras.h"
 
 char proc_version[] = "1.0";
 char *proc_alias[] = { "json", "jsondecode", NULL };
@@ -189,7 +190,7 @@ static int proc_tuple(void * vinstance, wsdata_t* input_data,
 
      // XXX: this is really slow, need a better way to get a correctly
      // nul-terminated char * to the json string 
-     char * json_str = strndup(string->buf, string->len);
+     char * json_str = _strndup(string->buf, string->len);
 
      // Parse the Json.
      cJSON * cjson = cJSON_Parse(json_str);

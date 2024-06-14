@@ -80,11 +80,13 @@ ifndef ISWINDOWS
 else
 	@if EXIST shared $(RM) shared\*.o $(QUIETOUT)
 endif
-#	$(RM) parse_graph.* graph.lex* graph.tab* $(QUIETOUT)
-#	$(RM) wscalc.c wscalc.tab* wscalc_int.c $(QUIETOUT)
-#	$(RM) wscalc_int.tab.c wscalc_int.tab.h $(QUIETOUT)
 	$(RM) libwaterslide$(LIBEND) $(QUIETOUT)
 	$(RM) libwaterslide-parallel$(LIBEND) $(QUIETOUT)
+
+scour: clean
+	$(RM) parse_graph.* graph.lex* graph.tab* $(QUIETOUT)
+	$(RM) wscalc.c wscalc.tab* wscalc_int.c $(QUIETOUT)
+	$(RM) wscalc_int.tab.c wscalc_int.tab.h $(QUIETOUT)
 
 graph.tab$(SUFFIX).o: graph.tab.cc
 graph.lex$(SUFFIX).o: graph.lex.cc ast.h

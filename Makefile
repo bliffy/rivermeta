@@ -40,6 +40,6 @@ else
 	@if EXIST $(WS_PROCS_DIR)\proc_* $(RM) $(WS_PROCS_DIR)\proc_*
 endif
 
-scour: clean
-	$(RM) $(WS_LIB_DIR) $(WS_PROCS_DIR) $(QUIETOUT)
+#scour: clean
+#	$(RM) $(WS_LIB_DIR) $(WS_PROCS_DIR) $(QUIETOUT)
 

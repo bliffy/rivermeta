@@ -32,10 +32,14 @@ SOFTWARE.
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#if (defined WIN32 || defined WIN64 || defined WINDOWS) 
+#include "win_mman.h"
+#else
 #include <sys/mman.h>
+#endif
 #include <fcntl.h>
 #include "waterslide.h"
 #include "waterslidedata.h"

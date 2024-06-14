@@ -39,6 +39,19 @@ SOFTWARE.
 #include "wscalc.h"
 
 
+// These globals are exposed and used elsewhere, such as in the calc language files
+extern wscalcValue (*getVarValue)(void *, void *, int operation);
+extern int (*setVarValue)(wscalcValue, int, void *, void *); 
+extern void (*destroyVar)(void *);
+extern void (*flushVar)(void *);
+extern uint8_t (*nameExists)(void *, void *);
+extern void *(*initializeVarReference)(char *, char *, void *);
+extern void *(*initializeLabelAssignment)(char *, char *, void *);
+extern int (*assignLabel)(void *, void *);
+extern void (*wsflush)(void *);
+
+
+
 char proc_version[]     = "1.5";
 char *proc_tags[]     = { "math", NULL };
 char *proc_alias[]     = { "mathwscalc", "math", "icalc", NULL };

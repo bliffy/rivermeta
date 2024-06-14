@@ -23,7 +23,17 @@ ifndef NOPB
 endif
 CFLAGS += -Wno-unknown-pragmas -Wno-strict-aliasing
 
-LDFLAGS += -shared 
+ifdef ISWINDOWS
+  LDFLAGS += -shared $(WINSTATIC_CXX)
+else
+  LDFLAGS += -shared $(RELATIVE_ORIGIN)
+endif
+
+ifdef WS_PARALLEL
+  LDFLAGS += -lwaterslide-parallel
+else
+  LDFLAGS += -lwaterslide
+endif
 
 MODULES = $(patsubst %.c, $(WS_PROCS_DIR)/%$(WS_SFX), $(wildcard *.c))
 MODULES += $(patsubst %.cc, $(WS_PROCS_DIR)/%$(WS_SFX), $(wildcard *.cc))
@@ -47,13 +57,29 @@ $(WS_PROCS_DIR)/proc_tcpthrow$(WS_SFX): proc_tcpthrow.c $(WS_INC_DIR)/tcp_rw.h
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 ifdef HASMAGIC
+ifdef ISWINDOWS
+$(WS_PROCS_DIR)/proc_filemagic$(WS_SFX): proc_filemagic.c
+	$(SKIPFILE)
+else
 $(WS_PROCS_DIR)/proc_filemagic$(WS_SFX): proc_filemagic.c
 	$(SHOWFILE) 
 	$(CC) $(CFLAGS) $< -o $@ -lmagic $(LDFLAGS)
+endif
 else
 $(WS_PROCS_DIR)/proc_filemagic$(WS_SFX): proc_filemagic.c
 	$(SKIPFILE)
+endif
 
+ifdef ISWINDOWS
+$(WS_PROCS_DIR)/proc_csv_in$(WS_SFX): proc_csv_in.c
+	$(SKIPFILE)
+$(WS_PROCS_DIR)/proc_exec_in$(WS_SFX): proc_exec_in.c
+	$(SKIPFILE)
+$(WS_PROCS_DIR)/proc_udpgen_in$(WS_SFX): proc_udpgen_in.c
+	$(SKIPFILE)
+$(WS_PROCS_DIR)/proc_udpgen_in_buf$(WS_SFX): proc_udpgen_in_buf.c
+	$(SKIPFILE)
+#proc_wsproto_out
 endif
 
 ifndef NOPB

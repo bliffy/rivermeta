@@ -1,6 +1,7 @@
 //#define DEBUG 1
 
 #include "fileout.h"
+#include "time_macros.h" // GMTIME_R()
 #include <fcntl.h>
 
 // cross platform macros
@@ -364,7 +365,7 @@ char * make_basename(
                } else {
                     char tmptm[300];
                     struct tm tres;
-                    gmtime_r(&basetime, &tres);
+                    GMTIME_R(&basetime, &tres);
                     strftime(
                          tmptm, 300,
                          &fs->namepiece[i][1],

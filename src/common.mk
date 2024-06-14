@@ -2,7 +2,6 @@
 # General project Makefile contents
 
 NORE2=1
-NOHWLOC=1
 NOPB=1
 
 # catch for windows (Mingw32/64)
@@ -75,18 +74,6 @@ ifndef NORE2
   RE2LIB = $(RE2DIR)/lib
 endif
 
-ifndef NOHWLOC
-  HWLOC_VER = 1.9
-  HWLOC_DIR = $(WS_LIB_DIR)/hwloc-$(HWLOC_VER)
-  HWLOC_BUILDROOT = $(EXT_DIR)/hwlocBuildDir
-  HWLOC_BUILDDIR = $(HWLOC_BUILDROOT)/hwloc-$(HWLOC_VER)
-  HWLOC_PKG = hwloc-$(HWLOC_VER).tar.bz2
-  HWLOC_INCLUDE = $(HWLOC_DIR)/include
-  HWLOC_LIB = $(HWLOC_DIR)/lib
-  HWLOC_LINK = $(HWLOC_LIB)/libhwloc_embedded.a
-  HWLOC_CFLAGS = -I$(HWLOC_INCLUDE) -DUSE_HWLOC
-endif
-
 # Compiler settings
 
 ifndef OPT_LEVEL
@@ -97,14 +84,22 @@ CFLAGS = $(OPT_LEVEL) -Wall -fpic -std=gnu99
 ifdef GNU_DEBUG
   CFLAGS += -g
 endif
-CFLAGS += -D_GNU_SOURCE
+CFLAGS += -D_GNU_SOURCE -D_CRT_RAND_S
 
 WS_INCLUDES = -I$(WS_INC_DIR) -I$(SRC_ROOT) -I.
 
 #TODO the sections thing might break linux
-LDFLAGS += -L$(WS_LIB_DIR) -Wl,--no-gc-sections
+#LDFLAGS += -L$(WS_LIB_DIR) -Wl,--no-gc-sections
+LDFLAGS += -L$(WS_LIB_DIR) -L$(WS_BIN_DIR)
 
-LDFLAGS += -lm -lz -lpthread -m64
+ifdef ISWINDOWS
+  ifdef WS_PARALLEL
+    # used for NtQuerySystemInformation() to get cpu load levels
+    LDFLAGS += -lNtdll
+  endif
+endif
+
+LDFLAGS += -lm -lz -pthread -m64 -Wl,--no-undefined
 ifndef NODL
   LDFLAGS += -ldl
 endif

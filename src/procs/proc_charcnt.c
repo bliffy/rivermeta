@@ -31,6 +31,7 @@ SOFTWARE.
 #include <ctype.h>
 #include "procloader_buffer.h"
 #include "bit.h"
+#include "win_extras.h"
 
 int is_procbuffer = 1;
 int procbuffer_pass_not_found = 1;
@@ -77,7 +78,7 @@ static void set_characters(proc_instance_t * proc, const char * str) {
      char * dup = strdup(str);
      char * buf = dup;
 
-     char * rtok = strsep(&buf, DELIM);
+     char * rtok = _strsep(&buf, DELIM);
 
      uint8_t c;
      while (rtok) {
@@ -87,7 +88,7 @@ static void set_characters(proc_instance_t * proc, const char * str) {
                proc->cset[c] = 1;
                proc->char_cnt++;
           }
-          rtok = strsep(&buf, DELIM);
+          rtok = _strsep(&buf, DELIM);
           //rtok = strtok_r(NULL, DELIM, &ptok);
      }
 

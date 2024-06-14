@@ -27,7 +27,8 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <poll.h>
+//#include <poll.h>
+//#include "poll_macro.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
@@ -45,6 +46,7 @@ SOFTWARE.
 #include "datatypes/wsdt_uint.h"
 #include "datatypes/wsdt_uint64.h"
 #include "datatypes/wsdt_double.h"
+#include "win_extras.h"
 
 char proc_version[]     = "1.1";
 char *proc_tags[]     = { "input", NULL };
@@ -260,7 +262,7 @@ static inline int read_csv_udp(proc_instance_t * proc, ws_doutput_t * dout) {
      }
 
      char * sep;
-     sep = strsep(&buf, "\n");
+     sep = _strsep(&buf, "\n");
 
      if (!sep) {
           tool_print("no separator in pkt");
@@ -287,10 +289,10 @@ static inline int read_csv_udp(proc_instance_t * proc, ws_doutput_t * dout) {
      proc->expected_frameid = frameid + 1;
 
      //parse buffer
-     while (((sep = strsep(&buf, "\n")) != NULL) && (sep[0] != 0)) {
+     while (((sep = _strsep(&buf, "\n")) != NULL) && (sep[0] != 0)) {
           char * pbuf = sep;
-          uint64_t key = strtoul(strsep(&pbuf, ","),NULL, 10);
-          uint32_t value = atoi(strsep(&pbuf, ","));
+          uint64_t key = strtoul(_strsep(&pbuf, ","),NULL, 10);
+          uint32_t value = atoi(_strsep(&pbuf, ","));
           uint32_t bias = atoi(pbuf);
                proc->outcnt++;
           tdata = ws_get_outdata(proc->outtype_tuple);
