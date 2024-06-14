@@ -33,13 +33,14 @@ endif
 
 ifndef ISWINDOWS
   WS_BIN_DIR = $(BASE_DIR)
-  WS_LIB_DIR = $(BASE_DIR)/lib
+  WS_LIB_DIR = $(BASE_DIR)
+  WS_DATATYPES_DIR = $(BASE_DIR)/lib
   WS_PROCS_DIR = $(BASE_DIR)/procs
   WS_INC_DIR = $(SRC_ROOT)/include
 else
   WS_BIN_DIR = $(BASE_DIR)
-#  WS_LIB_DIR = $(BASE_DIR)\lib
-  WS_LIB_DIR = $(WS_BIN_DIR)
+  WS_LIB_DIR = $(BASE_DIR)
+  WS_DATATYPES_DIR = $(BASE_DIR)\lib
   WS_PROCS_DIR = $(BASE_DIR)\procs
   WS_INC_DIR = $(SRC_ROOT)\include
   EXT_EXEC = .exe
@@ -48,6 +49,7 @@ endif
 ifdef ISWINDOWS
   LIBEND:=.dll
   WIN_STATIC_CXX:=-static-libgcc -static-libstdc++
+  RELATIVE_ORIGIN:=-Wl,-rpath='.\lib\'
 else
   LIBEND:=.so
   RELATIVE_ORIGIN:=-Wl,-z,origin -Wl,-rpath='$$ORIGIN/lib'

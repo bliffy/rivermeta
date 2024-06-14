@@ -40,13 +40,13 @@ ifdef ISWINDOWS
 $(WS_CORE_LIB): $(MODULES)
 	$(SHOWFILE)
 	$(CXX) $(MODULES) -o $@ -shared $(LDFLAGS) $(WINSTATIC_CXX)
-	$(CP) $@ $(WS_LIB_DIR)
+	$(CP) $@ $(WS_BIN_DIR)\$@
 else
 # for linux
 $(WS_CORE_LIB): $(MODULES)
 	$(SHOWFILE)
 	$(CXX) -shared $(MODULES) -o $@ $(LDFLAGS) $(RELATIVE_ORIGIN)
-	$(CP) $@ $(WS_LIB_DIR) 
+	$(CP) $@ $(WS_LIB_DIR)/$@
 endif
 
 graph.lex.cc: graph.l graph.tab.hh

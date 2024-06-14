@@ -18,7 +18,7 @@ CFLAGS += $(PERF_FLAG)
 CFLAGS += -shared
 #CFLAGS += -Wl,--no-allow-shlib-undefined,--no-undefined
 
-DESTDIR = $(WS_LIB_DIR)
+DESTDIR = $(WS_DATATYPES_DIR)
 
 
 all: $(DESTDIR) $(MODULES) 

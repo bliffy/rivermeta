@@ -27,17 +27,17 @@ uninstall:
 
 clean:
 	$(MAKE) --no-print-directory -C src clean
-	$(RM) waterslide waterslide-parallel $(QUIETOUT)
-	$(RM) wsalias wsman $(QUIETOUT)
+	$(RM) waterslide$(EXT_EXEC) $(QUIETOUT)
+	$(RM) waterslide-parallel$(EXT_EXEC) $(QUIETOUT)
+	$(RM) wsalias$(EXT_EXEC) wsman$(EXT_EXEC) $(QUIETOUT)
 ifndef ISWINDOWS
-	$(RM) $(WS_LIB_DIR)/wsdt_* $(QUIETOUT)
+	$(RM) $(WS_DATATYPES_DIR)/wsdt_* $(QUIETOUT)
 	$(RM) $(WS_LIB_DIR)/libwaterslid*.so $(QUIETOUT)
-	$(RM) $(WS_PROCS_DIR)/proc_*
+	#$(RM) $(WS_PROCS_DIR)/proc_*
 else
-	@if EXIST libwaterslide.dll $(RM) libwaterslide.dll
-	@if EXIST lib $(RM) lib\wsdt_*
-	@if EXIST lib $(RM) lib\libwaterslide*.so
-	@if EXIST procs $(RM) procs\proc_*
+	@if EXIST $(WS_DATATYPES_DIR)\wsdt_* $(RM) $(WS_DATATYPES_DIR)\wsdt_*
+	@if EXIST $(WS_LIB_DIR)\*.dll $(RM) $(WS_LIB_DIR)\libwaterslide*.dll
+	@if EXIST $(WS_PROCS_DIR)\proc_* $(RM) $(WS_PROCS_DIR)\proc_*
 endif
 
 scour: clean
