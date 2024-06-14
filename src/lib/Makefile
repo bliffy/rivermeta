@@ -45,8 +45,9 @@ else
 # for linux
 $(WS_CORE_LIB): $(MODULES)
 	$(SHOWFILE)
-	$(CXX) -shared $(MODULES) -o $@ $(LDFLAGS) $(RELATIVE_ORIGIN)
-	$(CP) $@ $(WS_LIB_DIR)/$@
+	@#$(CXX) -shared $(MODULES) -o $@ $(LDFLAGS) $(RELATIVE_ORIGIN)
+	$(CXX) -shared $(MODULES) -o $(WS_LIB_DIR)/$@ $(LDFLAGS) $(RELATIVE_ORIGIN)
+	@#$(CP) $@ $(WS_LIB_DIR)/$@
 endif
 
 graph.lex.cc: graph.l graph.tab.hh
@@ -92,4 +93,6 @@ graph.tab$(SUFFIX).o: graph.tab.cc
 graph.lex$(SUFFIX).o: graph.lex.cc ast.h
 graphBuilder$(SUFFIX).o: graph.tab.hh ast.h
 ast$(SUFFIX).o: ast.cc ast.h
+
+graph.lex$(SUFFIX).o: CXXFLAGS+=-std=c++98
 

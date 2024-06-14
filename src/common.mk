@@ -32,7 +32,7 @@ endif
 
 ifndef ISWINDOWS
   WS_BIN_DIR = $(BASE_DIR)
-  WS_LIB_DIR = $(BASE_DIR)
+  WS_LIB_DIR = $(BASE_DIR)/lib
   WS_DATATYPES_DIR = $(BASE_DIR)/lib
   WS_PROCS_DIR = $(BASE_DIR)/procs
   WS_INC_DIR = $(SRC_ROOT)/include
