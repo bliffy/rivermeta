@@ -33,4 +33,5 @@
 /src/pkg/pbtemp/
 /src/pkg/re2temp/
 
+*cscope.out
 .*.swp
