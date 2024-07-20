@@ -33,7 +33,7 @@ clean:
 ifndef ISWINDOWS
 	$(RM) $(WS_DATATYPES_DIR)/wsdt_* $(QUIETOUT)
 	$(RM) $(WS_LIB_DIR)/libwaterslid*.so $(QUIETOUT)
-	#$(RM) $(WS_PROCS_DIR)/proc_*
+	$(RM) $(WS_PROCS_DIR)/proc_*
 else
 	@if EXIST $(WS_DATATYPES_DIR)\wsdt_* $(RM) $(WS_DATATYPES_DIR)\wsdt_*
 	@if EXIST $(WS_LIB_DIR)\*.dll $(RM) $(WS_LIB_DIR)\libwaterslide*.dll

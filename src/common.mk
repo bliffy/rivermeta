@@ -51,7 +51,7 @@ ifdef ISWINDOWS
   RELATIVE_ORIGIN:=-Wl,-rpath='.\lib\'
 else
   LIBEND:=.so
-  RELATIVE_ORIGIN:=-Wl,-z,origin -Wl,-rpath='$$ORIGIN/lib'
+  RELATIVE_ORIGIN:=-Wl,-z,origin -Wl,-rpath='$$ORIGIN/lib',-rpath='$$ORIGIN/../lib'
 endif
 ifdef WS_PARALLEL
   WS_CORE_LIB = libwaterslide-parallel$(LIBEND)
